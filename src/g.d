@@ -14,10 +14,6 @@ import std.algorithm : remove;
 import helper;
 import objects;
 import viewport;
-import map;
-import gui : gui_t;
-import blood;
-import atlas;
 
 immutable int TILE_W=32;
 immutable int TILE_H=TILE_W;
@@ -195,47 +191,13 @@ struct pair
 		}
 	}
 
-atlas_t atlas1;
-atlas_t atlas2;
 world_t world;
 viewport_t [2] viewports;
-gui_t[2] guis; //todo: combine into viewports
 
 enum direction { down, up, left, right, upleft, upright, downright, downleft} // do we support diagonals. 
 // everyone supports at least down. [for signs]
 // then UDLR
 // then UDLR + diags
-
-class tile_t
-	{
-	ALLEGRO_BITMAP* bmp;/// sprite
-	bool is_passable;	/// blocks passage
-
-	bool is_diggable;	/// self-explainatory
-	bool is_liquid;		/// blockable/swimmable/drownable?
-	bool is_lava;		/// kills you when touching
-	bool is_money;		/// $$$$$$$$$$$$
-	int worth;			/// $$$$$$$$$$$$$ when mining
-	// fun fact: sentinal value is when money=0 also means is_money=false. 
-	// two different ideas/concepts in one variable.
-	
-	@disable this();	
-		//{
-	//	assert(false, "dick."); //is there really no language construct for properly 
-		// disabling default constructors due to .init bullcrap?
-		//}
-	
-	this(ALLEGRO_BITMAP* _bmp, bool passable, bool diggable, bool liquid, bool lava, bool money, int _worth)
-		{
-		bmp = _bmp;
-		is_passable = passable;
-		is_diggable = diggable;
-		is_liquid = liquid;
-		is_lava = lava;
-		is_money = money;
-		worth = _worth ;
-		}	
-	}
 
 struct player_t
 	{
@@ -245,61 +207,14 @@ struct player_t
 
 class world_t
 	{			
-	dwarf_t[] dwarves; //and monsters? and any active objects?
-	monster_t[] monsters; 
 	object_t[] objects; // other stuff
 	unit_t[] units;
-	treasure_chest[] chests;
-	item[] items;
 	structure_t[] structures;
-	map_t map;
-	tree[] trees;
-	static_blood_handler_t blood2;
 
 	this()
 		{
-		map = new map_t;
-		blood2 = new static_blood_handler_t(map);
-		
 		units ~= new dwarf_t(680, 360, 0, 0, g.stone_bmp);
-		monsters ~= new monster_t(220 + uniform!"[]"(-100, 100), 220, uniform!"[]"(-.5, .5), uniform!"[]"(-.5, .5));
-		monsters ~= new monster_t(220 + uniform!"[]"(-100, 100), 220, uniform!"[]"(-.5, .5), uniform!"[]"(-.5, .5));
-		monsters ~= new monster_t(220 + uniform!"[]"(-100, 100), 220, uniform!"[]"(-.5, .5), uniform!"[]"(-.5, .5));
-		monsters ~= new monster_t(220 + uniform!"[]"(-100, 100), 220, uniform!"[]"(-.5, .5), uniform!"[]"(-.5, .5));
-		monsters ~= new monster_t(220 + uniform!"[]"(-100, 100), 220, uniform!"[]"(-.5, .5), uniform!"[]"(-.5, .5));
-		monsters ~= new boss_t(420, 320, uniform!"[]"(-.5, .5), uniform!"[]"(-.5, .5));	
-	
-		structures ~= new monster_structure_t(500, 200);
-		structures ~= new monster_structure_t(600, 200);
-		structures ~= new monster_structure_t(700, 200);
-		structures ~= new monster_structure_t(800, 200);
-		
-		trees ~= new tree(200, 200, 0, 0, g.tree_bmp);
-		trees ~= new tree(232, 200, 0, 0, g.tree_bmp);
-		trees ~= new tree(200, 232, 0, 0, g.tree_bmp);
-		trees ~= new tree(232, 232, 0, 0, g.tree_bmp);
-		trees ~= new tree(264, 200, 0, 0, g.tree_bmp);
-		trees ~= new tree(264, 232, 0, 0, g.tree_bmp);
-
 		testGraph = new intrinsic_graph!float(units[0].x, COLOR(1,0,0,1));
-//		testGraph.dataSource = &units[0].x;
-		
-		int x = 300;
-		int y = 300;
-		chests ~= new treasure_chest(0, x, y, 0, 0);
-			{
-			item i = new item(0,x,y,uniform!"[]"(-.5,.5),uniform!"[]"(-.5,.5), g.sword_bmp);
-			chests[0].itemsInside ~= i; 
-			items ~= i;
-			
-			item i2 = new item(0,x,y,uniform!"[]"(-.5,.5),uniform!"[]"(-.5,.5), g.carrot_bmp);
-			chests[0].itemsInside ~= i2; 
-			items ~= i2;
-
-			item i3 = new item(0,x,y,uniform!"[]"(-.5,.5),uniform!"[]"(-.5,.5), g.potion_bmp);
-			chests[0].itemsInside ~= i3; 
-			items ~= i3;
-			}
 		}
 
 	void draw(viewport_t v)
@@ -321,24 +236,8 @@ class world_t
 				}
 			}
 		
-		map.draw(v, false);
-		blood2.draw(v);
 		drawStat(units, stats.number_of_drawn_dwarves);
-		drawStat(monsters, stats.number_of_drawn_dwarves);		
 		drawStat(structures, stats.number_of_drawn_structures);		
-		drawStat(chests, stats.number_of_drawn_objects);
-		drawStat(items, stats.number_of_drawn_objects);
-		drawStat(trees, stats.number_of_drawn_objects);
-
-		map.draw(v, true);
-		
-		if(!g.atlas1.isHidden)
-			{
-			if(g.selectLayer)
-				g.atlas1.drawAtlas( g.SCREEN_W - g.atlas1.atl.w, 140);
-			else
-				g.atlas2.drawAtlas( g.SCREEN_W - g.atlas2.atl.w, 140);
-			}
 		
 		testGraph.draw(v);
 		}
@@ -357,12 +256,7 @@ class world_t
 		if(key_s_down)p.down();
 		if(key_a_down)p.left();
 		if(key_d_down)p.right();
-		if(key_q_down)p.actionAttack();
-		if(key_e_down)p.actionUse();
-		if(key_f_down)p.actionSprint();
-		if(key_space_down)p.actionJump();
-
-		map.logic();
+		if(key_q_down)p.attack();
 		
 		void tick(T)(ref T obj)
 			{
@@ -373,13 +267,7 @@ class world_t
 			}
 			
 		tick(units);
-//		tick(objects);
-//		tick(dwarves);
-		tick(monsters);
 		tick(structures);
-		tick(chests);
-		tick(items);
-		tick(trees);
 
 		//prune ready-to-delete entries
 		void prune(T)(ref T obj)
@@ -391,13 +279,7 @@ class world_t
 			//see https://forum.dlang.org/post/sagacsjdtwzankyvclxn@forum.dlang.org
 			}
 		prune(units);
-		prune(objects);
-		prune(dwarves);
-		prune(monsters);
 		prune(structures);
-		prune(chests);
-		prune(items);
-		prune(trees);
 		}
 	}
 
@@ -437,11 +319,6 @@ int SCREEN_H = 720;
 
 void loadResources()	
 	{
-	g.atlas1.load("./data/atlas.png");
-	g.atlas1.loadMeta();
-	g.atlas2.load("./data/atlas2.png");
-	g.atlas2.loadMeta();
-		
 	g.font = getFont("./data/DejaVuSans.ttf", 18);
 
 	g.dude_up_bmp  	= getBitmap("./data/dude_up.png");

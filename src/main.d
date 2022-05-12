@@ -45,9 +45,6 @@ import helper;
 import objects;
 import viewport;
 static import g;
-import g : TILE_W, TILE_H;
-import gui;
-import atlas;
 
 //ALLEGRO_CONFIG* 		cfg;  //whats this used for?
 ALLEGRO_DISPLAY* 		al_display;
@@ -154,11 +151,8 @@ static if (false) // MULTISAMPLING. Not sure if helpful.
 	g.viewports[0].ox = 0;
 	g.viewports[0].oy = 0;
 
-	dwarf_t p = cast(dwarf_t)(g.world.units[0]); 
-	g.guis[0] = new gui_t(p);
-	g.guis[0].x = 50;
-	g.guis[0].y = 200;
-	
+//	dwarf_t p = cast(dwarf_t)(g.world.units[0]); 
+
 	g.lights[1].x = 200;
 	
 /*
@@ -170,7 +164,6 @@ static if (false) // MULTISAMPLING. Not sure if helpful.
 	g.viewports[1].ox = 0;
 	g.viewports[1].oy = 0;
 */
-	g.world.map.load();
 
 	assert(g.viewports[0] !is null);
 	
@@ -231,8 +224,6 @@ struct display_t
 			al_clear_to_color(ALLEGRO_COLOR(.05, .05, .05, 1));
 		
 		g.world.draw(g.viewports[0]);
-		g.guis[0].onTick();
-		g.guis[0].draw(g.viewports[0]);
 		}
 
 	static if(false) //draw right viewport
@@ -278,11 +269,6 @@ if(g.stats.fps != 0)
 					// should be approx constant for a cpu once you have enough objects and, are 
 					// no longer limited by screen VSYNC.
 	
-	
-			if(g.selectLayer)
-				al_draw_textf(g.font, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "mouse [%d, %d][%d] cursor[%d]", g.mouse_x, g.mouse_y, g.mouse_lmb, g.atlas1.currentCursor);
-				else
-				al_draw_textf(g.font, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "mouse [%d, %d][%d] cursor[%d]", g.mouse_x, g.mouse_y, g.mouse_lmb, g.atlas2.currentCursor);
 			
 			al_draw_textf(g.font, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "money [%d] deaths [%d]", g.players[0].money, g.players[0].deaths);
 			al_draw_textf(g.font, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, 
@@ -297,22 +283,21 @@ if(g.stats.fps != 0)
 		
 		// DRAW MOUSE PIXEL HELPER/FINDER
 		draw_target_dot(g.mouse_x, g.mouse_y);
-
+/*
 		int val = -1;
 		int mouse_xi = (g.mouse_x + cast(int)g.viewports[0].ox + cast(int)g.viewports[0].x)/TILE_W;
 		int mouse_yi = (g.mouse_y + cast(int)g.viewports[0].oy + cast(int)g.viewports[0].x)/TILE_H;
 		if(mouse_xi >= 0 && mouse_yi >= 0
 			&& mouse_xi < 50 && mouse_yi < 50)
 			{
-			val = g.world.map.data[mouse_xi][mouse_yi];
 			}
-			
+*/			
 		al_draw_textf(
 			g.font, 
 			ALLEGRO_COLOR(0, 0, 0, 1), 
 			g.mouse_x, 
 			g.mouse_y - 30, 
-			ALLEGRO_ALIGN_CENTER, "mouse [%d, %d] = %d", g.mouse_x, g.mouse_y, val);
+			ALLEGRO_ALIGN_CENTER, "mouse [%d, %d]", g.mouse_x, g.mouse_y);
 		}
 	}
 
@@ -376,95 +361,7 @@ void execute()
 					isKeySet(ALLEGRO_KEY_A, g.key_a_down);
 					isKeySet(ALLEGRO_KEY_D, g.key_d_down);
 					isKeySet(ALLEGRO_KEY_F, g.key_f_down);
-					
-					isKeySet(ALLEGRO_KEY_N, g.atlas1.isHidden);
-					isKeyRel(ALLEGRO_KEY_M, g.atlas1.isHidden);
-					
-					void mouseSetTile(ALLEGRO_KEY key, ubyte mapValue)
-						{
-						if(event.keyboard.keycode == key)
-							{
-							int i = cast(int)((g.mouse_x + g.viewports[0].ox)/TILE_W);
-							int j = cast(int)((g.mouse_y + g.viewports[0].oy)/TILE_H);
-							if(i >= 0 && j >= 0 && i < 50 && j < 50)g.world.map.data[i][j] = mapValue;
-							}
-						}
-
-					void mouseChangeTile(ALLEGRO_KEY key, byte relMapValue)
-						{
-						if(event.keyboard.keycode == key)
-							{
-							int i = cast(int)((g.mouse_x + g.viewports[0].ox)/TILE_W);
-							int j = cast(int)((g.mouse_y + g.viewports[0].oy)/TILE_H);
-							if(i >= 0 && j >= 0 && i < 50 && j < 50)
-								{
-								if(cast(short)g.world.map.data[i][j] + cast(short)relMapValue >= 0
-								 &&
-								 g.world.map.data[i][j] <= g.atlas1.data.length
-								 )
-									g.world.map.data[i][j] += relMapValue;
-								}
-							}
-						}
-						
-					void mouseChangeCursorTile(ALLEGRO_KEY key, int relValue)
-						{
-						if(event.keyboard.keycode == key)
-							{
-							int i = cast(int)((g.mouse_x + g.viewports[0].ox)/TILE_W);
-							int j = cast(int)((g.mouse_y + g.viewports[0].oy)/TILE_H);
-							if(i >= 0 && j >= 0 && i < 50 && j < 50)
-								{
-								if(g.selectLayer)
-									g.atlas1.changeCursor(relValue);
-									else
-									g.atlas2.changeCursor(relValue);
-								}
-							}
-						}
-
-					mouseSetTile(ALLEGRO_KEY_1, 0);
-					mouseSetTile(ALLEGRO_KEY_2, 1);
-					mouseSetTile(ALLEGRO_KEY_3, 2);
-					mouseSetTile(ALLEGRO_KEY_4, 3);
-					mouseSetTile(ALLEGRO_KEY_5, 4);
-					mouseSetTile(ALLEGRO_KEY_6, 5);
-					mouseSetTile(ALLEGRO_KEY_7, 6);
-					mouseSetTile(ALLEGRO_KEY_8, 7);
-					mouseChangeCursorTile(ALLEGRO_KEY_LEFT, -1);
-					mouseChangeCursorTile(ALLEGRO_KEY_RIGHT, 1);
-					mouseChangeCursorTile(ALLEGRO_KEY_UP, -g.atlas1.atl.w/TILE_W);
-					mouseChangeCursorTile(ALLEGRO_KEY_DOWN, g.atlas1.atl.w/TILE_W);
-					
-					if(event.keyboard.keycode == ALLEGRO_KEY_B)
-						{
-						if(g.selectLayer)
-							g.atlas1.toggleIsPassable();
-							//we don't do atlas2 because the top layer doesn't have collision. so we just ignore keypress.
-						}	
-
-					if(event.keyboard.keycode == ALLEGRO_KEY_O)
-						{
-						g.atlas1.saveMeta();
-						g.atlas2.saveMeta();
-						}	
-				
-					if(event.keyboard.keycode == ALLEGRO_KEY_P)
-						{
-						g.atlas1.loadMeta();
-						g.atlas2.loadMeta();
-						}
-
-					if(event.keyboard.keycode == ALLEGRO_KEY_K)
-						{
-						g.world.map.save();
-						}
-
-					if(event.keyboard.keycode == ALLEGRO_KEY_L)
-						{
-						g.world.map.load();
-						}
-					
+										
 					break;
 					}
 					
@@ -507,24 +404,12 @@ void execute()
 				case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
 					{
 					if(!g.mouse_in_window)break;
-					long px = to!long(g.mouse_x + g.viewports[0].ox + g.viewports[0].x)/TILE_W;
-					long py = to!long(g.mouse_y + g.viewports[0].oy + g.viewports[0].y)/TILE_H;
-					writeln(g.viewports[0].ox, ",", g.viewports[0].oy);
-					writeln("mouse click at coordinate[", g.mouse_x, ",", g.mouse_y, "] and tile [", px, ",", py, "]");
-					if(px < 0 || py < 0)break;
 					
 					if(event.mouse.button == 1)
 						{
-						g.mouse_lmb = true;
-						if(g.selectLayer)
-							g.world.map.data[px][py] = cast(ubyte)g.atlas1.currentCursor;
-							else
-							g.world.map.data2[px][py] = cast(ubyte)g.atlas2.currentCursor;
 						}
 					if(event.mouse.button == 2)
 						{
-//						mouse_lmb = true;
-//						world.map.data[px][py] = 1;
 						}
 					break;
 					}
