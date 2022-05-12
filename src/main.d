@@ -136,36 +136,10 @@ static if (false) // MULTISAMPLING. Not sure if helpful.
 	// SETUP world
 	// --------------------------------------------------------
 	g.world = new g.world_t;
-
-	// SETUP players
-	// --------------------------------------------------------
 	
 	// SETUP viewports
 	// --------------------------------------------------------
-	g.viewports[0] = new viewport_t;
-	g.viewports[0].x = 0;
-	g.viewports[0].y = 0;
-//	g.viewports[0].w  = g.SCREEN_W/2;// - 1;
-	g.viewports[0].w  = g.SCREEN_W;// - 1;
-	g.viewports[0].h = g.SCREEN_H;
-	g.viewports[0].ox = 0;
-	g.viewports[0].oy = 0;
-
-//	ship_t p = cast(ship_t)(g.world.units[0]); 
-
-	g.lights[1].x = 200;
-	
-/*
-	g.viewports[1] = new viewport_t;
-	g.viewports[1].x = g.SCREEN_W/2;
-	g.viewports[1].y = 0;
-	g.viewports[1].w  = g.SCREEN_W/2;//[ - 1;
-	g.viewports[1].h = g.SCREEN_H;
-	g.viewports[1].ox = 0;
-	g.viewports[1].oy = 0;
-*/
-
-	assert(g.viewports[0] !is null);
+	g.viewports[0] = new viewport_t(0, 0, g.SCREEN_W, g.SCREEN_H, 0, 0);
 	
 	// FPS Handling
 	// --------------------------------------------------------

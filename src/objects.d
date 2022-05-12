@@ -15,7 +15,6 @@ import g;
 import helper;
 import viewport;
 
-
 struct bullet
 	{
 	float x=0, y=0;
@@ -100,6 +99,37 @@ class unit_t : object_t
 	bool isPlayerControlled=false;
 	float weapon_damage = 5;
 
+	void applyGravity()
+		{		
+		// gravity acceleration formula: g = -G*M/r^2
+		float G = 1; // gravitational constant
+		float M = 1000; // mass of planet
+		auto p = pair(400,400); // planet position
+		float r = distanceTo(this, p);
+		float angle = angleTo(this, p);
+		float g = -G*M/r^^2;
+		applyV(angle, g);
+		}
+
+	void applyV(float applyAngle, float vel)
+		{
+		vx += cos(applyAngle)*vel;
+		vy += sin(applyAngle)*vel;
+		}
+
+	override void onTick()
+		{
+		applyGravity();
+		auto p = pair(400,400);
+		if(distanceTo(this, p) < 100)
+			{
+			vx *= -.80;
+			vy *= -.80;
+			}
+		x += vx;
+		y += vy;
+		}
+
 	void doAttackStructure(structure_t s)
 		{
 		s.onHit(this, weapon_damage);
@@ -134,7 +164,6 @@ class unit_t : object_t
 		drawAngleHelper(this, v, angle2, mag, COLOR(1,0,0,1)); 
 		
 		drawAngleHelper(this, v, angle, 25, COLOR(0,1,0,1)); 
-
 		drawPlanetHelper(this, v);
 
 		draw_hp_bar(
@@ -196,37 +225,13 @@ class structure_t : object_t
 
 class object_t
 	{
-	public:
-	
 	ALLEGRO_BITMAP* bmp;
-	
-	@disable this(); // SWEET. <-THIS (no relation) means the compiler checks to make
-	// sure we call super() from child classes!!!!!
-		
-	void draw(viewport_t v)
-		{
-		al_draw_bitmap(bmp, 
-			x - v.ox + v.x - bmp.w/2, 
-			y - v.oy + v.y - bmp.h/2, 
-			0);
-		writeln("beep");
-		}
-	
-	bool		delete_me = false;	
-	float 		x=0, y=0; 	/// Objects are centered at X/Y (not top-left) so we can easily follow other objects.
-	float		vx=0, vy=0; /// Velocities.
-	float		w=0, h=0;   /// width, height (does this make sense in here instead of drawable_object_t)
-	float 		angle=0;	/// pointing angle (not necessarily the direction of movement)
-
-	// if this gets called implicity through SUPER, AFTER later code changes it, we reset back to defaults!
-	// we have to be CAREFUL to make sure the call order for super is DEFINED and respected.
-	this()
-		{
-		x = 0;
-		y = 0;
-		vx = 0;
-		vy = 0;
-		}
+	@disable this(); 
+	bool  delete_me = false;	
+	float x=0, y=0; 	/// Objects are centered at X/Y (not top-left) so we can easily follow other objects.
+	float vx=0, vy=0; /// Velocities.
+	float w=0, h=0;   /// width, height (does this make sense in here instead of drawable_object_t)
+	float angle=0;	/// pointing angle (not necessarily the direction of movement)
 
 	this(float _x, float _y, float _vx, float _vy, ALLEGRO_BITMAP* _bmp)
 		{
@@ -237,6 +242,15 @@ class object_t
 		bmp = _bmp;
 		}
 		
+	void draw(viewport_t v)
+		{
+		al_draw_bitmap(bmp, 
+			x - v.ox + v.x - bmp.w/2, 
+			y - v.oy + v.y - bmp.h/2, 
+			0);
+		writeln("beep");
+		}
+	
 	// INPUTS (do we support mouse input?)
 	// ------------------------------------------
 	void up(){ y-= 10;}
@@ -246,36 +260,10 @@ class object_t
 	void attack()
 		{
 		}
-
-	void applyGravity()
-		{		
-		// gravity acceleration formula: g = -G*M/r^2
-		float G = 1; // gravitational constant
-		float M = 1000; // mass of planet
-		auto p = pair(400,400); // planet position
-		float r = distanceTo(this, p);
-		float angle = angleTo(this, p);
-		float g = -G*M/r^^2;
-		applyV(angle, g);
-		}
-
-	void applyV(float applyAngle, float vel)
-		{
-		vx += cos(applyAngle)*vel;
-		vy += sin(applyAngle)*vel;
-		}
-
+	
 	void onTick()
 		{
-		applyGravity();
-		auto p = pair(400,400);
-		if(distanceTo(this, p) < 100)
-			{
-			vx *= -.80;
-			vy *= -.80;
-			}
-		x += vx;
-		y += vy;
+		// THOU. SHALT. NOT. PUT. PHYSICS. IN BASE. OBJECT.
 		}
 		
 	void onCollision(object_t other_obj)

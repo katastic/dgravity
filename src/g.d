@@ -211,25 +211,50 @@ struct player_t
 	int money=1000; //we might have team based money accounts. doesn't matter yet.
 	int deaths=0;
 	}
+	
+class planet_t : object_t
+	{
+	import std.math;
+	float r = 100; /// radius
+	string name="filler";
+	@disable this();
+	
+	this(string _name, float _x, float _y, float _r)
+		{
+		name = _name;
+		r = _r;
+		super(_x, _y, 0, 0, g.tree_bmp); // works perfect
+		}
+	
+	override void draw(viewport_t v)
+		{
+		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r, COLOR(.8,.8,.8,1));
+		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r * .80, COLOR(1,1,1,1));
+		}
+		
+	override void onTick()
+		{
+		// DO. NOT. DO. PHYSICS to the planet.
+		}
+	}
 
 class world_t
 	{			
 	object_t[] objects; // other stuff
 	unit_t[] units;
 	structure_t[] structures;
+	planet_t[] planets;
 
 	this()
 		{
 		units ~= new ship_t(680, 360, 0, 0, g.stone_bmp);
+		units ~= new ship_t(880, 360, 0, 0, g.goblin_bmp);
+		planets ~= new planet_t("first", 400, 400, 100);
+		planets ~= new planet_t("second", 1210, 410, 100);
+		planets ~= new planet_t("third", 1720, 420, 100);
 		testGraph = new intrinsic_graph!float(units[0].x, COLOR(1,0,0,1));
 		}
 		
-	void drawPlanet(viewport_t v)
-		{
-		auto p = pair(400,400);
-		al_draw_filled_circle(p.x + v.x - v.ox, p.y + v.y - v.oy, 100, COLOR(1,1,1,1));
-		}
-
 	void draw(viewport_t v)
 		{
 		void draw(T)(ref T obj)
@@ -249,9 +274,9 @@ class world_t
 				}
 			}
 		
+		draw(planets);
 		drawStat(units, stats.number_of_drawn_dwarves);
 		drawStat(structures, stats.number_of_drawn_structures);		
-		drawPlanet(v);
 		testGraph.draw(v);
 		}
 		
@@ -260,8 +285,8 @@ class world_t
 		assert(testGraph !is null);
 		testGraph.onTick();
 		ship_t p = cast(ship_t)units[0]; // player
-		viewports[0].ox = units[0].x - viewports[0].w/2;
-		viewports[0].oy = units[0].y - viewports[0].h/2;
+		viewports[0].ox = p.x - viewports[0].w/2;
+		viewports[0].oy = p.y - viewports[0].h/2;
 
 		p.isPlayerControlled = true;
 
@@ -281,6 +306,7 @@ class world_t
 			
 		tick(units);
 		tick(structures);
+		tick(planets);
 
 		//prune ready-to-delete entries
 		void prune(T)(ref T obj)
@@ -293,6 +319,7 @@ class world_t
 			}
 		prune(units);
 		prune(structures);
+		prune(planets);
 		}
 	}
 
