@@ -1,0 +1,22 @@
+
+ - require skill based feats for game mechanics:
+ 
+	- landing gently on planet for X (capture, for example)
+	- landing gently on orbiting carrier (gives you researched powerup)
+	- getting yourself into an orbit around a planet at correct altitude (new. research/bioscan planet for resources?)
+
+rewards players for learning skills to naturally "unlock" aspects of the game.
+
+coop mode against fleets, carriers, etc? unlocks, research, progression system for more gameplay time.
+	- unlock better ships
+	- unlock carriers
+	- fly carriers
+
+
+
+game changing mechanic:
+	- escort, or "pull" a space trailer to colonize a new planet. (wait... but normally you just mark a new place and carriers come.)
+		 - you can detach trailers (ala drop bags) to be more nimble during your fight however the trailer could get hit then
+		 
+		 
+	- assemble new space stations (or something) from space by dragging or pushing pieces together

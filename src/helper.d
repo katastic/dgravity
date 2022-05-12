@@ -11,6 +11,64 @@ import std.random;
 import std.conv;
 import viewport;
 import g;
+import objects;
+
+// TODO: does this track viewport offset or not?!
+void drawAngleHelper(object_t o, viewport_t v, float angle, float distance, ALLEGRO_COLOR color)
+	{
+	float cx = cos(angle)*distance;
+	float cy = sin(angle)*distance;
+	al_draw_line(
+		o.x + v.x - v.ox, 
+		o.y + v.y - v.oy, 
+		o.x + cx + v.x - v.ox, 
+		o.y + cy + v.y - v.oy, 
+		color, 1);
+	}
+
+/// no distance indicator
+/// has a gap before the line starts
+void drawPlanetHelper(object_t o, viewport_t v) 
+	{
+	pair p = pair(400,400);
+	float angle = angleTo(p,o); //to P from O
+	float cx = cos(angle)*40;
+	float cy = sin(angle)*40;
+	float cx2 = cos(angle)*80;
+	float cy2 = sin(angle)*80;
+	al_draw_line(
+		o.x + cx + v.x - v.ox, 
+		o.y + cy + v.y - v.oy, 
+		o.x + cx2 + v.x - v.ox, 
+		o.y + cy2 + v.y - v.oy, 
+		COLOR(0,0,1,1), 
+		1);
+	}
+
+T radToDeg(T)(T angle)
+	{
+	return angle/(2.0*PI)*360.0;
+	}
+
+T degToRad(T)(T angle)
+	{
+	return angle*(2.0*PI)/360.0;
+	}
+	
+void testRad()
+	{
+	for(int i = 0; i < 10; i++)
+		{
+		double x = -2*PI -.5 + .1*i;
+		writeln(x, " ", wrapRad(x));
+		}
+	}
+	
+T wrapRad(T)(T angle)
+	{
+	return fmod(angle, 2.0*PI);
+	}
+
 
 /// angleTo:
 ///
@@ -65,7 +123,7 @@ bool isWideInsideScreen(float x, float y, ALLEGRO_BITMAP* b, viewport_t v)
 
 /*
 //inline this? or template...
-void draw_target_dot(xy_pair xy)
+void draw_target_dot(pair xy)
 	{
 	draw_target_dot(xy.x, xy.y);
 	}

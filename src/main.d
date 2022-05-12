@@ -151,7 +151,7 @@ static if (false) // MULTISAMPLING. Not sure if helpful.
 	g.viewports[0].ox = 0;
 	g.viewports[0].oy = 0;
 
-//	dwarf_t p = cast(dwarf_t)(g.world.units[0]); 
+//	ship_t p = cast(ship_t)(g.world.units[0]); 
 
 	g.lights[1].x = 200;
 	
@@ -257,7 +257,10 @@ struct display_t
 
 		al_draw_filled_rounded_rectangle(16, 32, 64+650, 105+32, 8, 8, ALLEGRO_COLOR(.7, .7, .7, .7));
 
-if(g.stats.fps != 0)	
+//if(g.stats.fps != 0)	
+		unit_t u = g.world.units[0];
+
+		al_draw_textf(g.font, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "obj[%.2f,%.2f][%.2f %f.2] %.2f deg", u.x, u.y, u.vx, u.vy, u.angle.radToDeg); 
 		al_draw_textf(g.font, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "fps[%d] objrate[%d]", g.stats.fps, 
 					(g.stats.number_of_drawn_objects +
 					g.stats.number_of_drawn_dwarves + 
@@ -351,16 +354,10 @@ void execute()
 
 					isKeySet(ALLEGRO_KEY_SPACE, g.key_space_down);
 					
-					isKeySet(ALLEGRO_KEY_Z, g.selectLayer);
-					isKeyRel(ALLEGRO_KEY_X, g.selectLayer);
-					
-					isKeySet(ALLEGRO_KEY_Q, g.key_q_down);
-					isKeySet(ALLEGRO_KEY_E, g.key_e_down);
 					isKeySet(ALLEGRO_KEY_W, g.key_w_down);
 					isKeySet(ALLEGRO_KEY_S, g.key_s_down);
 					isKeySet(ALLEGRO_KEY_A, g.key_a_down);
 					isKeySet(ALLEGRO_KEY_D, g.key_d_down);
-					isKeySet(ALLEGRO_KEY_F, g.key_f_down);
 										
 					break;
 					}
@@ -368,13 +365,10 @@ void execute()
 				case ALLEGRO_EVENT_KEY_UP:				
 					{
 					isKeyRel(ALLEGRO_KEY_SPACE, g.key_space_down);
-					isKeyRel(ALLEGRO_KEY_Q, g.key_q_down);
-					isKeyRel(ALLEGRO_KEY_E, g.key_e_down);
 					isKeyRel(ALLEGRO_KEY_W, g.key_w_down);
 					isKeyRel(ALLEGRO_KEY_S, g.key_s_down);
 					isKeyRel(ALLEGRO_KEY_A, g.key_a_down);
 					isKeyRel(ALLEGRO_KEY_D, g.key_d_down);
-					isKeyRel(ALLEGRO_KEY_F, g.key_f_down);
 
 					break;
 					}
@@ -455,6 +449,8 @@ void shutdown()
 //=============================================================================
 int main(string [] args)
 	{
+//	testRad();
+		
 	writeln("args length = ", args.length);
 	foreach(size_t i, string arg; args)
 		{

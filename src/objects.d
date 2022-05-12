@@ -1,20 +1,3 @@
-
-enum STATE{	WALKING, SPRINTING, JUMPING, LANDING, ATTACKING}
-
-interface animState
-	{
-	void enter();
-	void trigger();
-	void exit();
-	}
-
-class attackingState : animState
-	{
-	void enter(){}
-	void trigger(){}
-	void exit(){}
-	}
-
 import allegro5.allegro;
 import allegro5.allegro_primitives;
 import allegro5.allegro_image;
@@ -32,20 +15,59 @@ import g;
 import helper;
 import viewport;
 
-class item : drawable_object_t
+
+struct bullet
+	{
+	float x=0, y=0;
+	float vx=0, vy=0;
+	int type; // 0 = normal bullet whatever
+	int lifetime; // frames passed since firing
+	bool isDead=false; // to trim
+	}
+	
+class bulletHandler
+	{
+	bullet[] bullets;
+	
+	void add(float _x, float _y, float _vx, float _vy)
+		{
+		bullet b;
+		b.x = _x;
+		b.y = _y;
+		b.vx = _vx;
+		b.vy = _vy;
+		bullets ~= b;
+		}
+	
+	void draw(viewport_t v)
+		{
+		foreach(ref b; bullets)
+			{
+			// draw
+			}
+		}
+		
+	void onTick()
+		{
+		foreach(ref b; bullets)
+			{
+			b.x += b.vx;
+			b.y += b.vy;
+			b.lifetime--;
+			if(b.lifetime <= 0)b.isDead = true;
+			}
+		}
+	}
+
+class item : object_t
 	{
 	bool isInside = false; //or isHidden? Not always the same though...
 	int team;
 	
 	this(uint _team, float _x, float _y, float _vx, float _vy, ALLEGRO_BITMAP* b)
-		{
-		x = _x;
-		y = _y;
-		vx = _vx;
-		vy = _vy;
-		
+		{	
 		writeln("ITEM EXISTS BTW at ", x, " ", y);
-		super(b);
+		super(_x, _y, _vx, _vy, b);
 		}
 		
 	override void draw(viewport_t v)
@@ -68,52 +90,7 @@ class item : drawable_object_t
 		}
 	}
 
-class boss_t : monster_t
-	{
-	this(float _x, float _y, float  _vx, float _vy)
-		{
-		super(_x, _y, _vx, _vy);
-		bmp = g.boss_bmp;
-		hp = 300;
-		}
-	}
-
-class monster_t : unit_t
-	{
-	bool isBeingHit=false;
-
-	this(float _x, float _y, float  _vx, float _vy)
-		{
-		super(2, _x, _y, _vx, _vy, g.goblin_bmp);
-		}
-
-	void onHit(unit_t by, float damage)
-		{
-		isBeingHit=true;
-
-		float angle = atan2(by.y - y, by.x - x);
-		float vel = 2.0f;
-		
-		vx = -cos(angle)*vel;
-		vy = -sin(angle)*vel;
-		writeln(angle, ",", vel, ",", vx, ",", vy);
-		hp -= damage;
-		writeln("monster hit. health is now:", hp);
-
-		if(hp <= 0)
-				{
-				writeln("monster died!"); 
-				delete_me = true; 
-				}
-		}
-
-	override void onTick()
-		{
-		}
-	}
-
-
-class unit_t : drawable_object_t 
+class unit_t : object_t 
 	{
 	immutable float maxHP=100.0; /// Maximum health points
 	float hp=maxHP; /// Current health points
@@ -138,14 +115,10 @@ class unit_t : drawable_object_t
 		hp -= amount;
 		}
 	
-	this(uint _team, float _x, float _y, float _xv, float _yv, ALLEGRO_BITMAP* b)
+	this(uint _team, float _x, float _y, float _vx, float _vy, ALLEGRO_BITMAP* b)
 		{
-		super(b);
 		team = _team; 
-		x = _x; 
-		y = _y;
-		vx = _xv;
-		vy = _yv;
+		super(_x, _y, _vx, _vy, b);
 		}
 
 	override void draw(viewport_t v)
@@ -156,23 +129,26 @@ class unit_t : drawable_object_t
 			y - v.oy + v.y - bmp.h/2, 
 			0);			
 		
+		float mag = distance(vx, vy)*10.0;
+		float angle2 = atan2(vy, vx);
+		drawAngleHelper(this, v, angle2, mag, COLOR(1,0,0,1)); 
+		
+		drawAngleHelper(this, v, angle, 25, COLOR(0,1,0,1)); 
+
+		drawPlanetHelper(this, v);
+
 		draw_hp_bar(
 			x - v.ox + v.x, 
 			y - v.oy + v.y - bmp.w/2, 
 			v, hp, 100);		
 		}
-
-	override void onTick()
-		{
-		}
 	}
 
-class dwarf_t : unit_t
+class ship_t : unit_t
 	{
 	this(float _x, float _y, float _xv, float _yv, ALLEGRO_BITMAP* b)
 		{
 		super(1, _x, _y, _xv, _yv, b);
-		bmp = g.dude_up_bmp;
 		}
 
 	override void draw(viewport_t v)
@@ -180,44 +156,16 @@ class dwarf_t : unit_t
 		super.draw(v);
 		}
 
-	override void onTick()
-		{		
-		}
-		
-	immutable float RUN_SPEED = 2.0f; 
-	immutable float JUMP_SPEED = 4.0f; 
-
-	override void up(){ }
-	override void down() { }
-	override void left() { }
-	override void right() { }
+	override void up(){ applyV(angle, .1);}
+	override void down() { applyV(angle, -.1); }
+	override void left() { angle -= degToRad(10.0);}
+	override void right() { angle += degToRad(10.0);}
 	override void attack()
 		{
 		}
 	}
-	
-class drawable_object_t : object_t
-	{
-	ALLEGRO_BITMAP* bmp;
-	
-	@disable this(); // SWEET. <-THIS (no relation) means the compiler checks to make
-	// sure we call super() from child classes!!!!!
-	
-	this(ALLEGRO_BITMAP* _bmp) 
-		{
-		bmp = _bmp;
-		}
-	
-	void draw(viewport_t v)
-		{
-		al_draw_bitmap(bmp, 
-			x - v.ox + v.x - bmp.w/2, 
-			y - v.oy + v.y - bmp.h/2, 
-			0);
-		}
-	}	
 
-class structure_t : drawable_object_t
+class structure_t : object_t
 	{
 	immutable float maxHP=500.0;
 	float hp=maxHP;
@@ -229,11 +177,9 @@ class structure_t : drawable_object_t
 	
 	this(float x, float y, ALLEGRO_BITMAP* b)
 		{
-		super(b);
+		super(x, y, 0, 0,b);
 		writeln("we MADE a structure. @ ", x, " ", y);
 		g.players[0].money -= 250;
-		this.x = x;
-		this.y = y;	
 		}
 
 	override void draw(viewport_t v)
@@ -246,24 +192,31 @@ class structure_t : drawable_object_t
 		{
 		hp -= weapon_damage;
 		}
-
-	override void onTick()
-		{
-		}
 	}
-
-	
 
 class object_t
 	{
 	public:
-	bool		delete_me = false;
 	
-	float 		x, y; 	/// Objects are centered at X/Y (not top-left) so we can easily follow other objects.
-	float		vx, vy; /// Velocities.
-	float		w, h;   /// width, height (does this make sense in here instead of drawable_object_t)
-	float 		angle;	/// pointing angle (not necessarily the direction of movement)
-
+	ALLEGRO_BITMAP* bmp;
+	
+	@disable this(); // SWEET. <-THIS (no relation) means the compiler checks to make
+	// sure we call super() from child classes!!!!!
+		
+	void draw(viewport_t v)
+		{
+		al_draw_bitmap(bmp, 
+			x - v.ox + v.x - bmp.w/2, 
+			y - v.oy + v.y - bmp.h/2, 
+			0);
+		writeln("beep");
+		}
+	
+	bool		delete_me = false;	
+	float 		x=0, y=0; 	/// Objects are centered at X/Y (not top-left) so we can easily follow other objects.
+	float		vx=0, vy=0; /// Velocities.
+	float		w=0, h=0;   /// width, height (does this make sense in here instead of drawable_object_t)
+	float 		angle=0;	/// pointing angle (not necessarily the direction of movement)
 
 	// if this gets called implicity through SUPER, AFTER later code changes it, we reset back to defaults!
 	// we have to be CAREFUL to make sure the call order for super is DEFINED and respected.
@@ -275,12 +228,13 @@ class object_t
 		vy = 0;
 		}
 
-	this(float _x, float _y, float _vx, float _vy)
+	this(float _x, float _y, float _vx, float _vy, ALLEGRO_BITMAP* _bmp)
 		{
 		x = _x;
 		y = _y;
 		vx = _vx;
 		vy = _vy;
+		bmp = _bmp;
 		}
 		
 	// INPUTS (do we support mouse input?)
@@ -293,13 +247,38 @@ class object_t
 		{
 		}
 
-	// EVENTS
-	// ------------------------------------------
-	void onTick()
-		{
+	void applyGravity()
+		{		
+		// gravity acceleration formula: g = -G*M/r^2
+		float G = 1; // gravitational constant
+		float M = 1000; // mass of planet
+		auto p = pair(400,400); // planet position
+		float r = distanceTo(this, p);
+		float angle = angleTo(this, p);
+		float g = -G*M/r^^2;
+		applyV(angle, g);
 		}
 
-	void on_collision(object_t other_obj)
+	void applyV(float applyAngle, float vel)
+		{
+		vx += cos(applyAngle)*vel;
+		vy += sin(applyAngle)*vel;
+		}
+
+	void onTick()
+		{
+		applyGravity();
+		auto p = pair(400,400);
+		if(distanceTo(this, p) < 100)
+			{
+			vx *= -.80;
+			vy *= -.80;
+			}
+		x += vx;
+		y += vy;
+		}
+		
+	void onCollision(object_t other_obj)
 		{
 		}	
 	}	

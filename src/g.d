@@ -162,12 +162,18 @@ struct ipair
 		}
 	}
 
+struct apair
+	{
+	float a; /// angle
+	float m; /// magnitude
+	} // idea: some sort of automatic convertion between angle/magnitude, and xy velocities?
+
 struct pair
 	{
 	float x;
 	float y;
 	
-	this(T)(T t) //give it an object
+	this(T)(T t) //give it an object that has fields x and y
 		{
 		x = t.x;
 		y = t.y;
@@ -184,6 +190,7 @@ struct pair
 		x = _x;
 		y = _y;
 		}
+		
 	this(double _x, double _y)
 		{
 		x = _x;
@@ -213,8 +220,14 @@ class world_t
 
 	this()
 		{
-		units ~= new dwarf_t(680, 360, 0, 0, g.stone_bmp);
+		units ~= new ship_t(680, 360, 0, 0, g.stone_bmp);
 		testGraph = new intrinsic_graph!float(units[0].x, COLOR(1,0,0,1));
+		}
+		
+	void drawPlanet(viewport_t v)
+		{
+		auto p = pair(400,400);
+		al_draw_filled_circle(p.x + v.x - v.ox, p.y + v.y - v.oy, 100, COLOR(1,1,1,1));
 		}
 
 	void draw(viewport_t v)
@@ -238,7 +251,7 @@ class world_t
 		
 		drawStat(units, stats.number_of_drawn_dwarves);
 		drawStat(structures, stats.number_of_drawn_structures);		
-		
+		drawPlanet(v);
 		testGraph.draw(v);
 		}
 		
@@ -246,7 +259,7 @@ class world_t
 		{
 		assert(testGraph !is null);
 		testGraph.onTick();
-		unit_t p = units[0]; // player
+		ship_t p = cast(ship_t)units[0]; // player
 		viewports[0].ox = units[0].x - viewports[0].w/2;
 		viewports[0].oy = units[0].y - viewports[0].h/2;
 
@@ -289,6 +302,8 @@ player_t[2] players;
 	
 ALLEGRO_FONT* 	font;
 
+ALLEGRO_BITMAP* bullet_bmp;
+
 ALLEGRO_BITMAP* dude_up_bmp;
 ALLEGRO_BITMAP* dude_down_bmp;
 ALLEGRO_BITMAP* dude_left_bmp;
@@ -321,6 +336,8 @@ void loadResources()
 	{
 	g.font = getFont("./data/DejaVuSans.ttf", 18);
 
+	g.bullet_bmp  	= getBitmap("./data/bullet.png");
+	
 	g.dude_up_bmp  	= getBitmap("./data/dude_up.png");
 	g.dude_down_bmp  	= getBitmap("./data/dude_down.png");
 	g.dude_left_bmp  	= getBitmap("./data/dude_left.png");
