@@ -192,6 +192,7 @@ class ship_t : unit_t
 	override void attack()
 		{
 		}
+	
 	}
 
 class structure_t : object_t
@@ -227,7 +228,7 @@ class object_t
 	{
 	ALLEGRO_BITMAP* bmp;
 	@disable this(); 
-	bool  delete_me = false;	
+	bool isDead = false;	
 	float x=0, y=0; 	/// Objects are centered at X/Y (not top-left) so we can easily follow other objects.
 	float vx=0, vy=0; /// Velocities.
 	float w=0, h=0;   /// width, height (does this make sense in here instead of drawable_object_t)

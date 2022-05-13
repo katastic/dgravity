@@ -15,6 +15,67 @@ import helper;
 import objects;
 import viewport;
 
+ALLEGRO_FONT* 	font;
+ALLEGRO_BITMAP* bullet_bmp;
+ALLEGRO_BITMAP* dude_up_bmp;
+ALLEGRO_BITMAP* dude_down_bmp;
+ALLEGRO_BITMAP* dude_left_bmp;
+ALLEGRO_BITMAP* dude_right_bmp;
+ALLEGRO_BITMAP* chest_bmp;
+ALLEGRO_BITMAP* chest_open_bmp;
+ALLEGRO_BITMAP* dwarf_bmp;
+ALLEGRO_BITMAP* goblin_bmp;
+ALLEGRO_BITMAP* boss_bmp;
+ALLEGRO_BITMAP* fountain_bmp;
+ALLEGRO_BITMAP* tree_bmp;
+ALLEGRO_BITMAP* wall_bmp;
+ALLEGRO_BITMAP* grass_bmp;
+ALLEGRO_BITMAP* lava_bmp;
+ALLEGRO_BITMAP* water_bmp;
+ALLEGRO_BITMAP* wood_bmp;
+ALLEGRO_BITMAP* stone_bmp;
+ALLEGRO_BITMAP* reinforced_wall_bmp;
+ALLEGRO_BITMAP* sword_bmp;
+ALLEGRO_BITMAP* carrot_bmp;
+ALLEGRO_BITMAP* potion_bmp;
+ALLEGRO_BITMAP* blood_bmp;
+
+int SCREEN_W = 1360;
+int SCREEN_H = 720;
+
+void loadResources()	
+	{
+	g.font = getFont("./data/DejaVuSans.ttf", 18);
+
+	g.bullet_bmp  	= getBitmap("./data/bullet.png");
+	
+	g.dude_up_bmp  	= getBitmap("./data/dude_up.png");
+	g.dude_down_bmp  	= getBitmap("./data/dude_down.png");
+	g.dude_left_bmp  	= getBitmap("./data/dude_left.png");
+	g.dude_right_bmp  	= getBitmap("./data/dude_right.png");
+	
+	g.sword_bmp  		= getBitmap("./data/sword.png");
+	g.carrot_bmp  		= getBitmap("./data/carrot.png");
+	g.potion_bmp  		= getBitmap("./data/potion.png");
+	g.chest_bmp  		= getBitmap("./data/chest.png");
+	g.chest_open_bmp  	= getBitmap("./data/chest_open.png");
+
+	g.dwarf_bmp  	= getBitmap("./data/dwarf.png");
+	g.goblin_bmp  	= getBitmap("./data/goblin.png");
+	g.boss_bmp  	= getBitmap("./data/boss.png");
+
+	g.wall_bmp  	= getBitmap("./data/wall.png");
+	g.grass_bmp  	= getBitmap("./data/grass.png");
+	g.lava_bmp  	= getBitmap("./data/lava.png");
+	g.water_bmp  	= getBitmap("./data/water.png");
+	g.fountain_bmp  = getBitmap("./data/fountain.png");
+	g.wood_bmp  	= getBitmap("./data/wood.png");
+	g.stone_bmp  	= getBitmap("./data/brick.png");
+	g.tree_bmp  	= getBitmap("./data/tree.png");
+	g.blood_bmp  	= getBitmap("./data/blood.png");
+	g.reinforced_wall_bmp  	= getBitmap("./data/reinforced_wall.png");	
+	}
+
 immutable int TILE_W=32;
 immutable int TILE_H=TILE_W;
 bool selectLayer=false; //which layer for mouse map editing is selected
@@ -252,7 +313,8 @@ class world_t
 		planets ~= new planet_t("first", 400, 400, 100);
 		planets ~= new planet_t("second", 1210, 410, 100);
 		planets ~= new planet_t("third", 1720, 420, 100);
-		testGraph = new intrinsic_graph!float(units[0].x, COLOR(1,0,0,1));
+		testGraph = new intrinsic_graph!float(units[0].x, 100, 300, COLOR(1,0,0,1));
+		testGraph2 = new intrinsic_graph!ulong(g.stats.fps, 100, 500, COLOR(1,0,0,1));
 		}
 		
 	void draw(viewport_t v)
@@ -278,12 +340,14 @@ class world_t
 		drawStat(units, stats.number_of_drawn_dwarves);
 		drawStat(structures, stats.number_of_drawn_structures);		
 		testGraph.draw(v);
+		testGraph2.draw(v);
 		}
 		
 	void logic()
 		{
 		assert(testGraph !is null);
 		testGraph.onTick();
+		testGraph2.onTick();
 		ship_t p = cast(ship_t)units[0]; // player
 		viewports[0].ox = p.x - viewports[0].w/2;
 		viewports[0].oy = p.y - viewports[0].h/2;
@@ -313,7 +377,7 @@ class world_t
 			{
 			for (size_t i = obj.length ; i-- > 0 ; )
 				{
-				if(obj[i].delete_me)obj = obj.remove(i); continue;
+				if(obj[i].isDead)obj = obj.remove(i); continue;
 				}
 			//see https://forum.dlang.org/post/sagacsjdtwzankyvclxn@forum.dlang.org
 			}
@@ -327,71 +391,6 @@ class world_t
 //=============================================================================
 player_t[2] players;
 	
-ALLEGRO_FONT* 	font;
-
-ALLEGRO_BITMAP* bullet_bmp;
-
-ALLEGRO_BITMAP* dude_up_bmp;
-ALLEGRO_BITMAP* dude_down_bmp;
-ALLEGRO_BITMAP* dude_left_bmp;
-ALLEGRO_BITMAP* dude_right_bmp;
-
-ALLEGRO_BITMAP* chest_bmp;
-ALLEGRO_BITMAP* chest_open_bmp;
-
-ALLEGRO_BITMAP* dwarf_bmp;
-ALLEGRO_BITMAP* goblin_bmp;
-ALLEGRO_BITMAP* boss_bmp;
-ALLEGRO_BITMAP* fountain_bmp;
-ALLEGRO_BITMAP* tree_bmp;
-ALLEGRO_BITMAP* wall_bmp;
-ALLEGRO_BITMAP* grass_bmp;
-ALLEGRO_BITMAP* lava_bmp;
-ALLEGRO_BITMAP* water_bmp;
-ALLEGRO_BITMAP* wood_bmp;
-ALLEGRO_BITMAP* stone_bmp;
-ALLEGRO_BITMAP* reinforced_wall_bmp;
-ALLEGRO_BITMAP* sword_bmp;
-ALLEGRO_BITMAP* carrot_bmp;
-ALLEGRO_BITMAP* potion_bmp;
-ALLEGRO_BITMAP* blood_bmp;
-
-int SCREEN_W = 1360;
-int SCREEN_H = 720;
-
-void loadResources()	
-	{
-	g.font = getFont("./data/DejaVuSans.ttf", 18);
-
-	g.bullet_bmp  	= getBitmap("./data/bullet.png");
-	
-	g.dude_up_bmp  	= getBitmap("./data/dude_up.png");
-	g.dude_down_bmp  	= getBitmap("./data/dude_down.png");
-	g.dude_left_bmp  	= getBitmap("./data/dude_left.png");
-	g.dude_right_bmp  	= getBitmap("./data/dude_right.png");
-	
-	g.sword_bmp  		= getBitmap("./data/sword.png");
-	g.carrot_bmp  		= getBitmap("./data/carrot.png");
-	g.potion_bmp  		= getBitmap("./data/potion.png");
-	g.chest_bmp  		= getBitmap("./data/chest.png");
-	g.chest_open_bmp  	= getBitmap("./data/chest_open.png");
-
-	g.dwarf_bmp  	= getBitmap("./data/dwarf.png");
-	g.goblin_bmp  	= getBitmap("./data/goblin.png");
-	g.boss_bmp  	= getBitmap("./data/boss.png");
-
-	g.wall_bmp  	= getBitmap("./data/wall.png");
-	g.grass_bmp  	= getBitmap("./data/grass.png");
-	g.lava_bmp  	= getBitmap("./data/lava.png");
-	g.water_bmp  	= getBitmap("./data/water.png");
-	g.fountain_bmp  = getBitmap("./data/fountain.png");
-	g.wood_bmp  	= getBitmap("./data/wood.png");
-	g.stone_bmp  	= getBitmap("./data/brick.png");
-	g.tree_bmp  	= getBitmap("./data/tree.png");
-	g.blood_bmp  	= getBitmap("./data/blood.png");
-	g.reinforced_wall_bmp  	= getBitmap("./data/reinforced_wall.png");	
-	}
-
 /// al_draw_line_segment for pairs
 void al_draw_line_segment(pair[] pairs, COLOR color, float thickness)
 	{
@@ -455,7 +454,7 @@ void testerror()
 // and one with (T)ime? (not to be confused with T below)
 class circular_buffer(T, size_t size)
 	{
-	float[size] data; 
+	T[size] data; 
  	int index=0;
 	bool isFull=false;
 	int maxSize=size;
@@ -472,15 +471,25 @@ class circular_buffer(T, size_t size)
 	going to expand so the appender has to deal with the case of growing
 	until it hits max size. which is also bullshit.
 	*/
-    
     T maxElement()
 		{
-		T maxSoFar = to!T(-99999999);
+		import std.traits;
+		T maxSoFar = to!T(mostNegative!T);
 		for(int i = 0; i < size; i++)
 			{
 			if(data[i] > maxSoFar)maxSoFar = data[i]; 
 			}
 		return maxSoFar;
+		}
+		
+    T minElement()
+		{
+		T minSoFar = to!T(99999999);
+		for(int i = 0; i < size; i++)
+			{
+			if(data[i] < minSoFar)minSoFar = data[i]; 
+			}
+		return minSoFar;
 		}
 
     T opApply(scope T delegate(ref T) dg)
@@ -507,6 +516,7 @@ class circular_buffer(T, size_t size)
 	}
 
 intrinsic_graph!float testGraph;
+intrinsic_graph!ulong testGraph2;
 
 /// Graph that attempts to automatically poll a value every frame
 /// is instrinsic the right name?
@@ -523,8 +533,20 @@ intrinsic_graph!float testGraph;
 /// lined up 1-to-1 with LOGIC. Draw calls may be duplicated with no new data, or 
 /// skipped during slowdowns.
 
+/*
+	how do we support multiple datasources of different types? Have we gone about this
+	the wrong way? How about simply accepting all datasources and simply converting them
+	to float? In addition to simplicity, we can also now accept multiple datasources.
+		EXCEPT. while it's easy to support a manual "pushBackData(T)(T value)" function
+		is there a way to mark datasources and still have it convert them? Doesn't that
+		require some method of storing multiple different data types? I mean all datatypes
+		in D inherit from [Object], right? Is that a starting point?
+*/
 class intrinsic_graph(T)
 	{
+	bool isScaling=true;  // NYI, probably want no for FPS
+	bool isTransparent=false; // NYI, no background. For overlaying multiple graphs (but how do we handle multiple drawing multiple min/max scales in UI?)
+	bool doFlipVertical=false; // NYI, flip vertical axis. Do we want ZERO to be bottom or top. Could be as easy as sending a negative scaling value.
 	float x=0,y=300;
 	int w=400, h=100;
 	COLOR color;
@@ -534,16 +556,20 @@ class intrinsic_graph(T)
 
 	// private data
  	private T max=-9999; //READONLY cache of max value.
+ 	private T min=-9999; //READONLY cache of max value.
  	private float scaleFactor=1.00; //READONLY set by draw() every frame.
  	private int maxTimeRemembered=600; // how many frames do we remember a previous maximum. 0 for always update.
  	private T previousMaximum=0;
+ 	private T previousMinimum=0;
 	private int howLongAgoWasMaxSet=0;
  	
-	this(ref T _dataSource, COLOR _color)
+	this(ref T _dataSource, float _x, float _y, COLOR _color)
 		{
 		dataBuffer = new circular_buffer!(T, 400);
 		dataSource = &_dataSource;
 		color = _color;
+		x = _x;
+		y = _y;
 		}
 
 	void draw(viewport_t v)
@@ -554,25 +580,36 @@ class intrinsic_graph(T)
 		// We need a 'max', that is cached between onTicks. But we also have a tempMax
 		// where we choose which 'max' we use
 		
-		float tempMax = max;
+		T tempMax = max;
+		T tempMin = min;
 		howLongAgoWasMaxSet++;
-		if(tempMax < previousMaximum && howLongAgoWasMaxSet <= maxTimeRemembered)
+//		if(howLongAgoWasMaxSet <= maxTimeRemembered) DISABLED
+		if(tempMax < previousMaximum)
 			{
 			tempMax = previousMaximum;
 			}else{
 			previousMaximum = tempMax;
 			howLongAgoWasMaxSet = 0;
 			}
-		float scaleFactor=h/tempMax;
+		if(tempMin > previousMinimum)
+			{
+			tempMin = previousMinimum;
+			}else{
+			previousMinimum = tempMin;
+			}
+		import std.math : abs;
+		if(tempMax == tempMin)tempMax++;
+		float scaleFactor=h/(tempMax + abs(tempMin)); //fixme for negatives. i think the width is right but it's still "offset" above the datum then.
 		al_draw_scaled_line_segment(pair(this), dataBuffer.data, scaleFactor, color, 1.0f);
 
-		al_draw_text(g.font, COLOR(0,0,0,1), x, y, 0, "0");
+		al_draw_text(g.font, COLOR(0,0,0,1), x, y, 0, format("%s",min).toStringz);
 		al_draw_text(g.font, COLOR(0,0,0,1), x, y+h-g.font.h, 0, format("%s",max).toStringz);
 		}
 		
 	void onTick()
 		{
 		max = dataBuffer.maxElement; // note: we only really need to scan if [howLongAgoWasMaxSet] indicates a time we'd scan
+		min = dataBuffer.minElement; // note: we only really need to scan if [howLongAgoWasMaxSet] indicates a time we'd scan
 		dataBuffer.addNext(*dataSource);
 		}
 	}
