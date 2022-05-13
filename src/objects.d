@@ -43,6 +43,7 @@ class bulletHandler
 		foreach(ref b; bullets)
 			{
 			// draw
+			al_draw_bitmap(g.stone_bmp, b.x + v.x - v.ox, b.y + v.y - v.oy, 0);
 			}
 		}
 		
@@ -163,8 +164,8 @@ class unit_t : object_t
 		drawPlanetHelper(this, v);
 
 		draw_hp_bar(
-			x - v.ox + v.x, 
-			y - v.oy + v.y - bmp.w/2, 
+			x, 
+			y - bmp.w/2, 
 			v, hp, 100);		
 		}
 	}
@@ -188,7 +189,36 @@ class ship_t : unit_t
 	override void attack()
 		{
 		}
+	}
 	
+class planet_t : object_t
+	{
+	float r = 100; /// radius
+	string name="";
+	@disable this();
+	structure_t[] structures;
+	
+	this(string _name, float _x, float _y, float _r)
+		{
+		name = _name;
+		r = _r;
+		super(_x, _y, 0, 0, g.tree_bmp); // works perfect
+		
+		structures ~= new structure_t(0, 0, g.fountain_bmp, this);
+		}
+	
+	override void draw(viewport_t v)
+		{
+		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r, COLOR(.8,.8,.8,1));
+		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r * .80, COLOR(1,1,1,1));
+		foreach(s; structures) s.draw(v);
+		}
+		
+	override void onTick()
+		{
+		// do structures  get handled by us or by root logic() call?
+		foreach(s; structures) s.onTick();
+		}
 	}
 
 class structure_t : object_t
@@ -200,23 +230,29 @@ class structure_t : object_t
 	int direction=0;
 	immutable int countdown_rate = 200; // 60 fps, 60 ticks = 1 second
 	int countdown = countdown_rate; // I don't like putting variables in the middle of classes but I ALSO don't like throwing 1-function-only variables at the top like the entire class uses them.
+	planet_t myPlanet;
 	
-	this(float x, float y, ALLEGRO_BITMAP* b)
+	this(float x, float y, ALLEGRO_BITMAP* b, planet_t _myPlanet)
 		{
 		super(x, y, 0, 0,b);
 		writeln("we MADE a structure. @ ", x, " ", y);
 		g.players[0].money -= 250;
+		myPlanet = _myPlanet;
 		}
 
 	override void draw(viewport_t v)
 		{
-		super.draw(v);
+		// we draw RELATIVE to planet.xy, so no using object.draw
+		// TODO how do we rotate angle from center of planet properly?
+		float cx=myPlanet.x + v.x - v.ox;
+		float cy=myPlanet.y + v.y - v.oy;
+		al_draw_center_rotated_bitmap(bmp, cx, cy, 0, 0);
 		draw_hp_bar(x, y, v, hp, maxHP);
 		}
 
-	void onHit(unit_t u, float weapon_damage)
+	void onHit(unit_t u, float damage)
 		{
-		hp -= weapon_damage;
+		hp -= damage;
 		}
 	}
 
@@ -227,8 +263,8 @@ class object_t
 	bool isDead = false;	
 	float x=0, y=0; 	/// Objects are centered at X/Y (not top-left) so we can easily follow other objects.
 	float vx=0, vy=0; /// Velocities.
-	float w=0, h=0;   /// width, height (does this make sense in here instead of drawable_object_t)
-	float angle=0;	/// pointing angle (not necessarily the direction of movement)
+	float w=0, h=0;   /// width, height 
+	float angle=0;	/// pointing angle 
 
 	this(float _x, float _y, float _vx, float _vy, ALLEGRO_BITMAP* _bmp)
 		{

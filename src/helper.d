@@ -69,7 +69,6 @@ T wrapRad(T)(T angle)
 	return fmod(angle, 2.0*PI);
 	}
 
-
 /// angleTo:
 ///
 /// Get angle to anything that has an x and y coordinate fields
@@ -163,10 +162,10 @@ void draw_hp_bar(float x, float y, viewport_t v, float hp, float max)
 
 	if(hp != max)
 		al_draw_filled_rectangle(
-			_x - 20/2, 
-			_y, 
-			_x + _hp/2, 
-			_y + 5, 
+			_x - 20/2 + v.x - v.ox, 
+			_y + v.y - v.oy, 
+			_x + _hp/2  + v.x - v.ox, 
+			_y + 5 + v.y - v.oy, 
 			ALLEGRO_COLOR(1, 0, 0, 0.70));
 	}
 
@@ -491,9 +490,7 @@ void al_draw_gouraud_bitmap_5pt(ALLEGRO_BITMAP* bmp, float x, float y, COLOR tl,
 	al_draw_prim(cast(void*)vtx, null, bmp, 0, vtx.length, ALLEGRO_PRIM_TYPE.ALLEGRO_PRIM_TRIANGLE_FAN);
 	}
 
-
 void al_draw_center_rotated_bitmap(BITMAP* bmp, float x, float y, float angle, int flags)
 	{
-	al_draw_rotated_bitmap(bmp, bmp.w/2, bmp.h/2, x, y, angle, 0);
+	al_draw_rotated_bitmap(bmp, bmp.w/2, bmp.h/2, x, y, angle, flags);
 	}
-

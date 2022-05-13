@@ -176,10 +176,6 @@ struct particle
 	bool isDead=false;
 	}
 
-class leaf_handler : particle_handler
-	{
-	}
-
 class particle_handler
 	{
 	particle[] data;
@@ -189,7 +185,7 @@ class particle_handler
 		// what about accumulation buffer particle systems like static blood decal
 		foreach(ref p; data)
 			{
-			
+			al_draw_bitmap(g.stone_bmp, p.x + v.x - v.ox, p.y + v.y - v.oy, 0);
 			}
 		}
 	
@@ -200,17 +196,6 @@ class particle_handler
 			p.x += p.vx;
 			p.y += p.vy;
 			}
-		}
-	}
-
-class weather_t
-	{
-	void draw(viewport_t v)
-		{
-		}
-	
-	void onTick()
-		{
 		}
 	}
 
@@ -275,32 +260,6 @@ struct player_t
 	int deaths=0;
 	}
 	
-class planet_t : object_t
-	{
-	import std.math;
-	float r = 100; /// radius
-	string name="filler";
-	@disable this();
-	
-	this(string _name, float _x, float _y, float _r)
-		{
-		name = _name;
-		r = _r;
-		super(_x, _y, 0, 0, g.tree_bmp); // works perfect
-		}
-	
-	override void draw(viewport_t v)
-		{
-		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r, COLOR(.8,.8,.8,1));
-		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r * .80, COLOR(1,1,1,1));
-		}
-		
-	override void onTick()
-		{
-		// DO. NOT. DO. PHYSICS to the planet.
-		}
-	}
-
 class world_t
 	{			
 	object_t[] objects; // other stuff
@@ -315,8 +274,8 @@ class world_t
 		planets ~= new planet_t("first", 400, 400, 100);
 		planets ~= new planet_t("second", 1210, 410, 100);
 		planets ~= new planet_t("third", 1720, 420, 100);
-		testGraph = new intrinsic_graph!float("Draw (ms)", g.stats.msDraw, 100, 200 - 50, COLOR(1,0,0,1));
-		testGraph2 = new intrinsic_graph!float("Logic (ms)", g.stats.msLogic, 100, 320 - 50, COLOR(1,0,0,1));
+		testGraph = new intrinsicGraph!float("Draw (ms)", g.stats.msDraw, 100, 200 - 50, COLOR(1,0,0,1));
+		testGraph2 = new intrinsicGraph!float("Logic (ms)", g.stats.msLogic, 100, 320 - 50, COLOR(1,0,0,1));
 		stats.swLogic = StopWatch(AutoStart.no);
 		stats.swDraw = StopWatch(AutoStart.no);
 		}
@@ -455,16 +414,9 @@ void al_draw_scaled_line_segment(T)(pair xycoord, T[] y, float yScale, COLOR col
 		}
 	}
 
-void testerror()
-	{
-	import std.algorithm;
-	float [] arr;
-	float value = arr.maxElement;
-	}
-
 // what if we want timestamps? Have two identical buffers, one with X
 // and one with (T)ime? (not to be confused with T below)
-class circular_buffer(T, size_t size)
+class circularBuffer(T, size_t size)
 	{
 	T[size] data; 
  	int index=0;
@@ -485,7 +437,7 @@ class circular_buffer(T, size_t size)
 	*/
     T maxElement()
 		{
-		import std.traits;
+		import std.traits : mostNegative;
 		T maxSoFar = to!T(mostNegative!T);
 		for(int i = 0; i < size; i++)
 			{
@@ -496,7 +448,7 @@ class circular_buffer(T, size_t size)
 		
     T minElement()
 		{
-		T minSoFar = to!T(99999999);
+		T minSoFar = to!T(T.max);
 		for(int i = 0; i < size; i++)
 			{
 			if(data[i] < minSoFar)minSoFar = data[i]; 
@@ -527,8 +479,8 @@ class circular_buffer(T, size_t size)
 		}
 	}
 
-intrinsic_graph!float testGraph;
-intrinsic_graph!float testGraph2;
+intrinsicGraph!float testGraph;
+intrinsicGraph!float testGraph2;
 
 /// Graph that attempts to automatically poll a value every frame
 /// is instrinsic the right name?
@@ -553,8 +505,15 @@ intrinsic_graph!float testGraph2;
 		is there a way to mark datasources and still have it convert them? Doesn't that
 		require some method of storing multiple different data types? I mean all datatypes
 		in D inherit from [Object], right? Is that a starting point?
+
+	also what about new features in inherited modified versions of graph?
+		multigraph   - figuring this out templates wise.
+		coloredgraph - color a line differently above or below a datum ("redlining")
+		?			 - filled solid drawing
+		?			 - multicolored solid filled graph (showing how much percentage each is)
+		?			 - peak detection?
 */
-class intrinsic_graph(T)
+class intrinsicGraph(T)
 	{
 	string name;
 	bool isScaling=true;  // NYI, probably want no for FPS
@@ -565,7 +524,7 @@ class intrinsic_graph(T)
 	COLOR color;
 	BITMAP* buffer;
 	T* dataSource; // where we auto grab the data every frame
-	circular_buffer!(T, 400) dataBuffer; //how do we invoke the constructor?
+	circularBuffer!(T, 400) dataBuffer; //how do we invoke the constructor?
 
 	// private data
  	private T max=-9999; //READONLY cache of max value.
@@ -579,7 +538,7 @@ class intrinsic_graph(T)
 	this(string _name, ref T _dataSource, float _x, float _y, COLOR _color)
 		{
 		name = _name;
-		dataBuffer = new circular_buffer!(T, 400);
+		dataBuffer = new circularBuffer!(T, 400);
 		dataSource = &_dataSource;
 		color = _color;
 		x = _x;
@@ -588,7 +547,9 @@ class intrinsic_graph(T)
 
 	void draw(viewport_t v)
 		{
-		al_draw_filled_rectangle(x, y, x + w, y + h, COLOR(1,1,1,.75));
+		// TODO. Are we keeping/using viewport? 
+		// We'd have to know which grapsh are used in which viewport
+		al_draw_filled_rectangle(x + v.x, y + v.y, x + w + v.x, y + h + v.y, COLOR(1,1,1,.75));
 
 		// this looks confusing but i'm not entirely sure how to clean it up
 		// We need a 'max', that is cached between onTicks. But we also have a tempMax
@@ -613,7 +574,7 @@ class intrinsic_graph(T)
 			}
 		import std.math : abs;
 		if(tempMax == tempMin)tempMax++;
-		float scaleFactor=h/(tempMax + abs(tempMin)); //fixme for negatives. i think the width is right but it's still "offset" above the datum then.
+		scaleFactor = h/(tempMax + abs(tempMin)); //fixme for negatives. i think the width is right but it's still "offset" above the datum then.
 		al_draw_scaled_line_segment(pair(this), dataBuffer.data, scaleFactor, color, 1.0f);
 
 		al_draw_text(g.font, COLOR(0,0,0,1), x, y, 0, name.toStringz);
@@ -645,7 +606,6 @@ struct statistics_t
 	StopWatch swDraw;
 	float msLogic;
 	float msDraw;
-	
 	
 	void reset()
 		{ // note we do NOT reset fps and frames_passed here as they are cumulative or handled elsewhere.
