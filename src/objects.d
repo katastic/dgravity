@@ -153,11 +153,7 @@ class unit_t : object_t
 
 	override void draw(viewport_t v)
 		{
-		al_draw_tinted_bitmap(bmp,
-			ALLEGRO_COLOR(1.0, 1.0, 1.0, 1.0),
-			x - v.ox + v.x - bmp.w/2, 
-			y - v.oy + v.y - bmp.h/2, 
-			0);			
+		super.draw(v);
 		
 		float mag = distance(vx, vy)*10.0;
 		float angle2 = atan2(vy, vx);
@@ -245,11 +241,10 @@ class object_t
 		
 	void draw(viewport_t v)
 		{
-		al_draw_bitmap(bmp, 
-			x - v.ox + v.x - bmp.w/2, 
-			y - v.oy + v.y - bmp.h/2, 
-			0);
-		writeln("beep");
+		al_draw_center_rotated_bitmap(bmp, 
+			x - v.ox + v.x, 
+			y - v.oy + v.y, 
+			angle, 0);
 		}
 	
 	// INPUTS (do we support mouse input?)

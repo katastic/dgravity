@@ -10,6 +10,8 @@ import std.conv;
 import std.string;
 import std.random;
 import std.algorithm : remove;
+import std.datetime;
+import std.datetime.stopwatch : benchmark, StopWatch, AutoStart;
 
 import helper;
 import objects;
@@ -313,12 +315,15 @@ class world_t
 		planets ~= new planet_t("first", 400, 400, 100);
 		planets ~= new planet_t("second", 1210, 410, 100);
 		planets ~= new planet_t("third", 1720, 420, 100);
-		testGraph = new intrinsic_graph!float(units[0].x, 100, 300, COLOR(1,0,0,1));
-		testGraph2 = new intrinsic_graph!ulong(g.stats.fps, 100, 500, COLOR(1,0,0,1));
+		testGraph = new intrinsic_graph!float("Draw (ms)", g.stats.msDraw, 100, 200 - 50, COLOR(1,0,0,1));
+		testGraph2 = new intrinsic_graph!float("Logic (ms)", g.stats.msLogic, 100, 320 - 50, COLOR(1,0,0,1));
+		stats.swLogic = StopWatch(AutoStart.no);
+		stats.swDraw = StopWatch(AutoStart.no);
 		}
 		
 	void draw(viewport_t v)
 		{
+		stats.swDraw.start();
 		void draw(T)(ref T obj)
 			{
 			foreach(ref o; obj)
@@ -341,10 +346,14 @@ class world_t
 		drawStat(structures, stats.number_of_drawn_structures);		
 		testGraph.draw(v);
 		testGraph2.draw(v);
+		stats.swDraw.stop();
+		stats.msDraw = stats.swDraw.peek.total!"msecs";
+		stats.swDraw.reset();
 		}
 		
 	void logic()
 		{
+		stats.swLogic.start();
 		assert(testGraph !is null);
 		testGraph.onTick();
 		testGraph2.onTick();
@@ -384,6 +393,9 @@ class world_t
 		prune(units);
 		prune(structures);
 		prune(planets);
+		stats.swLogic.stop();
+		stats.msLogic = stats.swLogic.peek.total!"msecs";
+		stats.swLogic.reset();
 		}
 	}
 
@@ -516,7 +528,7 @@ class circular_buffer(T, size_t size)
 	}
 
 intrinsic_graph!float testGraph;
-intrinsic_graph!ulong testGraph2;
+intrinsic_graph!float testGraph2;
 
 /// Graph that attempts to automatically poll a value every frame
 /// is instrinsic the right name?
@@ -544,6 +556,7 @@ intrinsic_graph!ulong testGraph2;
 */
 class intrinsic_graph(T)
 	{
+	string name;
 	bool isScaling=true;  // NYI, probably want no for FPS
 	bool isTransparent=false; // NYI, no background. For overlaying multiple graphs (but how do we handle multiple drawing multiple min/max scales in UI?)
 	bool doFlipVertical=false; // NYI, flip vertical axis. Do we want ZERO to be bottom or top. Could be as easy as sending a negative scaling value.
@@ -563,8 +576,9 @@ class intrinsic_graph(T)
  	private T previousMinimum=0;
 	private int howLongAgoWasMaxSet=0;
  	
-	this(ref T _dataSource, float _x, float _y, COLOR _color)
+	this(string _name, ref T _dataSource, float _x, float _y, COLOR _color)
 		{
+		name = _name;
 		dataBuffer = new circular_buffer!(T, 400);
 		dataSource = &_dataSource;
 		color = _color;
@@ -602,8 +616,9 @@ class intrinsic_graph(T)
 		float scaleFactor=h/(tempMax + abs(tempMin)); //fixme for negatives. i think the width is right but it's still "offset" above the datum then.
 		al_draw_scaled_line_segment(pair(this), dataBuffer.data, scaleFactor, color, 1.0f);
 
-		al_draw_text(g.font, COLOR(0,0,0,1), x, y, 0, format("%s",min).toStringz);
-		al_draw_text(g.font, COLOR(0,0,0,1), x, y+h-g.font.h, 0, format("%s",max).toStringz);
+		al_draw_text(g.font, COLOR(0,0,0,1), x, y, 0, name.toStringz);
+		al_draw_text(g.font, COLOR(0,0,0,1), x + w - 32, y, 0, format("%s",min).toStringz);
+		al_draw_text(g.font, COLOR(0,0,0,1), x + w - 32, y+h-g.font.h, 0, format("%s",max).toStringz);
 		}
 		
 	void onTick()
@@ -625,6 +640,12 @@ struct statistics_t
 	
 	ulong fps=0;
 	ulong frames_passed=0;
+	
+	StopWatch swLogic;
+	StopWatch swDraw;
+	float msLogic;
+	float msDraw;
+	
 	
 	void reset()
 		{ // note we do NOT reset fps and frames_passed here as they are cumulative or handled elsewhere.

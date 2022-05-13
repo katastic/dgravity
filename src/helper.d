@@ -490,3 +490,10 @@ void al_draw_gouraud_bitmap_5pt(ALLEGRO_BITMAP* bmp, float x, float y, COLOR tl,
 
 	al_draw_prim(cast(void*)vtx, null, bmp, 0, vtx.length, ALLEGRO_PRIM_TYPE.ALLEGRO_PRIM_TRIANGLE_FAN);
 	}
+
+
+void al_draw_center_rotated_bitmap(BITMAP* bmp, float x, float y, float angle, int flags)
+	{
+	al_draw_rotated_bitmap(bmp, bmp.w/2, bmp.h/2, x, y, angle, 0);
+	}
+

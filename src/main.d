@@ -17,6 +17,8 @@ import std.format;
 import std.random;
 import std.algorithm;
 import std.traits; // EnumMembers
+import std.datetime;
+import std.datetime.stopwatch : benchmark, StopWatch;
 //thread yielding?
 //-------------------------------------------
 //import core.thread; //for yield... maybe?
