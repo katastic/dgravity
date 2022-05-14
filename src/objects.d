@@ -28,13 +28,40 @@ name clashes
 /// 
 class asteroid : unit
 	{
+	int size=2; // 2 = large, 1 = medium, 0 = small
 	float va=0; // velocity of rotation (angular velocity)
-	this(float _x, float _y, float _vx, float _vy, float _va)
+
+	this(float _x, float _y, float _vx, float _vy, float _va, int _size)
 		{
 		va = _va;
 		angle = uniform!"[]"(0, 2*PI);
-		super(0, _x, _y, _vx, _vy, g.large_asteroid_bmp);
+		size = _size;
+		BITMAP* b;
+		if(size == 0)b = g.small_asteroid_bmp; 
+		if(size == 1)b = g.medium_asteroid_bmp; 
+		if(size == 2)b = g.large_asteroid_bmp; 
+		assert(b !is null);
+		super(0, _x, _y, _vx, _vy, b);
 		}
+		
+	/// WARN: we do SIZE REDUCTION HERE. Careful not to somehow use this
+	/// to clone an asteroid.
+	/// TODO: make sure they don't collide and they split off in random 
+	/// direction from each other.
+	this(asteroid a)
+		{
+		// We would call a function called shrink() to make this obvious
+		// but other functions cannot call super().
+		va = a.va;
+		angle = a.angle;
+		size = a.size - 1;
+		BITMAP* b;
+		if(size == 0)b = g.small_asteroid_bmp; 
+		if(size == 1)b = g.medium_asteroid_bmp; 
+		if(size == 2)b = g.large_asteroid_bmp; 
+		assert(b !is null);
+		super(0, a.x, a.y, a.vx, a.vy, b);
+		}		
 	
 	override void onTick()
 		{
@@ -43,9 +70,29 @@ class asteroid : unit
 		super.onTick(); //apply unit physics
 		}
 		
+	/// become smaller and create 3 new identical smaller size asteroids
+	void split()
+		{
+		size--;
+		if(size < 0)
+			{
+			isDead = true;
+			return;
+			}
+		g.world.asteroids ~= new asteroid(this);
+		g.world.asteroids ~= new asteroid(this);
+		g.world.asteroids ~= new asteroid(this);
+		}
+		
 	override void onCollision(baseObject who)
 		{
+		split();
 		}
+		
+	override void onHit(baseObject who)
+		{
+		}
+
 	}
 	
 struct bullet
@@ -164,15 +211,13 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		y += vy;
 		}
 		
-		
-	void onCollision()
+	void onCollision(baseObject who)
 		{
 		}
 		
-	void onHit()
+	void onHit(baseObject who)
 		{
 		}
-
 
 	void doAttackStructure(structure_t s)
 		{

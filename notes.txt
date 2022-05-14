@@ -35,3 +35,9 @@ game changing mechanic:
 		 
 		 
 	- assemble new space stations (or something) from space by dragging or pushing pieces together
+
+helpful git:
+	git add -A is short for git add -all? that's a little less typing.
+	
+	git diff variations
+	https://stackoverflow.com/questions/35978550/how-to-show-uncommitted-changes-in-git-and-some-git-diffs-in-detail

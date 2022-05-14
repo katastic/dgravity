@@ -17,7 +17,9 @@ import helper;
 import objects;
 import viewportsmod;
 
-ALLEGRO_FONT* 	font;
+ALLEGRO_FONT* 	font1;
+ALLEGRO_BITMAP* small_asteroid_bmp;
+ALLEGRO_BITMAP* medium_asteroid_bmp;
 ALLEGRO_BITMAP* large_asteroid_bmp;
 ALLEGRO_BITMAP* bullet_bmp;
 ALLEGRO_BITMAP* dude_up_bmp;
@@ -48,36 +50,38 @@ int SCREEN_H = 720;
 
 void loadResources()	
 	{
-	g.font = getFont("./data/DejaVuSans.ttf", 18);
+	font1 = getFont("./data/DejaVuSans.ttf", 18);
 
-	g.bullet_bmp  			= getBitmap("./data/bullet.png");
-	g.large_asteroid_bmp  	= getBitmap("./data/large_asteroid.png");
+	bullet_bmp  			= getBitmap("./data/bullet.png");
+	small_asteroid_bmp  	= getBitmap("./data/small_asteroid.png");
+	medium_asteroid_bmp  	= getBitmap("./data/medium_asteroid.png");
+	large_asteroid_bmp  	= getBitmap("./data/large_asteroid.png");
 	
-	g.dude_up_bmp  		= getBitmap("./data/dude_up.png");
-	g.dude_down_bmp  	= getBitmap("./data/dude_down.png");
-	g.dude_left_bmp  	= getBitmap("./data/dude_left.png");
-	g.dude_right_bmp  	= getBitmap("./data/dude_right.png");
+	dude_up_bmp  		= getBitmap("./data/dude_up.png");
+	dude_down_bmp  	= getBitmap("./data/dude_down.png");
+	dude_left_bmp  	= getBitmap("./data/dude_left.png");
+	dude_right_bmp  	= getBitmap("./data/dude_right.png");
 	
-	g.sword_bmp  		= getBitmap("./data/sword.png");
-	g.carrot_bmp  		= getBitmap("./data/carrot.png");
-	g.potion_bmp  		= getBitmap("./data/potion.png");
-	g.chest_bmp  		= getBitmap("./data/chest.png");
-	g.chest_open_bmp  	= getBitmap("./data/chest_open.png");
+	sword_bmp  		= getBitmap("./data/sword.png");
+	carrot_bmp  		= getBitmap("./data/carrot.png");
+	potion_bmp  		= getBitmap("./data/potion.png");
+	chest_bmp  		= getBitmap("./data/chest.png");
+	chest_open_bmp  	= getBitmap("./data/chest_open.png");
 
-	g.dwarf_bmp  	= getBitmap("./data/dwarf.png");
-	g.goblin_bmp  	= getBitmap("./data/goblin.png");
-	g.boss_bmp  	= getBitmap("./data/boss.png");
+	dwarf_bmp  	= getBitmap("./data/dwarf.png");
+	goblin_bmp  	= getBitmap("./data/goblin.png");
+	boss_bmp  	= getBitmap("./data/boss.png");
 
-	g.wall_bmp  	= getBitmap("./data/wall.png");
-	g.grass_bmp  	= getBitmap("./data/grass.png");
-	g.lava_bmp  	= getBitmap("./data/lava.png");
-	g.water_bmp  	= getBitmap("./data/water.png");
-	g.fountain_bmp  = getBitmap("./data/fountain.png");
-	g.wood_bmp  	= getBitmap("./data/wood.png");
-	g.stone_bmp  	= getBitmap("./data/brick.png");
-	g.tree_bmp  	= getBitmap("./data/tree.png");
-	g.blood_bmp  	= getBitmap("./data/blood.png");
-	g.reinforced_wall_bmp  	= getBitmap("./data/reinforced_wall.png");	
+	wall_bmp  	= getBitmap("./data/wall.png");
+	grass_bmp  	= getBitmap("./data/grass.png");
+	lava_bmp  	= getBitmap("./data/lava.png");
+	water_bmp  	= getBitmap("./data/water.png");
+	fountain_bmp  = getBitmap("./data/fountain.png");
+	wood_bmp  	= getBitmap("./data/wood.png");
+	stone_bmp  	= getBitmap("./data/brick.png");
+	tree_bmp  	= getBitmap("./data/tree.png");
+	blood_bmp  	= getBitmap("./data/blood.png");
+	reinforced_wall_bmp  	= getBitmap("./data/reinforced_wall.png");	
 	}
 
 alias KEY_UP = ALLEGRO_KEY_UP; // should we do these? By time we write them out we've already done more work than just writing them.
@@ -119,7 +123,7 @@ class bubble_handler
 			cx + w, cy + h,
 			r, r, COLOR(1,1,1,0.7));
 			
-		al_draw_text(g.font, COLOR(0,0,0,1.0), cx + r, cx + r, 0, b.text.toStringz);
+		al_draw_text(g.font1, COLOR(0,0,0,1.0), cx + r, cx + r, 0, b.text.toStringz);
 		
 		// todo: smooth fade out 
 		// if(lifetime < 10) ...
@@ -272,8 +276,12 @@ class world_t
 		planets ~= new planet("first", 400, 400, 100);
 		planets ~= new planet("second", 1210, 410, 100);
 		planets ~= new planet("third", 1720, 420, 100);
-		asteroids ~= new asteroid(400+150, 550, 0.1, 0, .02);
-		asteroids ~= new asteroid(400-150, 550, 0.1, 0, .02);
+		asteroids ~= new asteroid(400+150, 550, 0.1, 0, .02, 2);
+		asteroids ~= new asteroid(400-150, 550, 0.1, 0, .02, 1);
+		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
+		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
+		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
+		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
 		testGraph = new intrinsicGraph!float("Draw (ms)", g.stats.msDraw, 100, 200 - 50, COLOR(1,0,0,1));
 		testGraph2 = new intrinsicGraph!float("Logic (ms)", g.stats.msLogic, 100, 320 - 50, COLOR(1,0,0,1));
 		stats.swLogic = StopWatch(AutoStart.no);
@@ -582,9 +590,9 @@ class intrinsicGraph(T)
 		scaleFactor = h/(tempMax + abs(tempMin)); //fixme for negatives. i think the width is right but it's still "offset" above the datum then.
 		al_draw_scaled_line_segment(pair(this), dataBuffer.data, scaleFactor, color, 1.0f);
 
-		al_draw_text(g.font, COLOR(0,0,0,1), x, y, 0, name.toStringz);
-		al_draw_text(g.font, COLOR(0,0,0,1), x + w - 32, y, 0, format("%s",min).toStringz);
-		al_draw_text(g.font, COLOR(0,0,0,1), x + w - 32, y+h-g.font.h, 0, format("%s",max).toStringz);
+		al_draw_text(g.font1, COLOR(0,0,0,1), x, y, 0, name.toStringz);
+		al_draw_text(g.font1, COLOR(0,0,0,1), x + w - 32, y, 0, format("%s",min).toStringz);
+		al_draw_text(g.font1, COLOR(0,0,0,1), x + w - 32, y+h-g.font1.h, 0, format("%s",max).toStringz);
 		}
 		
 	void onTick()

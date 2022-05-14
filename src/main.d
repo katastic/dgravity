@@ -236,8 +236,8 @@ struct display_t
 //if(g.stats.fps != 0)	
 		unit u = g.world.units[0];
 
-		al_draw_textf(g.font, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "obj[%.2f,%.2f][%.2f %f.2] %.2f deg", u.x, u.y, u.vx, u.vy, u.angle.radToDeg); 
-		al_draw_textf(g.font, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "fps[%d] objrate[%d]", g.stats.fps, 
+		al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "obj[%.2f,%.2f][%.2f %f.2] %.2f deg", u.x, u.y, u.vx, u.vy, u.angle.radToDeg); 
+		al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "fps[%d] objrate[%d]", g.stats.fps, 
 					(g.stats.number_of_drawn_objects +
 					g.stats.number_of_drawn_dwarves + 
 					g.stats.number_of_drawn_background_tiles + 
@@ -249,8 +249,8 @@ struct display_t
 					// no longer limited by screen VSYNC.
 	
 			
-			al_draw_textf(g.font, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "money [%d] deaths [%d]", g.players[0].money, g.players[0].deaths);
-			al_draw_textf(g.font, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, 
+			al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "money [%d] deaths [%d]", g.players[0].money, g.players[0].deaths);
+			al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, 
 				"drawn: objects [%d] dwarves [%d] structs [%d] bg_tiles [%d] particles [%d]", 
 				g.stats.number_of_drawn_objects, 
 				g.stats.number_of_drawn_dwarves, 
@@ -272,7 +272,7 @@ struct display_t
 			}
 */			
 		al_draw_textf(
-			g.font, 
+			g.font1, 
 			ALLEGRO_COLOR(0, 0, 0, 1), 
 			g.mouse_x, 
 			g.mouse_y - 30, 
