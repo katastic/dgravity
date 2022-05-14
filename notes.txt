@@ -42,7 +42,16 @@ game changing mechanic:
 	- assemble new space stations (or something) from space by dragging or pushing pieces together
 
 helpful git:
+	git commit -am "message"   runs git add with TRACKED files and message. shorthand.
+		-> it WILL NOT add new files. run git add .
+ 	
+ 	https://stackoverflow.com/questions/572549/difference-between-git-add-a-and-git-add
+		note there is a difference between git 1.x and git 2.x for git add . and git add -A
+		"With Git 2.0, git add -A is default: git add . equals git add -A .. "
+
 	git add -A is short for git add -all? that's a little less typing.
+	
+	
 	
 	git diff variations
 	https://stackoverflow.com/questions/35978550/how-to-show-uncommitted-changes-in-git-and-some-git-diffs-in-detail
