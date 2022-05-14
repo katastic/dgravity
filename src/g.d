@@ -18,6 +18,7 @@ import objects;
 import viewportsmod;
 
 ALLEGRO_FONT* 	font1;
+ALLEGRO_BITMAP* ship_bmp;
 ALLEGRO_BITMAP* small_asteroid_bmp;
 ALLEGRO_BITMAP* medium_asteroid_bmp;
 ALLEGRO_BITMAP* large_asteroid_bmp;
@@ -53,34 +54,35 @@ void loadResources()
 	font1 = getFont("./data/DejaVuSans.ttf", 18);
 
 	bullet_bmp  			= getBitmap("./data/bullet.png");
+	ship_bmp			  	= getBitmap("./data/ship.png");
 	small_asteroid_bmp  	= getBitmap("./data/small_asteroid.png");
 	medium_asteroid_bmp  	= getBitmap("./data/medium_asteroid.png");
 	large_asteroid_bmp  	= getBitmap("./data/large_asteroid.png");
 	
 	dude_up_bmp  		= getBitmap("./data/dude_up.png");
-	dude_down_bmp  	= getBitmap("./data/dude_down.png");
-	dude_left_bmp  	= getBitmap("./data/dude_left.png");
+	dude_down_bmp	  	= getBitmap("./data/dude_down.png");
+	dude_left_bmp  		= getBitmap("./data/dude_left.png");
 	dude_right_bmp  	= getBitmap("./data/dude_right.png");
 	
-	sword_bmp  		= getBitmap("./data/sword.png");
+	sword_bmp  			= getBitmap("./data/sword.png");
 	carrot_bmp  		= getBitmap("./data/carrot.png");
 	potion_bmp  		= getBitmap("./data/potion.png");
-	chest_bmp  		= getBitmap("./data/chest.png");
+	chest_bmp  			= getBitmap("./data/chest.png");
 	chest_open_bmp  	= getBitmap("./data/chest_open.png");
 
-	dwarf_bmp  	= getBitmap("./data/dwarf.png");
+	dwarf_bmp  		= getBitmap("./data/dwarf.png");
 	goblin_bmp  	= getBitmap("./data/goblin.png");
-	boss_bmp  	= getBitmap("./data/boss.png");
+	boss_bmp 	 	= getBitmap("./data/boss.png");
 
-	wall_bmp  	= getBitmap("./data/wall.png");
-	grass_bmp  	= getBitmap("./data/grass.png");
-	lava_bmp  	= getBitmap("./data/lava.png");
-	water_bmp  	= getBitmap("./data/water.png");
-	fountain_bmp  = getBitmap("./data/fountain.png");
-	wood_bmp  	= getBitmap("./data/wood.png");
-	stone_bmp  	= getBitmap("./data/brick.png");
-	tree_bmp  	= getBitmap("./data/tree.png");
-	blood_bmp  	= getBitmap("./data/blood.png");
+	wall_bmp  		= getBitmap("./data/wall.png");
+	grass_bmp  		= getBitmap("./data/grass.png");
+	lava_bmp  		= getBitmap("./data/lava.png");
+	water_bmp  		= getBitmap("./data/water.png");
+	fountain_bmp  	= getBitmap("./data/fountain.png");
+	wood_bmp  		= getBitmap("./data/wood.png");
+	stone_bmp  		= getBitmap("./data/brick.png");
+	tree_bmp  		= getBitmap("./data/tree.png");
+	blood_bmp  		= getBitmap("./data/blood.png");
 	reinforced_wall_bmp  	= getBitmap("./data/reinforced_wall.png");	
 	}
 
@@ -271,11 +273,11 @@ class world_t
 
 	this()
 		{
-		units ~= new ship_t(680, 360, 0, 0, g.stone_bmp);
-		units ~= new ship_t(880, 360, 0, 0, g.goblin_bmp);
-		planets ~= new planet("first", 400, 400, 100);
+		units ~= new ship_t(680, 360, 0, 0);
+		units ~= new ship_t(880, 360, 0, 0);
+		planets ~= new planet("first", 400, 300, 200);
 		planets ~= new planet("second", 1210, 410, 100);
-		planets ~= new planet("third", 1720, 420, 100);
+		planets ~= new planet("third", 1720, 520, 50);
 		asteroids ~= new asteroid(400+150, 550, 0.1, 0, .02, 2);
 		asteroids ~= new asteroid(400-150, 550, 0.1, 0, .02, 1);
 		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);

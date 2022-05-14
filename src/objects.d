@@ -180,12 +180,11 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 	bool isPlayerControlled=false;
 	float weapon_damage = 5;
 
-	void applyGravity()
+	void applyGravity(planet p)
 		{		
 		// gravity acceleration formula: g = -G*M/r^2
 		float G = 1; // gravitational constant
-		float M = 1000; // mass of planet
-		auto p = pair(400,400); // planet position
+		float M = 2000; // mass of planet
 		float r = distanceTo(this, p);
 		float angle = angleTo(this, p);
 		float g = -G*M/r^^2;
@@ -198,14 +197,23 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		vy += sin(applyAngle)*vel;
 		}
 
-	override void onTick()
+	void checkPlanetCollision(planet p)
 		{
-		applyGravity();
-		auto p = pair(400,400);
-		if(distanceTo(this, p) < 100)
+		if(distanceTo(this, p) < p.r)
 			{
+			x += -vx; // NOTE we apply reverse full velocity once 
+			y += -vy; // to 'undo' the last tick and unstick us, then set the new heading
 			vx *= -.80;
 			vy *= -.80;
+			}
+		}
+
+	override void onTick()
+		{
+		applyGravity(g.world.planets[0]);
+		foreach(p; g.world.planets)
+			{
+			checkPlanetCollision(p);
 			}
 		x += vx;
 		y += vy;
@@ -244,26 +252,25 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		{
 		super.draw(v);
 		
+		// Velocity Helper
 		float mag = distance(vx, vy)*10.0;
 		float angle2 = atan2(vy, vx);
 		drawAngleHelper(this, v, angle2, mag, COLOR(1,0,0,1)); 
 		
+		// Planet Helper(s)
 		drawAngleHelper(this, v, angle, 25, COLOR(0,1,0,1)); 
 		drawPlanetHelper(this, g.world.planets[0], v);
 		drawPlanetHelper(this, g.world.planets[1], v);
 
-		draw_hp_bar(
-			x, 
-			y - bmp.w/2, 
-			v, hp, 100);		
+		draw_hp_bar(x, y - bmp.w/2, v, hp, 100);		
 		}
 	}
 
 class ship_t : unit
 	{
-	this(float _x, float _y, float _xv, float _yv, ALLEGRO_BITMAP* b)
+	this(float _x, float _y, float _xv, float _yv)
 		{
-		super(1, _x, _y, _xv, _yv, b);
+		super(1, _x, _y, _xv, _yv, ship_bmp);
 		}
 
 	override void draw(viewport v)
