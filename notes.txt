@@ -1,7 +1,7 @@
 TODO
 	- asteroid fields like asteroid
 
-
+	- it's a little cludgy that we have viewportsmod.viewport viewports. the file name that is. it was cleaner looking with viewport_t for the type.
 	+ add std.chrono timing
 	- geometric space ships (and drawing routines) that are easily rotable (and scalable for zoom)
 	- OH GOSH, none of the draw routines are built for zoom. OH NO.

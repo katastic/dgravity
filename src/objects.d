@@ -19,7 +19,9 @@ import viewportsmod;
 		0 - Neutral		(asteroids. unclaimed planets?)
 		1 - Player 1? (if we support real teams, then its whatever team it is)
 
-	note we cannot use "object" since that's a D keyword.
+name clashes
+	- we cannot use "object" since that's a D keyword. 
+	- we also can't use "with" for onCollision(baseObject with)
 */
 
 /// baseObject and handler for asteroids, 1st-order physics baseObjects that float and split on collision/firing
@@ -39,6 +41,10 @@ class asteroid : unit
 		angle += va;
 		wrapRadRef(angle);
 		super.onTick(); //apply unit physics
+		}
+		
+	override void onCollision(baseObject who)
+		{
 		}
 	}
 	
