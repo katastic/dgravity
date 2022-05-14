@@ -9,12 +9,24 @@ import std.format;
 import std.math;
 import std.random;
 import std.conv;
-import viewport;
+import viewportsmod;
 import g;
 import objects;
 
+/// TODO: NYI
+/// give me the necessary velocity (vx,vy) for a object to orbit a planet at distance D
+///
+///		startAngle - the (radian) clock angle to start it at (0 = noon, +velocity = facing clockwise)
+///
+/// ALSO: Gravity Well orbits were likely hardcoded 'attachments' so they had no chance of falling.
+
+pair giveStableOrbit(planet p, float velocity, float startAngle)  
+	{
+	return pair(0,0);
+	}
+
 // TODO: does this track viewport offset or not?!
-void drawAngleHelper(object_t o, viewport_t v, float angle, float distance, ALLEGRO_COLOR color)
+void drawAngleHelper(baseObject o, viewport v, float angle, float distance, ALLEGRO_COLOR color)
 	{
 	float cx = cos(angle)*distance;
 	float cy = sin(angle)*distance;
@@ -26,16 +38,18 @@ void drawAngleHelper(object_t o, viewport_t v, float angle, float distance, ALLE
 		color, 1);
 	}
 
-/// no distance indicator
+/// indicator that DOESNT show distance, only direction
 /// has a gap before the line starts
-void drawPlanetHelper(object_t o, viewport_t v) 
+void drawPlanetHelper(baseObject o, planet p, viewport v) 
 	{
-	pair p = pair(400,400);
 	float angle = angleTo(p,o); //to P from O
-	float cx = cos(angle)*40;
-	float cy = sin(angle)*40;
-	float cx2 = cos(angle)*80;
-	float cy2 = sin(angle)*80;
+	float gapLength = 40;
+	float totalLength = 80;
+	float cx = cos(angle)*(totalLength-gapLength);
+	float cy = sin(angle)*(totalLength-gapLength);
+	float cx2 = cos(angle)*(totalLength);
+	float cy2 = sin(angle)*(totalLength);
+	
 	al_draw_line(
 		o.x + cx + v.x - v.ox, 
 		o.y + cy + v.y - v.oy, 
@@ -67,6 +81,11 @@ void testRad()
 T wrapRad(T)(T angle)
 	{
 	return fmod(angle, 2.0*PI);
+	}
+
+void wrapRadRef(T)(ref T angle)
+	{
+	angle = fmod(angle, 2.0*PI);
 	}
 
 /// angleTo:
@@ -107,14 +126,14 @@ size_t h(T)(T[][] array2d)
 // Graphical helper functions
 //=============================================================================
 /// For bitmap culling. Is this point inside the screen?
-bool isInsideScreen(float x, float y, viewport_t v) 
+bool isInsideScreen(float x, float y, viewport v) 
 	{
 	if(x > 0 && x < v.w && y > 0 && y < v.h)
 		{return true;} else{ return false;}
 	}
 
 /// Same as above but includes a bitmaps width/height instead of a single point
-bool isWideInsideScreen(float x, float y, ALLEGRO_BITMAP* b, viewport_t v) 
+bool isWideInsideScreen(float x, float y, ALLEGRO_BITMAP* b, viewport v) 
 	{
 	if(x >= -b.w/2 && x - b.w/2 < v.w && y - b.h/2 >= -b.w/2 && y < v.h)
 		{return true;} else{ return false;} //fixme
@@ -154,7 +173,7 @@ int text_helper(bool do_reset)
 	return starting_height + text_height*number_of_entries;
 	}
 
-void draw_hp_bar(float x, float y, viewport_t v, float hp, float max)
+void draw_hp_bar(float x, float y, viewport v, float hp, float max)
 	{
 	float _x = x;
 	float _y = y - 10;

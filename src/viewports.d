@@ -1,4 +1,4 @@
-class viewport_t
+class viewport
 	{
 	/// Screen coordinates
 	int x;

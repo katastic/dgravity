@@ -15,9 +15,10 @@ import std.datetime.stopwatch : benchmark, StopWatch, AutoStart;
 
 import helper;
 import objects;
-import viewport;
+import viewportsmod;
 
 ALLEGRO_FONT* 	font;
+ALLEGRO_BITMAP* large_asteroid_bmp;
 ALLEGRO_BITMAP* bullet_bmp;
 ALLEGRO_BITMAP* dude_up_bmp;
 ALLEGRO_BITMAP* dude_down_bmp;
@@ -49,9 +50,10 @@ void loadResources()
 	{
 	g.font = getFont("./data/DejaVuSans.ttf", 18);
 
-	g.bullet_bmp  	= getBitmap("./data/bullet.png");
+	g.bullet_bmp  			= getBitmap("./data/bullet.png");
+	g.large_asteroid_bmp  	= getBitmap("./data/large_asteroid.png");
 	
-	g.dude_up_bmp  	= getBitmap("./data/dude_up.png");
+	g.dude_up_bmp  		= getBitmap("./data/dude_up.png");
 	g.dude_down_bmp  	= getBitmap("./data/dude_down.png");
 	g.dude_left_bmp  	= getBitmap("./data/dude_left.png");
 	g.dude_right_bmp  	= getBitmap("./data/dude_right.png");
@@ -78,10 +80,6 @@ void loadResources()
 	g.reinforced_wall_bmp  	= getBitmap("./data/reinforced_wall.png");	
 	}
 
-immutable int TILE_W=32;
-immutable int TILE_H=TILE_W;
-bool selectLayer=false; //which layer for mouse map editing is selected
-
 alias KEY_UP = ALLEGRO_KEY_UP; // should we do these? By time we write them out we've already done more work than just writing them.
 alias KEY_DOWN = ALLEGRO_KEY_DOWN; // i'll leave them coded as an open question for later
 alias KEY_LEFT = ALLEGRO_KEY_LEFT; 
@@ -90,7 +88,6 @@ alias KEY_RIGHT = ALLEGRO_KEY_RIGHT;
 alias COLOR = ALLEGRO_COLOR;
 alias BITMAP = ALLEGRO_BITMAP;
 alias FONT = ALLEGRO_FONT;
-alias tile=ushort;
 alias dir=direction;
 
 /// thought bubble handler
@@ -109,7 +106,7 @@ class bubble_handler
 		bubbles ~= b;
 		}
 	
-	void drawBubble(bubble b, viewport_t v)
+	void drawBubble(bubble b, viewport v)
 		{
 		float cx = b.x - v.ox + v.x; // topleft x,y
 		float cy = b.y - v.oy + v.y;
@@ -128,7 +125,7 @@ class bubble_handler
 		// if(lifetime < 10) ...
 		}
 	
-	void draw(viewport_t v)
+	void draw(viewport v)
 		{
 		foreach(ref b; bubbles)
 			{
@@ -180,7 +177,7 @@ class particle_handler
 	{
 	particle[] data;
 	
-	void draw(viewport_t v)
+	void draw(viewport v)
 		{
 		// what about accumulation buffer particle systems like static blood decal
 		foreach(ref p; data)
@@ -198,7 +195,7 @@ class particle_handler
 			}
 		}
 	}
-
+	
 struct ipair
 	{
 	int x;
@@ -247,7 +244,7 @@ struct pair
 	}
 
 world_t world;
-viewport_t [2] viewports;
+viewport [2] viewports;
 
 enum direction { down, up, left, right, upleft, upright, downright, downleft} // do we support diagonals. 
 // everyone supports at least down. [for signs]
@@ -262,25 +259,28 @@ struct player_t
 	
 class world_t
 	{			
-	object_t[] objects; // other stuff
-	unit_t[] units;
+	baseObject[] objects; // other stuff
+	unit[] units;
 	structure_t[] structures;
-	planet_t[] planets;
+	planet[] planets;
+	asteroid[] asteroids;
 
 	this()
 		{
 		units ~= new ship_t(680, 360, 0, 0, g.stone_bmp);
 		units ~= new ship_t(880, 360, 0, 0, g.goblin_bmp);
-		planets ~= new planet_t("first", 400, 400, 100);
-		planets ~= new planet_t("second", 1210, 410, 100);
-		planets ~= new planet_t("third", 1720, 420, 100);
+		planets ~= new planet("first", 400, 400, 100);
+		planets ~= new planet("second", 1210, 410, 100);
+		planets ~= new planet("third", 1720, 420, 100);
+		asteroids ~= new asteroid(400+150, 550, 0.1, 0, .02);
+		asteroids ~= new asteroid(400-150, 550, 0.1, 0, .02);
 		testGraph = new intrinsicGraph!float("Draw (ms)", g.stats.msDraw, 100, 200 - 50, COLOR(1,0,0,1));
 		testGraph2 = new intrinsicGraph!float("Logic (ms)", g.stats.msLogic, 100, 320 - 50, COLOR(1,0,0,1));
 		stats.swLogic = StopWatch(AutoStart.no);
 		stats.swDraw = StopWatch(AutoStart.no);
 		}
 		
-	void draw(viewport_t v)
+	void draw(viewport v)
 		{
 		stats.swDraw.start();
 		void draw(T)(ref T obj)
@@ -301,8 +301,10 @@ class world_t
 			}
 		
 		draw(planets);
+		draw(asteroids);
 		drawStat(units, stats.number_of_drawn_dwarves);
 		drawStat(structures, stats.number_of_drawn_structures);		
+
 		testGraph.draw(v);
 		testGraph2.draw(v);
 		stats.swDraw.stop();
@@ -336,9 +338,10 @@ class world_t
 				}
 			}
 			
-		tick(units);
 		tick(structures);
 		tick(planets);
+		tick(asteroids);
+		tick(units);
 
 		//prune ready-to-delete entries
 		void prune(T)(ref T obj)
@@ -352,10 +355,12 @@ class world_t
 		prune(units);
 		prune(structures);
 		prune(planets);
+		prune(asteroids);
 		stats.swLogic.stop();
 		stats.msLogic = stats.swLogic.peek.total!"msecs";
 		stats.swLogic.reset();
 		}
+		
 	}
 
 // CONSTANTS
@@ -545,7 +550,7 @@ class intrinsicGraph(T)
 		y = _y;
 		}
 
-	void draw(viewport_t v)
+	void draw(viewport v)
 		{
 		// TODO. Are we keeping/using viewport? 
 		// We'd have to know which grapsh are used in which viewport

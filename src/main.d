@@ -45,7 +45,7 @@ import allegro5.allegro_color;
 
 import helper;
 import objects;
-import viewport;
+import viewportsmod;
 static import g;
 
 //ALLEGRO_CONFIG* 		cfg;  //whats this used for?
@@ -64,7 +64,7 @@ display_t display;
 alias ALLEGRO_KEY = ubyte;
 struct keyset_t
 		{
-		object_t obj;
+		baseObject obj;
 		ALLEGRO_KEY [ __traits(allMembers, keys_label).length] key;
 		// If we support MOUSE clicks, we could simply attach a MOUSE in here 
 		// and have it forward to the object's click_on() method.
@@ -141,7 +141,7 @@ static if (false) // MULTISAMPLING. Not sure if helpful.
 	
 	// SETUP viewports
 	// --------------------------------------------------------
-	g.viewports[0] = new viewport_t(0, 0, g.SCREEN_W, g.SCREEN_H, 0, 0);
+	g.viewports[0] = new viewport(0, 0, g.SCREEN_W, g.SCREEN_H, 0, 0);
 	
 	// FPS Handling
 	// --------------------------------------------------------
@@ -234,7 +234,7 @@ struct display_t
 		al_draw_filled_rounded_rectangle(16, 32, 64+650, 105+32, 8, 8, ALLEGRO_COLOR(.7, .7, .7, .7));
 
 //if(g.stats.fps != 0)	
-		unit_t u = g.world.units[0];
+		unit u = g.world.units[0];
 
 		al_draw_textf(g.font, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "obj[%.2f,%.2f][%.2f %f.2] %.2f deg", u.x, u.y, u.vx, u.vy, u.angle.radToDeg); 
 		al_draw_textf(g.font, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "fps[%d] objrate[%d]", g.stats.fps, 

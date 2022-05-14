@@ -13,8 +13,35 @@ import std.string;
 
 import g;
 import helper;
-import viewport;
+import viewportsmod;
+/*
+	Teams
+		0 - Neutral		(asteroids. unclaimed planets?)
+		1 - Player 1? (if we support real teams, then its whatever team it is)
 
+	note we cannot use "object" since that's a D keyword.
+*/
+
+/// baseObject and handler for asteroids, 1st-order physics baseObjects that float and split on collision/firing
+/// 
+class asteroid : unit
+	{
+	float va=0; // velocity of rotation (angular velocity)
+	this(float _x, float _y, float _vx, float _vy, float _va)
+		{
+		va = _va;
+		angle = uniform!"[]"(0, 2*PI);
+		super(0, _x, _y, _vx, _vy, g.large_asteroid_bmp);
+		}
+	
+	override void onTick()
+		{
+		angle += va;
+		wrapRadRef(angle);
+		super.onTick(); //apply unit physics
+		}
+	}
+	
 struct bullet
 	{
 	float x=0, y=0;
@@ -38,7 +65,7 @@ class bulletHandler
 		bullets ~= b;
 		}
 	
-	void draw(viewport_t v)
+	void draw(viewport v)
 		{
 		foreach(ref b; bullets)
 			{
@@ -59,7 +86,7 @@ class bulletHandler
 		}
 	}
 
-class item : object_t
+class item : baseObject
 	{
 	bool isInside = false; //or isHidden? Not always the same though...
 	int team;
@@ -70,7 +97,7 @@ class item : object_t
 		super(_x, _y, _vx, _vy, b);
 		}
 		
-	override void draw(viewport_t v)
+	override void draw(viewport v)
 		{
 		if(!isInside)
 			{
@@ -90,7 +117,7 @@ class item : object_t
 		}
 	}
 
-class unit_t : object_t 
+class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it, make sure to override if you don't want those physics.
 	{
 	immutable float maxHP=100.0; /// Maximum health points
 	float hp=maxHP; /// Current health points
@@ -130,18 +157,28 @@ class unit_t : object_t
 		x += vx;
 		y += vy;
 		}
+		
+		
+	void onCollision()
+		{
+		}
+		
+	void onHit()
+		{
+		}
+
 
 	void doAttackStructure(structure_t s)
 		{
 		s.onHit(this, weapon_damage);
 		}
 
-	void doAttack(unit_t u)
+	void doAttack(unit u)
 		{
 		u.onAttack(this, weapon_damage);
 		}
 		
-	void onAttack(unit_t from, float amount) /// I've been attacked!
+	void onAttack(unit from, float amount) /// I've been attacked!
 		{
 		hp -= amount;
 		}
@@ -152,7 +189,7 @@ class unit_t : object_t
 		super(_x, _y, _vx, _vy, b);
 		}
 
-	override void draw(viewport_t v)
+	override void draw(viewport v)
 		{
 		super.draw(v);
 		
@@ -161,7 +198,8 @@ class unit_t : object_t
 		drawAngleHelper(this, v, angle2, mag, COLOR(1,0,0,1)); 
 		
 		drawAngleHelper(this, v, angle, 25, COLOR(0,1,0,1)); 
-		drawPlanetHelper(this, v);
+		drawPlanetHelper(this, g.world.planets[0], v);
+		drawPlanetHelper(this, g.world.planets[1], v);
 
 		draw_hp_bar(
 			x, 
@@ -170,14 +208,14 @@ class unit_t : object_t
 		}
 	}
 
-class ship_t : unit_t
+class ship_t : unit
 	{
 	this(float _x, float _y, float _xv, float _yv, ALLEGRO_BITMAP* b)
 		{
 		super(1, _x, _y, _xv, _yv, b);
 		}
 
-	override void draw(viewport_t v)
+	override void draw(viewport v)
 		{
 		super.draw(v);
 		}
@@ -191,7 +229,7 @@ class ship_t : unit_t
 		}
 	}
 	
-class planet_t : object_t
+class planet : baseObject
 	{
 	float r = 100; /// radius
 	string name="";
@@ -207,7 +245,7 @@ class planet_t : object_t
 		structures ~= new structure_t(0, 0, g.fountain_bmp, this);
 		}
 	
-	override void draw(viewport_t v)
+	override void draw(viewport v)
 		{
 		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r, COLOR(.8,.8,.8,1));
 		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r * .80, COLOR(1,1,1,1));
@@ -221,7 +259,7 @@ class planet_t : object_t
 		}
 	}
 
-class structure_t : object_t
+class structure_t : baseObject
 	{
 	immutable float maxHP=500.0;
 	float hp=maxHP;
@@ -230,9 +268,9 @@ class structure_t : object_t
 	int direction=0;
 	immutable int countdown_rate = 200; // 60 fps, 60 ticks = 1 second
 	int countdown = countdown_rate; // I don't like putting variables in the middle of classes but I ALSO don't like throwing 1-function-only variables at the top like the entire class uses them.
-	planet_t myPlanet;
+	planet myPlanet;
 	
-	this(float x, float y, ALLEGRO_BITMAP* b, planet_t _myPlanet)
+	this(float x, float y, ALLEGRO_BITMAP* b, planet _myPlanet)
 		{
 		super(x, y, 0, 0,b);
 		writeln("we MADE a structure. @ ", x, " ", y);
@@ -240,9 +278,9 @@ class structure_t : object_t
 		myPlanet = _myPlanet;
 		}
 
-	override void draw(viewport_t v)
+	override void draw(viewport v)
 		{
-		// we draw RELATIVE to planet.xy, so no using object.draw
+		// we draw RELATIVE to planet.xy, so no using baseObject.draw
 		// TODO how do we rotate angle from center of planet properly?
 		float cx=myPlanet.x + v.x - v.ox;
 		float cy=myPlanet.y + v.y - v.oy;
@@ -250,18 +288,18 @@ class structure_t : object_t
 		draw_hp_bar(x, y, v, hp, maxHP);
 		}
 
-	void onHit(unit_t u, float damage)
+	void onHit(unit u, float damage)
 		{
 		hp -= damage;
 		}
 	}
 
-class object_t
+class baseObject
 	{
 	ALLEGRO_BITMAP* bmp;
 	@disable this(); 
 	bool isDead = false;	
-	float x=0, y=0; 	/// Objects are centered at X/Y (not top-left) so we can easily follow other objects.
+	float x=0, y=0; 	/// baseObjects are centered at X/Y (not top-left) so we can easily follow other baseObjects.
 	float vx=0, vy=0; /// Velocities.
 	float w=0, h=0;   /// width, height 
 	float angle=0;	/// pointing angle 
@@ -275,7 +313,7 @@ class object_t
 		bmp = _bmp;
 		}
 		
-	void draw(viewport_t v)
+	void draw(viewport v)
 		{
 		al_draw_center_rotated_bitmap(bmp, 
 			x - v.ox + v.x, 
@@ -295,10 +333,6 @@ class object_t
 	
 	void onTick()
 		{
-		// THOU. SHALT. NOT. PUT. PHYSICS. IN BASE. OBJECT.
+		// THOU. SHALT. NOT. PUT. PHYSICS. IN BASE. baseObject.
 		}
-		
-	void onCollision(object_t other_obj)
-		{
-		}	
 	}	
