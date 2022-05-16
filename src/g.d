@@ -284,8 +284,8 @@ class world_t
 		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
 		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
 		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
-		testGraph = new intrinsicGraph!float("Draw (ms)", g.stats.msDraw, 100, 200 - 50, COLOR(1,0,0,1));
-		testGraph2 = new intrinsicGraph!float("Logic (ms)", g.stats.msLogic, 100, 320 - 50, COLOR(1,0,0,1));
+		testGraph = new intrinsicGraph!float("Draw (ms)", g.stats.nsDraw, 100, 200 - 50, COLOR(1,0,0,1), 1_000_000);
+		testGraph2 = new intrinsicGraph!float("Logic (ms)", g.stats.msLogic, 100, 320 - 50, COLOR(1,0,0,1), 1_000_000);
 		stats.swLogic = StopWatch(AutoStart.no);
 		stats.swDraw = StopWatch(AutoStart.no);
 		}
@@ -318,7 +318,7 @@ class world_t
 		testGraph.draw(v);
 		testGraph2.draw(v);
 		stats.swDraw.stop();
-		stats.msDraw = stats.swDraw.peek.total!"msecs";
+		stats.nsDraw = stats.swDraw.peek.total!"nsecs";
 		stats.swDraw.reset();
 		}
 		
@@ -541,6 +541,8 @@ class intrinsicGraph(T)
 	T* dataSource; // where we auto grab the data every frame
 	circularBuffer!(T, 400) dataBuffer; //how do we invoke the constructor?
 
+	float scaling = 1.0; /// scale VALUES by this for peeking numbers with higher granulaity (nsecs to view milliseconds = 1_000_000)  
+
 	// private data
  	private T max=-9999; //READONLY cache of max value.
  	private T min=-9999; //READONLY cache of max value.
@@ -550,8 +552,9 @@ class intrinsicGraph(T)
  	private T previousMinimum=0;
 	private int howLongAgoWasMaxSet=0;
  	
-	this(string _name, ref T _dataSource, float _x, float _y, COLOR _color)
+	this(string _name, ref T _dataSource, float _x, float _y, COLOR _color, float _scaling=1)
 		{
+		scaling = _scaling;
 		name = _name;
 		dataBuffer = new circularBuffer!(T, 400);
 		dataSource = &_dataSource;
@@ -593,8 +596,9 @@ class intrinsicGraph(T)
 		al_draw_scaled_line_segment(pair(this), dataBuffer.data, scaleFactor, color, 1.0f);
 
 		al_draw_text(g.font1, COLOR(0,0,0,1), x, y, 0, name.toStringz);
-		al_draw_text(g.font1, COLOR(0,0,0,1), x + w - 32, y, 0, format("%s",min).toStringz);
-		al_draw_text(g.font1, COLOR(0,0,0,1), x + w - 32, y+h-g.font1.h, 0, format("%s",max).toStringz);
+		al_draw_text(g.font1, COLOR(0,0,0,1), x + w - 32, y, 0, format("%s",min/scaling).toStringz);
+		al_draw_text(g.font1, COLOR(0,0,0,1), x + w - 32, y+h-g.font1.h, 0, format("%s",max/scaling).toStringz);
+		al_draw_text(g.font1, COLOR(0,0,0,1), x     + 32, y+h-g.font1.h, 0, format("%s",dataBuffer.data[dataBuffer.index]/scaling).toStringz);
 		}
 		
 	void onTick()
@@ -620,7 +624,7 @@ struct statistics_t
 	StopWatch swLogic;
 	StopWatch swDraw;
 	float msLogic;
-	float msDraw;
+	float nsDraw;
 	
 	void reset()
 		{ // note we do NOT reset fps and frames_passed here as they are cumulative or handled elsewhere.
