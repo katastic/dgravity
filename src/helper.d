@@ -13,6 +13,14 @@ import viewportsmod;
 import g;
 import objects;
 
+
+COLOR white = COLOR(1,1,1,1);
+COLOR black = COLOR(0,0,0,1);
+COLOR red   = COLOR(1,0,0,1);
+COLOR green = COLOR(0,1,0,1);
+COLOR blue  = COLOR(0,0,1,1);
+
+
 /// TODO: NYI
 /// give me the necessary velocity (vx,vy) for a object to orbit a planet at distance D
 ///
@@ -59,12 +67,12 @@ void drawPlanetHelper(baseObject o, planet p, viewport v)
 		1);
 	}
 
-T radToDeg(T)(T angle)
+float radToDeg(T)(T angle)
 	{
 	return angle/(2.0*PI)*360.0;
 	}
 
-T degToRad(T)(T angle)
+float degToRad(T)(T angle)
 	{
 	return angle*(2.0*PI)/360.0;
 	}
@@ -80,7 +88,18 @@ void testRad()
 	
 T wrapRad(T)(T angle)
 	{
-	return fmod(angle, 2.0*PI);
+	if(angle >= 0)
+		angle = fmod(angle, 2.0*PI);
+	else
+		angle += 2.0*PI; // everyone does this. What if angle is more than 360 negative though?
+			// it'll be wrong. though a few more "hits" though this function and it'll be fixed.
+			// otherwise, we could do a while loop but is that slower even when we don't need it?
+			// either find the answer or stop caring.
+	
+	////	writeln(fmod(angle, 2.0*PI).radToDeg);
+	//while(angle > 2*PI)angle -= 2*PI;
+	//while(angle < 0)angle += 2*PI;
+	return angle;
 	}
 
 void wrapRadRef(T)(ref T angle)
@@ -88,15 +107,21 @@ void wrapRadRef(T)(ref T angle)
 	angle = fmod(angle, 2.0*PI);
 	}
 
-/// angleTo:
+/// angleTo:		angleTo (This FROM That)
 ///
 /// Get angle to anything that has an x and y coordinate fields
 /// 	Cleaner:	float angle = angleTo(this, g.world.units[0]);
 ///  	Verses :	float angle = atan2(y - g.world.units[0].y, x - g.world.units[0].x);
-float angleTo(T, U)(T t, U u) 
+float angleTo(T, U)(T _this, U fromThat) 
 	{
-	return atan2(t.y - u.y, t.x - u.x);
+	return atan2(_this.y - fromThat.y, _this.x - fromThat.x);
 	}
+
+float angleDiff(T)(T _thisAngle, T toThatAngle)
+	{
+	return abs(_thisAngle - toThatAngle);
+	}
+
 
 float distanceTo(T, U)(T t, U u)
 	{
@@ -340,7 +365,12 @@ void al_reset_target()
 /// draw scaled bitmap but with a scale factor (simpler than the allegro API version)
 void al_draw_scaled_bitmap2(ALLEGRO_BITMAP *bitmap, float x, float y, float scaleX, float scaleY, int flags=0)
 	{
-	al_draw_scaled_bitmap(bitmap, 0, 0, bitmap.w, bitmap.h, x, y, bitmap.w * scaleX, bitmap.w * scaleY, flags);
+	al_draw_scaled_bitmap(bitmap, 0, 0, bitmap.w, bitmap.h, x, y, bitmap.w * scaleX, bitmap.h * scaleY, flags);
+	}
+
+void al_draw_center_rotated_bitmap(BITMAP* bmp, float x, float y, float angle, int flags)
+	{
+	al_draw_rotated_bitmap(bmp, bmp.w/2, bmp.h/2, x, y, angle, flags);
 	}
 
 // you know, we could do some sort of scoped lambda like thing that auto resets the target
@@ -507,9 +537,4 @@ void al_draw_gouraud_bitmap_5pt(ALLEGRO_BITMAP* bmp, float x, float y, COLOR tl,
 	vtx[5].v = vtx[1].v;
 
 	al_draw_prim(cast(void*)vtx, null, bmp, 0, vtx.length, ALLEGRO_PRIM_TYPE.ALLEGRO_PRIM_TRIANGLE_FAN);
-	}
-
-void al_draw_center_rotated_bitmap(BITMAP* bmp, float x, float y, float angle, int flags)
-	{
-	al_draw_rotated_bitmap(bmp, bmp.w/2, bmp.h/2, x, y, angle, flags);
 	}

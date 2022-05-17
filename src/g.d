@@ -18,10 +18,13 @@ import objects;
 import viewportsmod;
 
 ALLEGRO_FONT* 	font1;
+
 ALLEGRO_BITMAP* ship_bmp;
+ALLEGRO_BITMAP* smoke_bmp;
 ALLEGRO_BITMAP* small_asteroid_bmp;
 ALLEGRO_BITMAP* medium_asteroid_bmp;
 ALLEGRO_BITMAP* large_asteroid_bmp;
+
 ALLEGRO_BITMAP* bullet_bmp;
 ALLEGRO_BITMAP* dude_up_bmp;
 ALLEGRO_BITMAP* dude_down_bmp;
@@ -58,6 +61,7 @@ void loadResources()
 	small_asteroid_bmp  	= getBitmap("./data/small_asteroid.png");
 	medium_asteroid_bmp  	= getBitmap("./data/medium_asteroid.png");
 	large_asteroid_bmp  	= getBitmap("./data/large_asteroid.png");
+	smoke_bmp  	= getBitmap("./data/smoke.png");
 	
 	dude_up_bmp  		= getBitmap("./data/dude_up.png");
 	dude_down_bmp	  	= getBitmap("./data/dude_down.png");
@@ -175,8 +179,76 @@ struct particle
 	{
 	float x=0, y=0;
 	float vx=0, vy=0;
+	int type=0;
 	int lifetime=0;
+	int maxLifetime=0;
+	int rotation=0;
 	bool isDead=false;
+
+	this(float _x, float _y, float _vx, float _vy, int _type, int  _lifetime, unit u)
+		{
+		import std.math : cos, sin;
+		float thrustAngle = u.angle;
+		float thrustDistance = -30;
+		float thrustVelocity = -3;
+		
+		x = _x + cos(thrustAngle)*thrustDistance;
+		y = _y + sin(thrustAngle)*thrustDistance;
+		vx = _vx + uniform!"[]"(-.1, .1) + cos(thrustAngle)*thrustVelocity;
+		vy = _vy + uniform!"[]"(-.1, .1) + sin(thrustAngle)*thrustVelocity;
+		type = _type;
+		lifetime = _lifetime;
+		maxLifetime = _lifetime;
+		rotation = uniform!"[]"(0, 3);
+		}
+		
+	void draw(viewport v)
+		{
+		BITMAP *b = g.smoke_bmp;
+		ALLEGRO_COLOR c = ALLEGRO_COLOR(1,1,1,cast(float)lifetime/cast(float)maxLifetime);
+		float cx = x + v.x - v.ox - b.w/2;
+		float cy = y + v.y - v.oy - b.h/2;
+		float scaleX = (cast(float)lifetime/cast(float)maxLifetime) * b.w;
+		float scaleY = (cast(float)lifetime/cast(float)maxLifetime) * b.h;
+		al_draw_tinted_scaled_bitmap(b, c,
+			0, 0, b.w, b.h,
+			cx, cy, scaleX, scaleY, rotation);
+		}
+	
+
+	// NOTE. duplicate of ship.checkPlanetCollision
+	bool checkPlanetCollision(planet p)
+		{
+		if(distanceTo(this, p) < p.r)
+			{
+			return true;
+			}else{
+			return false;
+			}
+		}
+	
+	void onTick() // should we check for planets collision?
+		{
+		lifetime--;
+		if(lifetime == 0)
+			{
+			isDead=true;
+			}else{
+				
+			foreach(p; g.world.planets) // NOTE. similar to ship.checkPlanetCollision
+				{
+				if(checkPlanetCollision(p))
+					{
+					vx = 0;
+					vy = 0;
+					}
+				}
+			
+			x += vx;
+			y += vy;
+			}
+		}
+	
 	}
 
 class particle_handler
@@ -270,11 +342,11 @@ class world_t
 	structure_t[] structures;
 	planet[] planets;
 	asteroid[] asteroids;
+	particle[] particles;
 
 	this()
 		{
-		units ~= new ship_t(680, 360, 0, 0);
-		units ~= new ship_t(880, 360, 0, 0);
+		units ~= new ship(680, 360, 0, 0);
 		planets ~= new planet("first", 400, 300, 200);
 		planets ~= new planet("second", 1210, 410, 100);
 		planets ~= new planet("third", 1720, 520, 50);
@@ -312,6 +384,7 @@ class world_t
 		
 		draw(planets);
 		draw(asteroids);
+		draw(particles);
 		drawStat(units, stats.number_of_drawn_dwarves);
 		drawStat(structures, stats.number_of_drawn_structures);		
 
@@ -328,7 +401,7 @@ class world_t
 		assert(testGraph !is null);
 		testGraph.onTick();
 		testGraph2.onTick();
-		ship_t p = cast(ship_t)units[0]; // player
+		ship p = cast(ship)units[0]; // player
 		viewports[0].ox = p.x - viewports[0].w/2;
 		viewports[0].oy = p.y - viewports[0].h/2;
 
@@ -350,6 +423,7 @@ class world_t
 			
 		tick(structures);
 		tick(planets);
+		tick(particles);
 		tick(asteroids);
 		tick(units);
 
@@ -365,6 +439,7 @@ class world_t
 		prune(units);
 		prune(structures);
 		prune(planets);
+		prune(particles);
 		prune(asteroids);
 		stats.swLogic.stop();
 		stats.msLogic = stats.swLogic.peek.total!"msecs";
@@ -540,8 +615,7 @@ class intrinsicGraph(T)
 	BITMAP* buffer;
 	T* dataSource; // where we auto grab the data every frame
 	circularBuffer!(T, 400) dataBuffer; //how do we invoke the constructor?
-
-	float scaling = 1.0; /// scale VALUES by this for peeking numbers with higher granulaity (nsecs to view milliseconds = 1_000_000)  
+	float scaling = 1.0; /// scale VALUES by this for peeking numbers with higher granulaity (nsecs to view milliseconds = 1_000_000)
 
 	// private data
  	private T max=-9999; //READONLY cache of max value.

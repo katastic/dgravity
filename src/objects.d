@@ -92,7 +92,6 @@ class asteroid : unit
 	override void onHit(baseObject who)
 		{
 		}
-
 	}
 	
 struct bullet
@@ -197,14 +196,13 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		vy += sin(applyAngle)*vel;
 		}
 
-	void checkPlanetCollision(planet p)
+	bool checkPlanetCollision(planet p)
 		{
 		if(distanceTo(this, p) < p.r)
 			{
-			x += -vx; // NOTE we apply reverse full velocity once 
-			y += -vy; // to 'undo' the last tick and unstick us, then set the new heading
-			vx *= -.80;
-			vy *= -.80;
+			return true;
+			}else{
+			return false;
 			}
 		}
 
@@ -213,7 +211,13 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		applyGravity(g.world.planets[0]);
 		foreach(p; g.world.planets)
 			{
-			checkPlanetCollision(p);
+			if(checkPlanetCollision(p))
+				{
+				x += -vx; // NOTE we apply reverse full velocity once 
+				y += -vy; // to 'undo' the last tick and unstick us, then set the new heading
+				vx *= -.80;
+				vy *= -.80;
+				}
 			}
 		x += vx;
 		y += vy;
@@ -262,12 +266,19 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		drawPlanetHelper(this, g.world.planets[0], v);
 		drawPlanetHelper(this, g.world.planets[1], v);
 
+		// draw angle text
+		al_draw_text(g.font1, white, x + v.x - v.ox + 30, y + v.y - v.oy - 30, 0, format("%3.2f", radToDeg(angle)).toStringz); 
+	
 		draw_hp_bar(x, y - bmp.w/2, v, hp, 100);		
 		}
 	}
 
-class ship_t : unit
+class ship : unit
 	{
+	bool isLanded=false;
+	immutable float MAX_LATCHING_SPEED = 3;
+	immutable float MAX_SAFE_LANDING_ANGLE = 45;
+	
 	this(float _x, float _y, float _xv, float _yv)
 		{
 		super(1, _x, _y, _xv, _yv, ship_bmp);
@@ -277,11 +288,78 @@ class ship_t : unit
 		{
 		super.draw(v);
 		}
+		
+	void crash()
+		{
+		x += -vx; // NOTE we apply reverse full velocity once 
+		y += -vy; // to 'undo' the last tick and unstick us, then set the new heading
+		vx *= -.80;
+		vy *= -.80;
+		}
 
-	override void up(){ applyV(angle, .1);}
-	override void down() { applyV(angle, -.1); }
-	override void left() { angle -= degToRad(10.0);}
-	override void right() { angle += degToRad(10.0);}
+	override void onTick()
+		{
+		if(!isLanded)
+			{
+			applyGravity(g.world.planets[0]);
+			foreach(p; g.world.planets)
+				{
+				if(checkPlanetCollision(p))
+					{
+					if(distance(vx, vy) > MAX_LATCHING_SPEED)
+						{ 
+						crash();
+						}else{
+						float a = angle;
+						float b = angleTo(this, p).wrapRad;
+						float result = angleDiff(a, b);
+						writefln("A%3.2f B%3.2f result was: %3.2f < %3.2f?", radToDeg(a), radToDeg(b), radToDeg(result), MAX_SAFE_LANDING_ANGLE);
+						if(result < degToRad(MAX_SAFE_LANDING_ANGLE))
+							{					
+							writeln(" SUCCESS");
+							angle = angleTo(this, p);
+							isLanded = true;
+							vx = 0;
+							vy = 0;
+							}else{
+							writeln(" FAIL");
+							crash();
+							}
+						}
+					}
+				}
+			x += vx;
+			y += vy;
+			}
+		}
+
+	void spawnSmoke()
+		{
+		g.world.particles ~= particle(x, y, vx*.99, vy*.99, 0, 100, this);
+		}
+
+	override void up()
+		{ 
+		if(isLanded)
+			{				
+			isLanded = false;
+			x += cos(angle)*5f; 
+			y += sin(angle)*5f; 
+			applyV(angle, .1);
+			applyV(angle, .1);
+			applyV(angle, .1);
+			}
+		applyV(angle, .1);
+		spawnSmoke();
+		}
+		
+	override void down() 
+		{ 	
+		if(!isLanded)applyV(angle, -.1); 
+		}
+		
+	override void left() { if(!isLanded){angle -= degToRad(10.0); angle = wrapRad(angle);}}
+	override void right() { if(!isLanded){angle += degToRad(10.0); angle = wrapRad(angle);}}
 	override void attack()
 		{
 		}
@@ -344,6 +422,7 @@ class structure_t : baseObject
 		float cy=myPlanet.y + v.y - v.oy;
 		al_draw_center_rotated_bitmap(bmp, cx, cy, 0, 0);
 		draw_hp_bar(x, y, v, hp, maxHP);
+		import std.format : format;
 		}
 
 	void onHit(unit u, float damage)
