@@ -28,12 +28,6 @@ name clashes
 /// baseObject and handler for asteroids, 1st-order physics baseObjects that float and split on collision/firing
 /// 
 
-
-
-
-
-
-
 struct particle
 	{
 	float x=0, y=0;
@@ -90,7 +84,6 @@ struct particle
 			cx, cy, scaleX, scaleY, rotation);
 		}
 	
-
 	// NOTE. duplicate of ship.checkPlanetCollision
 	bool checkPlanetCollision(planet p)
 		{
@@ -122,27 +115,24 @@ struct particle
 			x += vx;
 			y += vy;
 			}
-		}
-	
+		}	
 	}
-
-
-
 
 class asteroid : unit
 	{
 	int size=2; // 2 = large, 1 = medium, 0 = small
 	float va=0; // velocity of rotation (angular velocity)
-
+	int r=0; // radius, quick collision checking value. 
+	
 	this(float _x, float _y, float _vx, float _vy, float _va, int _size)
 		{
 		va = _va;
 		angle = uniform!"[]"(0, 2*PI);
 		size = _size;
 		BITMAP* b;
-		if(size == 0)b = g.small_asteroid_bmp; 
-		if(size == 1)b = g.medium_asteroid_bmp; 
-		if(size == 2)b = g.large_asteroid_bmp; 
+		if(size == 0){b = g.small_asteroid_bmp; r = b.w/2;}
+		if(size == 1){b = g.medium_asteroid_bmp; r = b.w/2;} 
+		if(size == 2){b = g.large_asteroid_bmp; r = b.w/2;}
 		assert(b !is null);
 		super(0, _x, _y, _vx, _vy, b);
 		}
@@ -159,9 +149,10 @@ class asteroid : unit
 		angle = a.angle;
 		size = a.size - 1;
 		BITMAP* b;
-		if(size == 0)b = g.small_asteroid_bmp; 
-		if(size == 1)b = g.medium_asteroid_bmp; 
-		if(size == 2)b = g.large_asteroid_bmp; 
+		assert(size >= 0);
+		if(size == 0){b = g.small_asteroid_bmp; r = b.w/2;}
+		if(size == 1){b = g.medium_asteroid_bmp; r = b.w/2;} 
+		if(size == 2){b = g.large_asteroid_bmp; r = b.w/2;}
 		assert(b !is null);
 		super(0, a.x, a.y, a.vx, a.vy, b);
 		}		
@@ -176,15 +167,21 @@ class asteroid : unit
 	/// become smaller and create 3 new identical smaller size asteroids
 	void split()
 		{
-		size--;
-		if(size < 0)
+		g.world.particles ~= particle(x, y, vx, vy, 0, uniform!"[]"(30, 60));
+		if(size <= 0)
 			{
+			import std.random : uniform;
+			g.world.particles ~= particle(x, y, vx, vy, 0, uniform!"[]"(30, 60));
 			isDead = true;
 			return;
 			}
 		g.world.asteroids ~= new asteroid(this);
 		g.world.asteroids ~= new asteroid(this);
 		g.world.asteroids ~= new asteroid(this);
+		size--;
+		if(size == 0){bmp = g.small_asteroid_bmp; r = bmp.w/2;}
+		if(size == 1){bmp = g.medium_asteroid_bmp; r = bmp.w/2;} 
+		if(size == 2){bmp = g.large_asteroid_bmp; r = bmp.w/2;}
 		}
 		
 	override void onCollision(baseObject who)
@@ -194,6 +191,7 @@ class asteroid : unit
 		
 	override void onHit(baseObject who)
 		{
+		split();
 		}
 	}
 	
@@ -235,6 +233,16 @@ class bullet : baseObject
 		vy += sin(applyAngle)*vel;
 		}
 	
+	bool checkAsteroidCollision(asteroid a) // TODO fix. currently radial collision setup
+		{
+		if(distanceTo(this, a) < a.r)
+			{
+			return true;
+			}else{
+			return false;
+			}		
+		}
+	
 	// NOTE. duplicate of ship.checkPlanetCollision
 	bool checkPlanetCollision(planet p)
 		{
@@ -266,6 +274,15 @@ class bullet : baseObject
 					}
 				}
 			
+			foreach(a; g.world.asteroids)
+				{
+				if(checkAsteroidCollision(a))
+					{
+					isDead=true;
+					a.onHit(this);
+					}
+				}
+						
 			x += vx;
 			y += vy;
 			}

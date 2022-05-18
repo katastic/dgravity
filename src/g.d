@@ -17,10 +17,8 @@ import helper;
 import objects;
 import viewportsmod;
 
-
 immutable PLANET_MASS = 4000;
 immutable PLANET_MASS_FOR_BULLETS = 20000;
-
 
 ALLEGRO_FONT* 	font1;
 
@@ -106,106 +104,6 @@ alias KEY_RIGHT = ALLEGRO_KEY_RIGHT;
 alias COLOR = ALLEGRO_COLOR;
 alias BITMAP = ALLEGRO_BITMAP;
 alias FONT = ALLEGRO_FONT;
-alias dir=direction;
-
-/// thought bubble handler
-class bubble_handler
-	{
-	bubble[] bubbles;
-	
-	void spawn(string text, float _x, float _y, int lifetime)
-		{
-		bubble b;
-		b.text = text;
-		b.x = _x;
-		b.y = _y;
-		b.lifetime = lifetime;
-		
-		bubbles ~= b;
-		}
-	
-	void drawBubble(bubble b, viewport v)
-		{
-		float cx = b.x - v.ox + v.x; // topleft x,y
-		float cy = b.y - v.oy + v.y;
-		float w = 100;
-		float h = 64;
-		float r = 5;
-		
-		al_draw_filled_rounded_rectangle(
-			cx, cy,
-			cx + w, cy + h,
-			r, r, COLOR(1,1,1,0.7));
-			
-		al_draw_text(g.font1, COLOR(0,0,0,1.0), cx + r, cx + r, 0, b.text.toStringz);
-		
-		// todo: smooth fade out 
-		// if(lifetime < 10) ...
-		}
-	
-	void draw(viewport v)
-		{
-		foreach(ref b; bubbles)
-			{
-			drawBubble(b, v);
-			}
-		}
-	
-	void onTick()
-		{
-		foreach(ref b; bubbles)
-			{
-			b.lifetime--;
-			if(b.lifetime >= 0)b.isDead = true;
-			}
-		for(size_t i = bubbles.length ; i-- > 0 ; )
-			{
-			if(bubbles[i].isDead)bubbles = bubbles.remove(i); continue;
-			}
-		}
-	}
-
-struct light
-	{
-	float x=684;
-	float y=245;
-	COLOR color;
-	}
-	
-light[2] lights;
-
-struct bubble
-	{
-	string text;
-	float x=0, y=0;
-	float vx=0, vy=0;
-	int lifetime=0;
-	bool isDead=false;
-	}
-
-
-class particle_handler
-	{
-	particle[] data;
-	
-	void draw(viewport v)
-		{
-		// what about accumulation buffer particle systems like static blood decal
-		foreach(ref p; data)
-			{
-			al_draw_bitmap(g.stone_bmp, p.x + v.x - v.ox, p.y + v.y - v.oy, 0);
-			}
-		}
-	
-	void onTick()
-		{
-		foreach(ref p; data)
-			{
-			p.x += p.vx;
-			p.y += p.vy;
-			}
-		}
-	}
 	
 struct ipair
 	{
@@ -255,12 +153,7 @@ struct pair
 	}
 
 world_t world;
-viewport [2] viewports;
-
-enum direction { down, up, left, right, upleft, upright, downright, downleft} // do we support diagonals. 
-// everyone supports at least down. [for signs]
-// then UDLR
-// then UDLR + diags
+viewport[2] viewports;
 
 struct player_t
 	{
@@ -298,12 +191,12 @@ class world_t
 		
 	void drawSpace(viewport v)
 		{
-		al_draw_bitmap(g.space_bmp, 0 + v.x - v.ox, 0 + v.y - v.oy, 0);
+//		al_draw_bitmap(g.space_bmp, 0 + v.x - v.ox, 0 + v.y - v.oy, 0);
 		for(int i = -2; i < 2; i++)
 			for(int j = -2; j < 2; j++)
 				{
-				COLOR c = COLOR(1,1,1,.5); 
-				al_draw_tinted_bitmap(g.space_bmp, c, 0 + v.x - v.ox + g.space_bmp.w*i, 0 + v.y - v.oy + g.space_bmp.h*j, 0);
+				COLOR c = COLOR(1,1,1,1); 
+				al_draw_tinted_bitmap(g.space_bmp, c, 0 + v.x - v.ox/1.25 + g.space_bmp.w*i, 0 + v.y - v.oy/1.25 + g.space_bmp.h*j, 0);
 				}
 		for(int i = -2; i < 2; i++)
 			for(int j = -2; j < 2; j++)
