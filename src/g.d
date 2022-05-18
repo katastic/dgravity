@@ -24,6 +24,7 @@ ALLEGRO_BITMAP* smoke_bmp;
 ALLEGRO_BITMAP* small_asteroid_bmp;
 ALLEGRO_BITMAP* medium_asteroid_bmp;
 ALLEGRO_BITMAP* large_asteroid_bmp;
+ALLEGRO_BITMAP* space_bmp;
 
 ALLEGRO_BITMAP* bullet_bmp;
 ALLEGRO_BITMAP* dude_up_bmp;
@@ -62,6 +63,7 @@ void loadResources()
 	medium_asteroid_bmp  	= getBitmap("./data/medium_asteroid.png");
 	large_asteroid_bmp  	= getBitmap("./data/large_asteroid.png");
 	smoke_bmp  	= getBitmap("./data/smoke.png");
+	space_bmp  	= getBitmap("./data/seamless_space.png");
 	
 	dude_up_bmp  		= getBitmap("./data/dude_up.png");
 	dude_down_bmp	  	= getBitmap("./data/dude_down.png");
@@ -364,6 +366,25 @@ class world_t
 		
 	void draw(viewport v)
 		{
+		al_draw_bitmap(g.space_bmp, 0 + v.x - v.ox, 0 + v.y - v.oy, 0);
+		for(int i = -2; i < 2; i++)
+			for(int j = -2; j < 2; j++)
+				{
+				COLOR c = COLOR(1,1,1,.5); 
+				al_draw_tinted_bitmap(g.space_bmp, c, 0 + v.x - v.ox + g.space_bmp.w*i, 0 + v.y - v.oy + g.space_bmp.h*j, 0);
+				}
+		for(int i = -2; i < 2; i++)
+			for(int j = -2; j < 2; j++)
+				{
+				COLOR c = COLOR(1,1,1,.5); 
+				al_draw_tinted_bitmap(g.space_bmp, c, 0 + v.x - v.ox/2 + g.space_bmp.w*i, 0 + v.y - v.oy/2 + g.space_bmp.h*j, 0);
+				}
+		for(int i = -2; i < 2; i++)
+			for(int j = -2; j < 2; j++)
+				{
+				COLOR c = COLOR(1,1,1,.25); 
+				al_draw_tinted_bitmap(g.space_bmp, c, 0 + v.x - v.ox*2 + g.space_bmp.w*i, 0 + v.y - v.oy*2 + g.space_bmp.h*j, 0);
+				}
 		stats.swDraw.start();
 		void draw(T)(ref T obj)
 			{
