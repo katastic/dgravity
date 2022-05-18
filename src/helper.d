@@ -13,13 +13,11 @@ import viewportsmod;
 import g;
 import objects;
 
-
 COLOR white = COLOR(1,1,1,1);
 COLOR black = COLOR(0,0,0,1);
 COLOR red   = COLOR(1,0,0,1);
 COLOR green = COLOR(0,1,0,1);
 COLOR blue  = COLOR(0,0,1,1);
-
 
 /// TODO: NYI
 /// give me the necessary velocity (vx,vy) for a object to orbit a planet at distance D
@@ -121,7 +119,6 @@ float angleDiff(T)(T _thisAngle, T toThatAngle)
 	{
 	return abs(_thisAngle - toThatAngle);
 	}
-
 
 float distanceTo(T, U)(T t, U u)
 	{

@@ -278,6 +278,7 @@ class ship : unit
 	bool isLanded=false;
 	immutable float MAX_LATCHING_SPEED = 3;
 	immutable float MAX_SAFE_LANDING_ANGLE = 45;
+	immutable float ROTATION_SPEED = 5;
 	
 	this(float _x, float _y, float _xv, float _yv)
 		{
@@ -358,8 +359,8 @@ class ship : unit
 		if(!isLanded)applyV(angle, -.1); 
 		}
 		
-	override void left() { if(!isLanded){angle -= degToRad(10.0); angle = wrapRad(angle);}}
-	override void right() { if(!isLanded){angle += degToRad(10.0); angle = wrapRad(angle);}}
+	override void left() { if(!isLanded){angle -= degToRad(ROTATION_SPEED); angle = wrapRad(angle);}}
+	override void right() { if(!isLanded){angle += degToRad(ROTATION_SPEED); angle = wrapRad(angle);}}
 	override void attack()
 		{
 		}
