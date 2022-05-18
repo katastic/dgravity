@@ -197,7 +197,7 @@ struct display_t
 			g.viewports[0].y + g.viewports[0].h); //-1
 		
 		static if(DEBUG_NO_BACKGROUND)
-			al_clear_to_color(ALLEGRO_COLOR(.05, .05, .05, 1));
+			al_clear_to_color(ALLEGRO_COLOR(0, 0, 0, 1));
 		
 		g.world.draw(g.viewports[0]);
 		}
@@ -329,7 +329,6 @@ void execute()
 					isKeySet(ALLEGRO_KEY_ESCAPE, exit);
 
 					isKeySet(ALLEGRO_KEY_SPACE, g.key_space_down);
-					
 					isKeySet(ALLEGRO_KEY_W, g.key_w_down);
 					isKeySet(ALLEGRO_KEY_S, g.key_s_down);
 					isKeySet(ALLEGRO_KEY_A, g.key_a_down);

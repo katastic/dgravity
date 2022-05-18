@@ -14,6 +14,7 @@ import std.string;
 import g;
 import helper;
 import viewportsmod;
+
 /*
 	Teams
 		0 - Neutral		(asteroids. unclaimed planets?)
@@ -26,6 +27,108 @@ name clashes
 
 /// baseObject and handler for asteroids, 1st-order physics baseObjects that float and split on collision/firing
 /// 
+
+
+
+
+
+
+
+struct particle
+	{
+	float x=0, y=0;
+	float vx=0, vy=0;
+	int type=0;
+	int lifetime=0;
+	int maxLifetime=0;
+	int rotation=0;
+	bool isDead=false;
+
+	//particle(x, y, vx, vy, 0, 5);
+	/// spawn smoke without additional unit u
+	this(float _x, float _y, float _vx, float _vy, int _type, int  _lifetime)
+		{
+		import std.math : cos, sin;
+		x = _x;
+		y = _y;
+		vx = _vx + uniform!"[]"(-.1, .1);
+		vy = _vy + uniform!"[]"(-.1, .1);
+		type = _type;
+		lifetime = _lifetime;
+		maxLifetime = _lifetime;
+		rotation = uniform!"[]"(0, 3);
+		}
+	
+	/// spawn smoke with acceleration from unit u
+	this(float _x, float _y, float _vx, float _vy, int _type, int  _lifetime, unit u)
+		{
+		import std.math : cos, sin;
+		float thrustAngle = u.angle;
+		float thrustDistance = -30;
+		float thrustVelocity = -3;
+		
+		x = _x + cos(thrustAngle)*thrustDistance;
+		y = _y + sin(thrustAngle)*thrustDistance;
+		vx = _vx + uniform!"[]"(-.1, .1) + cos(thrustAngle)*thrustVelocity;
+		vy = _vy + uniform!"[]"(-.1, .1) + sin(thrustAngle)*thrustVelocity;
+		type = _type;
+		lifetime = _lifetime;
+		maxLifetime = _lifetime;
+		rotation = uniform!"[]"(0, 3);
+		}
+		
+	void draw(viewport v)
+		{
+		BITMAP *b = g.smoke_bmp;
+		ALLEGRO_COLOR c = ALLEGRO_COLOR(1,1,1,cast(float)lifetime/cast(float)maxLifetime);
+		float cx = x + v.x - v.ox - b.w/2;
+		float cy = y + v.y - v.oy - b.h/2;
+		float scaleX = (cast(float)lifetime/cast(float)maxLifetime) * b.w;
+		float scaleY = (cast(float)lifetime/cast(float)maxLifetime) * b.h;
+		al_draw_tinted_scaled_bitmap(b, c,
+			0, 0, b.w, b.h,
+			cx, cy, scaleX, scaleY, rotation);
+		}
+	
+
+	// NOTE. duplicate of ship.checkPlanetCollision
+	bool checkPlanetCollision(planet p)
+		{
+		if(distanceTo(this, p) < p.r)
+			{
+			return true;
+			}else{
+			return false;
+			}
+		}
+	
+	void onTick() // should we check for planets collision?
+		{
+		lifetime--;
+		if(lifetime == 0)
+			{
+			isDead=true;
+			}else{
+				
+			foreach(p; g.world.planets) // NOTE. similar to ship.checkPlanetCollision
+				{
+				if(checkPlanetCollision(p))
+					{
+					vx = 0;
+					vy = 0;
+					}
+				}
+			
+			x += vx;
+			y += vy;
+			}
+		}
+	
+	}
+
+
+
+
 class asteroid : unit
 	{
 	int size=2; // 2 = large, 1 = medium, 0 = small
@@ -94,13 +197,87 @@ class asteroid : unit
 		}
 	}
 	
-struct bullet
+class bullet : baseObject
 	{
 	float x=0, y=0;
 	float vx=0, vy=0;
+	float angle=0;
 	int type; // 0 = normal bullet whatever
 	int lifetime; // frames passed since firing
 	bool isDead=false; // to trim
+	
+	this(float _x, float _y, float _vx, float _vy, float _angle, int _type, int _lifetime)
+		{
+		x = _x;
+		y = _y;
+		vx = _vx;
+		vy = _vy;
+		type = _type;
+		lifetime = _lifetime;
+		angle = _angle;
+		super(_x, _y, _vx, _vy, g.bullet_bmp);
+		}
+	
+	void applyGravity(planet p) //MODIFIED FROM ORIGINAL
+		{		
+		// gravity acceleration formula: g = -G*M/r^2
+		float G = 1; // gravitational constant
+		float M = PLANET_MASS_FOR_BULLETS; // mass of planet
+		float r = distanceTo(this, p);
+		float angle = angleTo(this, p);
+		float g = -G*M/r^^2;
+		applyV(angle, g);
+		}
+
+	void applyV(float applyAngle, float vel)
+		{
+		vx += cos(applyAngle)*vel;
+		vy += sin(applyAngle)*vel;
+		}
+	
+	// NOTE. duplicate of ship.checkPlanetCollision
+	bool checkPlanetCollision(planet p)
+		{
+		if(distanceTo(this, p) < p.r)
+			{
+			return true;
+			}else{
+			return false;
+			}
+		}
+	
+	override void onTick() // should we check for planets collision?
+		{
+		lifetime--;
+		if(lifetime == 0)
+			{
+			isDead=true;
+			}else{
+			applyGravity(g.world.planets[0]);
+			foreach(p; g.world.planets) // NOTE. similar to ship.checkPlanetCollision
+				{
+				if(checkPlanetCollision(p))
+					{
+					isDead=true;
+					vx = 0;
+					vy = 0;
+					import std.random : uniform;
+					g.world.particles ~= particle(x, y, vx, vy, 0, uniform!"[]"(3, 6));
+					}
+				}
+			
+			x += vx;
+			y += vy;
+			}
+		}
+	
+	override void draw(viewport v)
+		{		
+		float dx = x + v.x - v.ox;
+		float dy = y + v.y - v.oy;
+//		al_draw_bitmap(bmp, dx, dy, 0);
+		al_draw_center_rotated_bitmap(bmp, dx, dy, angle + degToRad(90), 0);
+		}
 	}
 	
 class bulletHandler
@@ -183,7 +360,7 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		{		
 		// gravity acceleration formula: g = -G*M/r^2
 		float G = 1; // gravitational constant
-		float M = 2000; // mass of planet
+		float M = PLANET_MASS; // mass of planet
 		float r = distanceTo(this, p);
 		float angle = angleTo(this, p);
 		float g = -G*M/r^^2;
@@ -279,6 +456,7 @@ class ship : unit
 	immutable float MAX_LATCHING_SPEED = 3;
 	immutable float MAX_SAFE_LANDING_ANGLE = 45;
 	immutable float ROTATION_SPEED = 5;
+	immutable float BULLET_SPEED = 10;
 	
 	this(float _x, float _y, float _xv, float _yv)
 		{
@@ -363,6 +541,9 @@ class ship : unit
 	override void right() { if(!isLanded){angle += degToRad(ROTATION_SPEED); angle = wrapRad(angle);}}
 	override void attack()
 		{
+		float _vx = vx + cos(angle)*BULLET_SPEED;
+		float _vy = vy + sin(angle)*BULLET_SPEED;
+		g.world.bullets ~= new bullet(x, y, _vx, _vy, angle, 0, 100);
 		}
 	}
 	

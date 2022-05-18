@@ -17,6 +17,11 @@ import helper;
 import objects;
 import viewportsmod;
 
+
+immutable PLANET_MASS = 4000;
+immutable PLANET_MASS_FOR_BULLETS = 20000;
+
+
 ALLEGRO_FONT* 	font1;
 
 ALLEGRO_BITMAP* ship_bmp;
@@ -25,8 +30,8 @@ ALLEGRO_BITMAP* small_asteroid_bmp;
 ALLEGRO_BITMAP* medium_asteroid_bmp;
 ALLEGRO_BITMAP* large_asteroid_bmp;
 ALLEGRO_BITMAP* space_bmp;
-
 ALLEGRO_BITMAP* bullet_bmp;
+
 ALLEGRO_BITMAP* dude_up_bmp;
 ALLEGRO_BITMAP* dude_down_bmp;
 ALLEGRO_BITMAP* dude_left_bmp;
@@ -64,6 +69,7 @@ void loadResources()
 	large_asteroid_bmp  	= getBitmap("./data/large_asteroid.png");
 	smoke_bmp  	= getBitmap("./data/smoke.png");
 	space_bmp  	= getBitmap("./data/seamless_space.png");
+	bullet_bmp  	= getBitmap("./data/bullet.png");
 	
 	dude_up_bmp  		= getBitmap("./data/dude_up.png");
 	dude_down_bmp	  	= getBitmap("./data/dude_down.png");
@@ -177,81 +183,6 @@ struct bubble
 	bool isDead=false;
 	}
 
-struct particle
-	{
-	float x=0, y=0;
-	float vx=0, vy=0;
-	int type=0;
-	int lifetime=0;
-	int maxLifetime=0;
-	int rotation=0;
-	bool isDead=false;
-
-	this(float _x, float _y, float _vx, float _vy, int _type, int  _lifetime, unit u)
-		{
-		import std.math : cos, sin;
-		float thrustAngle = u.angle;
-		float thrustDistance = -30;
-		float thrustVelocity = -3;
-		
-		x = _x + cos(thrustAngle)*thrustDistance;
-		y = _y + sin(thrustAngle)*thrustDistance;
-		vx = _vx + uniform!"[]"(-.1, .1) + cos(thrustAngle)*thrustVelocity;
-		vy = _vy + uniform!"[]"(-.1, .1) + sin(thrustAngle)*thrustVelocity;
-		type = _type;
-		lifetime = _lifetime;
-		maxLifetime = _lifetime;
-		rotation = uniform!"[]"(0, 3);
-		}
-		
-	void draw(viewport v)
-		{
-		BITMAP *b = g.smoke_bmp;
-		ALLEGRO_COLOR c = ALLEGRO_COLOR(1,1,1,cast(float)lifetime/cast(float)maxLifetime);
-		float cx = x + v.x - v.ox - b.w/2;
-		float cy = y + v.y - v.oy - b.h/2;
-		float scaleX = (cast(float)lifetime/cast(float)maxLifetime) * b.w;
-		float scaleY = (cast(float)lifetime/cast(float)maxLifetime) * b.h;
-		al_draw_tinted_scaled_bitmap(b, c,
-			0, 0, b.w, b.h,
-			cx, cy, scaleX, scaleY, rotation);
-		}
-	
-
-	// NOTE. duplicate of ship.checkPlanetCollision
-	bool checkPlanetCollision(planet p)
-		{
-		if(distanceTo(this, p) < p.r)
-			{
-			return true;
-			}else{
-			return false;
-			}
-		}
-	
-	void onTick() // should we check for planets collision?
-		{
-		lifetime--;
-		if(lifetime == 0)
-			{
-			isDead=true;
-			}else{
-				
-			foreach(p; g.world.planets) // NOTE. similar to ship.checkPlanetCollision
-				{
-				if(checkPlanetCollision(p))
-					{
-					vx = 0;
-					vy = 0;
-					}
-				}
-			
-			x += vx;
-			y += vy;
-			}
-		}
-	
-	}
 
 class particle_handler
 	{
@@ -345,6 +276,7 @@ class world_t
 	planet[] planets;
 	asteroid[] asteroids;
 	particle[] particles;
+	bullet[] bullets;
 
 	this()
 		{
@@ -364,7 +296,7 @@ class world_t
 		stats.swDraw = StopWatch(AutoStart.no);
 		}
 		
-	void draw(viewport v)
+	void drawSpace(viewport v)
 		{
 		al_draw_bitmap(g.space_bmp, 0 + v.x - v.ox, 0 + v.y - v.oy, 0);
 		for(int i = -2; i < 2; i++)
@@ -377,14 +309,19 @@ class world_t
 			for(int j = -2; j < 2; j++)
 				{
 				COLOR c = COLOR(1,1,1,.5); 
-				al_draw_tinted_bitmap(g.space_bmp, c, 0 + v.x - v.ox/2 + g.space_bmp.w*i, 0 + v.y - v.oy/2 + g.space_bmp.h*j, 0);
+				al_draw_tinted_bitmap(g.space_bmp, c, 0 + v.x - v.ox/2 + g.space_bmp.w*i, 0 + v.y - v.oy/2 + g.space_bmp.h*j, 1);
 				}
-		for(int i = -2; i < 2; i++)
-			for(int j = -2; j < 2; j++)
+		for(int i = -4; i < 4; i++)
+			for(int j = -4; j < 4; j++)
 				{
 				COLOR c = COLOR(1,1,1,.25); 
-				al_draw_tinted_bitmap(g.space_bmp, c, 0 + v.x - v.ox*2 + g.space_bmp.w*i, 0 + v.y - v.oy*2 + g.space_bmp.h*j, 0);
+				al_draw_tinted_bitmap(g.space_bmp, c, 0 + v.x - v.ox/4 + g.space_bmp.w*i, 0 + v.y - v.oy/4 + g.space_bmp.h*j, 3);
 				}
+		}
+		
+	void draw(viewport v)
+		{
+		drawSpace(v);
 		stats.swDraw.start();
 		void draw(T)(ref T obj)
 			{
@@ -405,6 +342,7 @@ class world_t
 		
 		draw(planets);
 		draw(asteroids);
+		draw(bullets);
 		draw(particles);
 		drawStat(units, stats.number_of_drawn_dwarves);
 		drawStat(structures, stats.number_of_drawn_structures);		
@@ -432,7 +370,7 @@ class world_t
 		if(key_s_down)p.down();
 		if(key_a_down)p.left();
 		if(key_d_down)p.right();
-		if(key_q_down)p.attack();
+		if(key_space_down)p.attack();
 		
 		void tick(T)(ref T obj)
 			{
@@ -447,6 +385,7 @@ class world_t
 		tick(particles);
 		tick(asteroids);
 		tick(units);
+		tick(bullets);
 
 		//prune ready-to-delete entries
 		void prune(T)(ref T obj)
@@ -461,6 +400,7 @@ class world_t
 		prune(structures);
 		prune(planets);
 		prune(particles);
+		prune(bullets);
 		prune(asteroids);
 		stats.swLogic.stop();
 		stats.msLogic = stats.swLogic.peek.total!"msecs";

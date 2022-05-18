@@ -1,4 +1,5 @@
 TODO
+	- NEAT but unsure: BULLETS are (heavily) affected by gravity and arc around planets
 	- We could make "more damage to ship = more thrust random velocity variation" as a visual indicator
 	- add "interstellar dust" just random particles hitting objects to add "feel" and interaction (no damage, just particle fx)
 	- game mechanics: Spawn on nearest available spawn (carrier, planet, etc)
