@@ -134,7 +134,7 @@ class asteroid : unit
 		if(size == 1){b = g.medium_asteroid_bmp; r = b.w/2;} 
 		if(size == 2){b = g.large_asteroid_bmp; r = b.w/2;}
 		assert(b !is null);
-		super(0, _x, _y, _vx, _vy, b);
+		super(0, _x + uniform!"[]"(-25, 25), _y + uniform!"[]"(-25, 25), _vx, _vy, b);
 		}
 		
 	/// WARN: we do SIZE REDUCTION HERE. Careful not to somehow use this
@@ -233,6 +233,7 @@ class bullet : baseObject
 		vy += sin(applyAngle)*vel;
 		}
 	
+
 	bool checkAsteroidCollision(asteroid a) // TODO fix. currently radial collision setup
 		{
 		if(distanceTo(this, a) < a.r)
@@ -492,6 +493,17 @@ class ship : unit
 		vx *= -.80;
 		vy *= -.80;
 		}
+		
+	bool checkAsteroidCollision(asteroid a) // TODO fix. currently radial collision setup
+		{
+		if(distanceTo(this, a) < a.r)
+			{
+			return true;
+			}else{
+			return false;
+			}		
+		}
+
 
 	override void onTick()
 		{
@@ -524,6 +536,16 @@ class ship : unit
 						}
 					}
 				}
+				
+			foreach(a; g.world.asteroids)
+				{
+				if(checkAsteroidCollision(a))
+					{
+				//	isDead=true;
+					a.onHit(this);
+					}
+				}
+				
 			x += vx;
 			y += vy;
 			}

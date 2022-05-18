@@ -191,7 +191,6 @@ class world_t
 		
 	void drawSpace(viewport v)
 		{
-//		al_draw_bitmap(g.space_bmp, 0 + v.x - v.ox, 0 + v.y - v.oy, 0);
 		for(int i = -2; i < 2; i++)
 			for(int j = -2; j < 2; j++)
 				{
