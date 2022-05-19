@@ -246,8 +246,10 @@ class world_t
 		stats.swDraw.reset();
 		}
 		
+	int timer=0;
 	void logic()
 		{
+		
 		stats.swLogic.start();
 		assert(testGraph !is null);
 		testGraph.onTick();
@@ -255,6 +257,14 @@ class world_t
 		ship p = cast(ship)units[0]; // player
 		viewports[0].ox = p.x - viewports[0].w/2;
 		viewports[0].oy = p.y - viewports[0].h/2;
+		timer++;
+		if(timer > 200)
+			{
+			timer = 0;
+			float cx = planets[0].x + uniform!"[]"(-500, 500);
+			float cy = planets[0].y + uniform!"[]"(-500, 500);
+			g.world.asteroids ~= new asteroid(cx, cy, 0, 0, uniform!"[]"(-10,10)/1000.0, uniform!"[]"(0,2));
+			}//float _x, float _y, float _vx, float _vy, float _va, int _size
 
 		p.isPlayerControlled = true;
 

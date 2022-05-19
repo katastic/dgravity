@@ -120,12 +120,13 @@ struct particle
 
 class asteroid : unit
 	{
-	int size=2; // 2 = large, 1 = medium, 0 = small
+	int size=200; // 2 = large, 1 = medium, 0 = small
 	float va=0; // velocity of rotation (angular velocity)
 	int r=0; // radius, quick collision checking value. 
 	
 	this(float _x, float _y, float _vx, float _vy, float _va, int _size)
 		{
+		writeln("asteroid.this, size: ", _size);
 		va = _va;
 		angle = uniform!"[]"(0, 2*PI);
 		size = _size;
@@ -134,27 +135,22 @@ class asteroid : unit
 		if(size == 1){b = g.medium_asteroid_bmp; r = b.w/2;} 
 		if(size == 2){b = g.large_asteroid_bmp; r = b.w/2;}
 		assert(b !is null);
-		super(0, _x + uniform!"[]"(-25, 25), _y + uniform!"[]"(-25, 25), _vx, _vy, b);
+		super(0, _x, _y, _vx, _vy, b);
 		}
 		
-	/// WARN: we do SIZE REDUCTION HERE. Careful not to somehow use this
-	/// to clone an asteroid.
-	/// TODO: make sure they don't collide and they split off in random 
-	/// direction from each other.
 	this(asteroid a)
 		{
-		// We would call a function called shrink() to make this obvious
-		// but other functions cannot call super().
+		writeln("asteroid.this(a), size: ", a.size);
 		va = a.va;
 		angle = a.angle;
-		size = a.size - 1;
+		size = a.size;
 		BITMAP* b;
 		assert(size >= 0);
 		if(size == 0){b = g.small_asteroid_bmp; r = b.w/2;}
 		if(size == 1){b = g.medium_asteroid_bmp; r = b.w/2;} 
 		if(size == 2){b = g.large_asteroid_bmp; r = b.w/2;}
 		assert(b !is null);
-		super(0, a.x, a.y, a.vx, a.vy, b);
+		super(0, a.x + uniform!"[]"(-250, 250), a.y + uniform!"[]"(-250, 250), a.vx, a.vy, b);
 		}		
 	
 	override void onTick()
@@ -167,21 +163,24 @@ class asteroid : unit
 	/// become smaller and create 3 new identical smaller size asteroids
 	void split()
 		{
+		writeln("asteroid.split, size: ", size);
 		g.world.particles ~= particle(x, y, vx, vy, 0, uniform!"[]"(30, 60));
-		if(size <= 0)
+		size--;
+		if(size < 0)
 			{
 			import std.random : uniform;
 			g.world.particles ~= particle(x, y, vx, vy, 0, uniform!"[]"(30, 60));
 			isDead = true;
 			return;
+			}else{				
+			// clone ourselves then reduce size
+			g.world.asteroids ~= new asteroid(this); 
+			g.world.asteroids ~= new asteroid(this);
+			g.world.asteroids ~= new asteroid(this);
+			if(size == 0){bmp = g.small_asteroid_bmp; r = bmp.w/2;}
+			if(size == 1){bmp = g.medium_asteroid_bmp; r = bmp.w/2;} 
+			if(size == 2){bmp = g.large_asteroid_bmp; r = bmp.w/2;}
 			}
-		g.world.asteroids ~= new asteroid(this);
-		g.world.asteroids ~= new asteroid(this);
-		g.world.asteroids ~= new asteroid(this);
-		size--;
-		if(size == 0){bmp = g.small_asteroid_bmp; r = bmp.w/2;}
-		if(size == 1){bmp = g.medium_asteroid_bmp; r = bmp.w/2;} 
-		if(size == 2){bmp = g.large_asteroid_bmp; r = bmp.w/2;}
 		}
 		
 	override void onCollision(baseObject who)
@@ -504,7 +503,6 @@ class ship : unit
 			}		
 		}
 
-
 	override void onTick()
 		{
 		if(!isLanded)
@@ -521,16 +519,16 @@ class ship : unit
 						float a = angle;
 						float b = angleTo(this, p).wrapRad;
 						float result = angleDiff(a, b);
-						writefln("A%3.2f B%3.2f result was: %3.2f < %3.2f?", radToDeg(a), radToDeg(b), radToDeg(result), MAX_SAFE_LANDING_ANGLE);
+			//			writefln("A%3.2f B%3.2f result was: %3.2f < %3.2f?", radToDeg(a), radToDeg(b), radToDeg(result), MAX_SAFE_LANDING_ANGLE);
 						if(result < degToRad(MAX_SAFE_LANDING_ANGLE))
 							{					
-							writeln(" SUCCESS");
+		//					writeln(" SUCCESS");
 							angle = angleTo(this, p);
 							isLanded = true;
 							vx = 0;
 							vy = 0;
 							}else{
-							writeln(" FAIL");
+	//						writeln(" FAIL");
 							crash();
 							}
 						}
