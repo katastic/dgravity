@@ -238,10 +238,8 @@ struct display_t
 
 		al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "obj[%.2f,%.2f][%.2f %f.2] %.2f deg", u.x, u.y, u.vx, u.vy, u.angle.radToDeg); 
 		al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "fps[%d] objrate[%d]", g.stats.fps, 
-					(g.stats.number_of_drawn_objects +
-					g.stats.number_of_drawn_dwarves + 
-					g.stats.number_of_drawn_background_tiles + 
-					g.stats.number_of_drawn_objects + 
+					(g.stats.number_of_drawn_particles +
+					g.stats.number_of_drawn_units + 
 					g.stats.number_of_drawn_particles + 
 					g.stats.number_of_drawn_structures) * g.stats.fps ); 
 					// total draws multiplied by fps. how many objects per second we can do.
@@ -251,12 +249,11 @@ struct display_t
 			
 			al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "money [%d] deaths [%d]", g.players[0].money, g.players[0].deaths);
 			al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, 
-				"drawn: objects [%d] dwarves [%d] structs [%d] bg_tiles [%d] particles [%d]", 
-				g.stats.number_of_drawn_objects, 
-				g.stats.number_of_drawn_dwarves, 
+				"drawn: structs [%d] bg_tiles [%d] particles [%d] units [%d]", 
 				g.stats.number_of_drawn_structures, 
 				g.stats.number_of_drawn_background_tiles, 
-				g.stats.number_of_drawn_particles);
+				g.stats.number_of_drawn_particles,
+				g.stats.number_of_drawn_units);
 			
 		text_helper(true);  //reset
 		

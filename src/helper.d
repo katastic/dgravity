@@ -19,6 +19,13 @@ COLOR red   = COLOR(1,0,0,1);
 COLOR green = COLOR(0,1,0,1);
 COLOR blue  = COLOR(0,0,1,1);
 
+//mixin template grey(T)(T w)
+	//{
+	//COLOR(w, w, w, 1);
+	//}
+ 
+
+
 /// TODO: NYI
 /// give me the necessary velocity (vx,vy) for a object to orbit a planet at distance D
 ///
@@ -534,4 +541,83 @@ void al_draw_gouraud_bitmap_5pt(ALLEGRO_BITMAP* bmp, float x, float y, COLOR tl,
 	vtx[5].v = vtx[1].v;
 
 	al_draw_prim(cast(void*)vtx, null, bmp, 0, vtx.length, ALLEGRO_PRIM_TYPE.ALLEGRO_PRIM_TRIANGLE_FAN);
+	}
+	
+	
+/// al_draw_line_segment for pairs
+void al_draw_line_segment(pair[] pairs, COLOR color, float thickness)
+	{
+	assert(pairs.length > 1);
+	pair lp = pairs[0]; // initial p, also previous p ("last p")
+	foreach(ref p; pairs)
+		{
+		al_draw_line(p.x, p.y, lp.x, lp.y, color, thickness);
+		lp = p;
+		}
+	}
+	
+/// al_draw_line_segment for raw integers floats POD arrays
+void al_draw_line_segment(T)(T[] x, T[] y, COLOR color, float thickness)
+	{
+	assert(x.length > 1);
+	assert(y.length > 1);
+	assert(x.length == y.length);
+
+	for(int i = 1; i < x.length; i++) // note i = 1
+		{
+		al_draw_line(x[i], y[i], x[i-1], y[i-1], color, thickness);
+		}
+	}
+
+/// al_draw_line_segment 1D
+void al_draw_line_segment(T)(T[] y, COLOR color, float thickness)
+	{
+	assert(y.length > 1);
+
+	for(int i = 1; i < y.length; i++) // note i = 1
+		{
+		al_draw_line(i, y[i], i-1, y[i-1], color, thickness);
+		}
+	}
+
+/// al_draw_line_segment 1D
+void al_draw_scaled_line_segment(T)(pair xycoord, T[] y, float yScale, COLOR color, float thickness)
+	{
+	assert(y.length > 1);
+
+	for(int i = 1; i < y.length; i++) // note i = 1
+		{
+		al_draw_line(
+			xycoord.x + i, 
+			xycoord.y + y[i]*yScale, 
+			xycoord.x + i-1, 
+			xycoord.y + y[i-1]*yScale, 
+			color, thickness);
+		}
+	}
+
+/// al_draw_line_segment 1D
+void al_draw_scaled_indexed_line_segment(T)(pair xycoord, T[] y, float yScale, COLOR color, float thickness, int index, COLOR indexColor)
+	{
+	assert(y.length > 1);
+
+	for(int i = 1; i < y.length; i++) // note i = 1
+		{
+		if(i == index)
+			{
+			al_draw_line(
+				xycoord.x + i, 
+				xycoord.y + y[i]*yScale, 
+				xycoord.x + i-1, 
+				xycoord.y + y[i-1]*yScale, 
+				indexColor, thickness*2);
+			}else{
+			al_draw_line(
+				xycoord.x + i, 
+				xycoord.y + y[i]*yScale, 
+				xycoord.x + i-1, 
+				xycoord.y + y[i-1]*yScale, 
+				color, thickness);
+			}
+		}
 	}
