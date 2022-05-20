@@ -586,25 +586,29 @@ class ship : unit
 	
 class planet : baseObject
 	{
+	player currentOwner;
 	float r = 100; /// radius
-	string name="";
-	@disable this();
+	string name="Big Chungus";
 	structure_t[] structures;
 	
-	this(string _name, float _x, float _y, float _r)
+	@disable this();
+	this(string _name, float _x, float _y, float _r, player p)
 		{
 		name = _name;
 		r = _r;
-		super(_x, _y, 0, 0, g.tree_bmp); // works perfect
-		
-		structures ~= new structure_t(0, 0, g.fountain_bmp, this);
+		super(_x, _y, 0, 0, g.tree_bmp); // works perfect		
+		structures ~= new structure_t(0, 0, g.fountain_bmp, this, p);
 		}
 	
 	override void draw(viewport v)
 		{
 		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r, COLOR(.8,.8,.8,1));
 		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r * .80, COLOR(1,1,1,1));
-		foreach(s; structures) s.draw(v);
+		foreach(s; structures) 
+			{
+			g.stats.number_of_drawn_structures++;
+			s.draw(v);
+			}
 		}
 		
 	override void onTick()
@@ -625,11 +629,15 @@ class structure_t : baseObject
 	int countdown = countdown_rate; // I don't like putting variables in the middle of classes but I ALSO don't like throwing 1-function-only variables at the top like the entire class uses them.
 	planet myPlanet;
 	
-	this(float x, float y, ALLEGRO_BITMAP* b, planet _myPlanet)
+	this(float x, float y, ALLEGRO_BITMAP* b, planet _myPlanet, player p)
 		{
 		super(x, y, 0, 0,b);
 		writeln("we MADE a structure. @ ", x, " ", y);
-		g.players[0].money -= 250;
+	// this CRASHES. I'm not sure why, players should exist by now but doesn't. Almost like it's not allocated yet.
+	//	assert(g.world.players[0] !is null);
+	//	g.world.players[0].money -= 250;
+		assert(p !is null); // this works fine. wtf.
+		p.money -= 250;
 		myPlanet = _myPlanet;
 		}
 
@@ -691,5 +699,4 @@ class baseObject
 		{
 		// THOU. SHALT. NOT. PUT. PHYSICS. IN BASE. baseObject.
 		}
-
 	}	

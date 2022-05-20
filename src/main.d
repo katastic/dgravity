@@ -247,7 +247,7 @@ struct display_t
 					// no longer limited by screen VSYNC.
 	
 			
-			al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "money [%d] deaths [%d]", g.players[0].money, g.players[0].deaths);
+			al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "money [%d] deaths [%d]", g.world.players[0].money, g.world.players[0].deaths);
 			al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, 
 				"drawn: structs [%d] bg_tiles [%d] particles [%d] units [%d]", 
 				g.stats.number_of_drawn_structures, 

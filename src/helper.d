@@ -23,8 +23,6 @@ COLOR blue  = COLOR(0,0,1,1);
 	//{
 	//COLOR(w, w, w, 1);
 	//}
- 
-
 
 /// TODO: NYI
 /// give me the necessary velocity (vx,vy) for a object to orbit a planet at distance D

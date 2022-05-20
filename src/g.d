@@ -57,7 +57,6 @@ ALLEGRO_BITMAP* blood_bmp;
 int SCREEN_W = 1360;
 int SCREEN_H = 720;
 
-player_t[2] players;
 intrinsicGraph!float testGraph;
 intrinsicGraph!float testGraph2;
 
@@ -160,28 +159,55 @@ struct pair
 world_t world;
 viewport[2] viewports;
 
-struct player_t
+class player
 	{
+	ship playerShip; //current. Also how do we handle with units die / switch active ship (if that's an option)
 	int money=1000; //we might have team based money accounts. doesn't matter yet.
+	int kills=0;
+	int aikills=0;
 	int deaths=0;
+	
+	this(ship who)
+		{
+		playerShip = who;
+		}
+	}
+	
+class team
+	{
+	int money=0;
+	int aikills=0;
+	int kills=0;
+	int deaths=0;
+	
+	this(player p)
+		{
+		}
 	}
 	
 class world_t
-	{			
+	{	
+	player[] players;
+	team[] teams;
+				
 	baseObject[] objects; // other stuff
 	unit[] units;
-	structure_t[] structures;
+ 	//structure_t[] structures; // should all structures be owned by a planet? are there 'free floating' structures we'd have? an asteroid structure that's just a structure?
 	planet[] planets;
 	asteroid[] asteroids;
 	particle[] particles;
 	bullet[] bullets;
 
 	this()
-		{
-		units ~= new ship(680, 360, 0, 0);
-		planets ~= new planet("first", 400, 300, 200);
-		planets ~= new planet("second", 1210, 410, 100);
-		planets ~= new planet("third", 1720, 520, 50);
+		{		
+		auto s = new ship(680, 360, 0, 0);	
+		units ~= s; //which comes first, player or the egg
+		players ~= new player(s);
+		teams ~= new team(players[0]);
+		// note structures currently pre-req a player instantiated
+		planets ~= new planet("first", 400, 300, 200, players[0]);
+		planets ~= new planet("second", 1210, 410, 100, players[0]);
+		planets ~= new planet("third", 1720, 520, 50, players[0]);
 		asteroids ~= new asteroid(400+150, 550, 0.1, 0, .02, 2);
 		asteroids ~= new asteroid(400-150, 550, 0.1, 0, .02, 1);
 		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
@@ -190,6 +216,7 @@ class world_t
 		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
 		testGraph = new intrinsicGraph!float("Draw (ms)", g.stats.nsDraw, 100, 200 - 50, COLOR(1,0,0,1), 1_000_000);
 		testGraph2 = new intrinsicGraph!float("Logic (ms)", g.stats.msLogic, 100, 320 - 50, COLOR(1,0,0,1), 1_000_000);
+	
 		stats.swLogic = StopWatch(AutoStart.no);
 		stats.swDraw = StopWatch(AutoStart.no);
 		}
@@ -242,7 +269,7 @@ class world_t
 		drawStat(bullets, 	stats.number_of_drawn_particles);
 		drawStat(particles, stats.number_of_drawn_particles);
 		drawStat(units, 	stats.number_of_drawn_units);
-		drawStat(structures, stats.number_of_drawn_structures);		
+//		drawStat(structures, stats.number_of_drawn_structures);		
 
 		testGraph.draw(v);
 		testGraph2.draw(v);
@@ -285,7 +312,7 @@ class world_t
 				}
 			}
 			
-		tick(structures);
+//		tick(structures);
 		tick(planets);
 		tick(particles);
 		tick(asteroids);
@@ -303,7 +330,7 @@ class world_t
 			}
 			
 		prune(units);
-		prune(structures);
+//		prune(structures);
 		prune(planets);
 		prune(particles);
 		prune(bullets);
@@ -314,7 +341,6 @@ class world_t
 		stats.swLogic.reset();
 		}
 	}
-
 
 struct statistics_t
 	{
