@@ -644,7 +644,7 @@ class structure_t : baseObject
 	override void draw(viewport v)
 		{
 		// we draw RELATIVE to planet.xy, so no using baseObject.draw
-		// TODO how do we rotate angle from center of planet properly?
+		// TODO how do we rotate angle from center of planet properly? Or do we even need that?
 		float cx=myPlanet.x + v.x - v.ox;
 		float cy=myPlanet.y + v.y - v.oy;
 		al_draw_center_rotated_bitmap(bmp, cx, cy, 0, 0);

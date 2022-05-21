@@ -230,35 +230,31 @@ struct display_t
 		
 		// Draw FPS and other text
 		display.reset_clipping();
-
 		al_draw_filled_rounded_rectangle(16, 32, 64+650, 105+32, 8, 8, ALLEGRO_COLOR(.7, .7, .7, .7));
-
-//if(g.stats.fps != 0)	
+		void drawText(A...)(float x, string formatStr, A a)
+			{
+			al_draw_text(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, textHelper(), ALLEGRO_ALIGN_LEFT, format(formatStr, a).toStringz); 
+			}
+			
 		unit u = g.world.units[0];
-
-		al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "obj[%.2f,%.2f][%.2f %f.2] %.2f deg", u.x, u.y, u.vx, u.vy, u.angle.radToDeg); 
-		al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "fps[%d] objrate[%d]", g.stats.fps, 
+		drawText(20, "obj[%.2f,%.2f][%.2f %f.2] %.2f deg", u.x, u.y, u.vx, u.vy, u.angle.radToDeg);
+		drawText(20, "fps[%d] objrate[%d]", g.stats.fps, 
 					(g.stats.number_of_drawn_particles +
 					g.stats.number_of_drawn_units + 
 					g.stats.number_of_drawn_particles + 
 					g.stats.number_of_drawn_structures) * g.stats.fps ); 
-					// total draws multiplied by fps. how many objects per second we can do.
-					// should be approx constant for a cpu once you have enough objects and, are 
-					// no longer limited by screen VSYNC.
-	
-			
-			al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, "money [%d] deaths [%d]", g.world.players[0].money, g.world.players[0].deaths);
-			al_draw_textf(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, text_helper(false), ALLEGRO_ALIGN_LEFT, 
-				"drawn: structs [%d] bg_tiles [%d] particles [%d] units [%d]", 
-				g.stats.number_of_drawn_structures, 
-				g.stats.number_of_drawn_background_tiles, 
-				g.stats.number_of_drawn_particles,
-				g.stats.number_of_drawn_units);
-			
-		text_helper(true);  //reset
 		
-		// DRAW MOUSE PIXEL HELPER/FINDER
-		draw_target_dot(g.mouse_x, g.mouse_y);
+		drawText(20, "money [%d] deaths [%d]", g.world.players[0].money, g.world.players[0].deaths);
+		drawText(20, "drawn: structs [%d] bg_tiles [%d] particles [%d] units [%d]", 
+			g.stats.number_of_drawn_structures, 
+			g.stats.number_of_drawn_background_tiles, 
+			g.stats.number_of_drawn_particles,
+			g.stats.number_of_drawn_units);
+			
+		textHelper(true);  //reset
+		
+		draw_target_dot(g.mouse_x, g.mouse_y);		// DRAW MOUSE PIXEL HELPER/FINDER
+
 /*
 		int val = -1;
 		int mouse_xi = (g.mouse_x + cast(int)g.viewports[0].ox + cast(int)g.viewports[0].x)/TILE_W;

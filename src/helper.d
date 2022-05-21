@@ -187,7 +187,7 @@ void draw_target_dot(int x, int y)
 	}
 
 /// For each call, this increments and returns a new Y coordinate for lower text.
-int text_helper(bool do_reset)
+int textHelper(bool doReset=false)
 	{
 	static int number_of_entries = -1;
 	
@@ -195,7 +195,7 @@ int text_helper(bool do_reset)
 	immutable int text_height = 20;
 	immutable int starting_height = 20;
 	
-	if(do_reset)number_of_entries = 0;
+	if(doReset)number_of_entries = 0;
 	
 	return starting_height + text_height*number_of_entries;
 	}
