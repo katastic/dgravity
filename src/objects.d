@@ -232,7 +232,6 @@ class bullet : baseObject
 		vy += sin(applyAngle)*vel;
 		}
 	
-
 	bool checkAsteroidCollision(asteroid a) // TODO fix. currently radial collision setup
 		{
 		if(distanceTo(this, a) < a.r)
@@ -377,7 +376,7 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		{		
 		// gravity acceleration formula: g = -G*M/r^2
 		float G = 1; // gravitational constant
-		float M = PLANET_MASS; // mass of planet
+		float M = p.m; // mass of planet
 		float r = distanceTo(this, p);
 		float angle = angleTo(this, p);
 		float g = -G*M/r^^2;
@@ -515,11 +514,32 @@ class ship : unit
 		p.capture(currentOwner.myTeam);
 		}
 
+	planet findNearestPlanet()
+		{
+		planet nearestP;
+		float nearestD = float.max;
+		foreach(p; g.world.planets)
+			{
+			float d = distanceTo(p, this);
+			if(d < nearestD)
+				{
+				nearestD = d;
+				nearestP = p;
+				}
+			}
+		assert(nearestP !is null);
+		assert(nearestD != float.max);
+		return nearestP;
+		}
+
 	override void onTick()
 		{
 		if(!isLanded)
 			{
-			applyGravity(g.world.planets[0]);
+			
+			applyGravity(findNearestPlanet());
+			
+			
 			foreach(p; g.world.planets)
 				{
 				if(checkPlanetCollision(p))
@@ -598,6 +618,8 @@ class planet : baseObject
 	bool isOwned=false;
 	//player currentOwner;
 	team currentTeam;
+	
+	float m = PLANET_MASS;
 	float r = 100; /// radius
 	string name="Big Chungus";
 	structure_t[] structures;

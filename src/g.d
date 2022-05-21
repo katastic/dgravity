@@ -215,7 +215,9 @@ class world_t
 		// note structures currently pre-req a player instantiated
 		planets ~= new planet("first", 400, 300, 200);
 		planets ~= new planet("second", 1210, 410, 100);
+		planets[1].m = PLANET_MASS*.25; // we get CLOSER to SMALLER planets making gravity much larger if its the same mass!
 		planets ~= new planet("third", 1720, 520, 50);
+		planets[2].m = PLANET_MASS*.05;
 		asteroids ~= new asteroid(400+150, 550, 0.1, 0, .02, 2);
 		asteroids ~= new asteroid(400-150, 550, 0.1, 0, .02, 1);
 		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);

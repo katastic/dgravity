@@ -1,9 +1,15 @@
 TODO
-	- shields. planet capture.
-	- ship hardpoints (that can get hit, like carrier storage tanks)
+	- shields. 
+	- ship hardpoints (that can get hit, like colony storage tanks)
 	- how can we shoot structures if the bullets hit the planet??? 
-	- capture planet on land. indicate captured planet team/player color
-	- defensive satellites 
+	+ capture planet on land. indicate captured planet team/player color
+	- defensive satellites
+	- we could have actual population (like Populous) running around on the planet, and killable, as a growing resource that gets loaded into colony ships
+	- resource sending ships vs people ships
+		- the worlds craziest version of OpenTTD in space
+	- biome things like stellar formations / mist / etc that have effects in the game. Can't shoot in certain areas (probably not a good idea
+	for campers), or if you shoot you have to keep moving because fires start and spread. Nebulas and stuff.
+	
 	
 	- consider moving collision code that's duplicated into object or unit
 		- also some other duplicates in places
