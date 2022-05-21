@@ -469,6 +469,8 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 
 class ship : unit
 	{
+	bool isOwned=false;
+	player currentOwner;
 	bool isLanded=false;
 	immutable float MAX_LATCHING_SPEED = 3;
 	immutable float MAX_SAFE_LANDING_ANGLE = 45;
@@ -502,6 +504,16 @@ class ship : unit
 			return false;
 			}		
 		}
+	
+	void doLand(planet p)
+		{
+		if(isOwned)p.currentTeam = currentOwner.myTeam;
+		angle = angleTo(this, p);
+		isLanded = true;
+		vx = 0;
+		vy = 0;
+		p.capture(currentOwner.myTeam);
+		}
 
 	override void onTick()
 		{
@@ -523,10 +535,7 @@ class ship : unit
 						if(result < degToRad(MAX_SAFE_LANDING_ANGLE))
 							{					
 		//					writeln(" SUCCESS");
-							angle = angleTo(this, p);
-							isLanded = true;
-							vx = 0;
-							vy = 0;
+							doLand(p);
 							}else{
 	//						writeln(" FAIL");
 							crash();
@@ -586,18 +595,35 @@ class ship : unit
 	
 class planet : baseObject
 	{
-	player currentOwner;
+	bool isOwned=false;
+	//player currentOwner;
+	team currentTeam;
 	float r = 100; /// radius
 	string name="Big Chungus";
 	structure_t[] structures;
 	
 	@disable this();
-	this(string _name, float _x, float _y, float _r, player p)
+	this(string _name, float _x, float _y, float _r)
 		{
 		name = _name;
 		r = _r;
 		super(_x, _y, 0, 0, g.tree_bmp); // works perfect		
-		structures ~= new structure_t(0, 0, g.fountain_bmp, this, p);
+		structures ~= new structure_t(0, 0, g.fountain_bmp, this);
+		structures ~= new structure_t( r*.8, 0, g.tree_bmp, this);
+		structures ~= new structure_t(-r*.8, 0, g.chest_bmp, this);
+		structures ~= new structure_t(0,  r*.8, g.dwarf_bmp, this);
+		structures ~= new structure_t(0, -r*.8, g.goblin_bmp, this);
+		}
+	
+	void capture(team by)
+		{
+		isOwned = true;
+		currentTeam = by;
+		}
+		
+	void drawOwnerFlag(viewport v)
+		{
+		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, 20, currentTeam.color);
 		}
 	
 	override void draw(viewport v)
@@ -609,6 +635,8 @@ class planet : baseObject
 			g.stats.number_of_drawn_structures++;
 			s.draw(v);
 			}
+		
+		if(isOwned)drawOwnerFlag(v);
 		}
 		
 	override void onTick()
@@ -629,24 +657,26 @@ class structure_t : baseObject
 	int countdown = countdown_rate; // I don't like putting variables in the middle of classes but I ALSO don't like throwing 1-function-only variables at the top like the entire class uses them.
 	planet myPlanet;
 	
-	this(float x, float y, ALLEGRO_BITMAP* b, planet _myPlanet, player p)
+	this(float x, float y, ALLEGRO_BITMAP* b, planet _myPlanet)
 		{
 		super(x, y, 0, 0,b);
 		writeln("we MADE a structure. @ ", x, " ", y);
 	// this CRASHES. I'm not sure why, players should exist by now but doesn't. Almost like it's not allocated yet.
 	//	assert(g.world.players[0] !is null);
 	//	g.world.players[0].money -= 250;
-		assert(p !is null); // this works fine. wtf.
-		p.money -= 250;
+//		assert(p !is null); // this works fine. wtf.
+//		p.money -= 250;
 		myPlanet = _myPlanet;
+		if(myPlanet.isOwned)
+			myPlanet.currentTeam.money -= 250; 
 		}
 
 	override void draw(viewport v)
 		{
 		// we draw RELATIVE to planet.xy, so no using baseObject.draw
 		// TODO how do we rotate angle from center of planet properly? Or do we even need that?
-		float cx=myPlanet.x + v.x - v.ox;
-		float cy=myPlanet.y + v.y - v.oy;
+		float cx=myPlanet.x + x + v.x - v.ox;
+		float cy=myPlanet.y + y + v.y - v.oy;
 		al_draw_center_rotated_bitmap(bmp, cx, cy, 0, 0);
 		draw_hp_bar(x, y, v, hp, maxHP);
 		import std.format : format;

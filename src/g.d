@@ -161,15 +161,16 @@ viewport[2] viewports;
 
 class player
 	{
-	ship playerShip; //current. Also how do we handle with units die / switch active ship (if that's an option)
-	int money=1000; //we might have team based money accounts. doesn't matter yet.
+	team myTeam;
+	ship currentShip; //current. Also how do we handle with units die / switch active ship (if that's an option)
+//	int money=1000; //we might have team based money accounts. doesn't matter yet.
 	int kills=0;
 	int aikills=0;
 	int deaths=0;
 	
 	this(ship who)
 		{
-		playerShip = who;
+		currentShip = who;
 		}
 	}
 	
@@ -179,9 +180,11 @@ class team
 	int aikills=0;
 	int kills=0;
 	int deaths=0;
+	COLOR color;
 	
-	this(player p)
+	this(player p, COLOR teamColor)
 		{
+		color = teamColor;
 		}
 	}
 	
@@ -203,11 +206,16 @@ class world_t
 		auto s = new ship(680, 360, 0, 0);	
 		units ~= s; //which comes first, player or the egg
 		players ~= new player(s);
-		teams ~= new team(players[0]);
+		teams ~= new team(players[0], blue);
+		players[0].myTeam = teams[0];
+		
+		s.isOwned = true;
+		s.currentOwner = players[0];
+		
 		// note structures currently pre-req a player instantiated
-		planets ~= new planet("first", 400, 300, 200, players[0]);
-		planets ~= new planet("second", 1210, 410, 100, players[0]);
-		planets ~= new planet("third", 1720, 520, 50, players[0]);
+		planets ~= new planet("first", 400, 300, 200);
+		planets ~= new planet("second", 1210, 410, 100);
+		planets ~= new planet("third", 1720, 520, 50);
 		asteroids ~= new asteroid(400+150, 550, 0.1, 0, .02, 2);
 		asteroids ~= new asteroid(400-150, 550, 0.1, 0, .02, 1);
 		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);

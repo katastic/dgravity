@@ -1,5 +1,12 @@
 TODO
+	- shields. planet capture.
+	- ship hardpoints (that can get hit, like carrier storage tanks)
+	- how can we shoot structures if the bullets hit the planet??? 
+	- capture planet on land. indicate captured planet team/player color
+	- defensive satellites 
+	
 	- consider moving collision code that's duplicated into object or unit
+		- also some other duplicates in places
 	- asteroids don't APPEAR to be splitting into extra pieces, just shrinking
 	- NEAT but unsure: BULLETS are (heavily) affected by gravity and arc around planets
 	- We could make "more damage to ship = more thrust random velocity variation" as a visual indicator

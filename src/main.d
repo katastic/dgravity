@@ -173,9 +173,7 @@ struct display_t
 		{
 		start_frame();
 		//------------------
-
 		draw2();
-
 		//------------------
 		end_frame();
 		}
@@ -231,6 +229,7 @@ struct display_t
 		// Draw FPS and other text
 		display.reset_clipping();
 		al_draw_filled_rounded_rectangle(16, 32, 64+650, 105+32, 8, 8, ALLEGRO_COLOR(.7, .7, .7, .7));
+
 		void drawText(A...)(float x, string formatStr, A a)
 			{
 			al_draw_text(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, textHelper(), ALLEGRO_ALIGN_LEFT, format(formatStr, a).toStringz); 
@@ -244,7 +243,7 @@ struct display_t
 					g.stats.number_of_drawn_particles + 
 					g.stats.number_of_drawn_structures) * g.stats.fps ); 
 		
-		drawText(20, "money [%d] deaths [%d]", g.world.players[0].money, g.world.players[0].deaths);
+		drawText(20, "money [%d] deaths [%d]", g.world.players[0].myTeam.money, g.world.players[0].deaths);
 		drawText(20, "drawn: structs [%d] bg_tiles [%d] particles [%d] units [%d]", 
 			g.stats.number_of_drawn_structures, 
 			g.stats.number_of_drawn_background_tiles, 
@@ -417,8 +416,6 @@ void shutdown()
 //=============================================================================
 int main(string [] args)
 	{
-//	testRad();
-		
 	writeln("args length = ", args.length);
 	foreach(size_t i, string arg; args)
 		{
