@@ -30,6 +30,7 @@ ALLEGRO_BITMAP* medium_asteroid_bmp;
 ALLEGRO_BITMAP* large_asteroid_bmp;
 ALLEGRO_BITMAP* space_bmp;
 ALLEGRO_BITMAP* bullet_bmp;
+ALLEGRO_BITMAP* dude_bmp;
 
 ALLEGRO_BITMAP* dude_up_bmp;
 ALLEGRO_BITMAP* dude_down_bmp;
@@ -69,9 +70,10 @@ void loadResources()
 	small_asteroid_bmp  	= getBitmap("./data/small_asteroid.png");
 	medium_asteroid_bmp  	= getBitmap("./data/medium_asteroid.png");
 	large_asteroid_bmp  	= getBitmap("./data/large_asteroid.png");
-	smoke_bmp  	= getBitmap("./data/smoke.png");
-	space_bmp  	= getBitmap("./data/seamless_space.png");
-	bullet_bmp  	= getBitmap("./data/bullet.png");
+	smoke_bmp  				= getBitmap("./data/smoke.png");
+	space_bmp  				= getBitmap("./data/seamless_space.png");
+	bullet_bmp  			= getBitmap("./data/bullet.png");
+	dude_bmp	  			= getBitmap("./data/dude.png");
 	
 	dude_up_bmp  		= getBitmap("./data/dude_up.png");
 	dude_down_bmp	  	= getBitmap("./data/dude_down.png");
@@ -214,10 +216,10 @@ class world_t
 		
 		// note structures currently pre-req a player instantiated
 		planets ~= new planet("first", 400, 300, 200);
-		planets ~= new planet("second", 1210, 410, 100);
-		planets[1].m = PLANET_MASS*.25; // we get CLOSER to SMALLER planets making gravity much larger if its the same mass!
-		planets ~= new planet("third", 1720, 520, 50);
-		planets[2].m = PLANET_MASS*.05;
+	//	planets ~= new planet("second", 1210, 410, 100);
+	//	planets[1].m = PLANET_MASS*.25; // we get CLOSER to SMALLER planets making gravity much larger if its the same mass!
+	//	planets ~= new planet("third", 1720, 520, 50);
+	//	planets[2].m = PLANET_MASS*.05;
 		asteroids ~= new asteroid(400+150, 550, 0.1, 0, .02, 2);
 		asteroids ~= new asteroid(400-150, 550, 0.1, 0, .02, 1);
 		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);

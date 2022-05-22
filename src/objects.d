@@ -221,9 +221,9 @@ class bullet : baseObject
 		float G = 1; // gravitational constant
 		float M = PLANET_MASS_FOR_BULLETS; // mass of planet
 		float r = distanceTo(this, p);
-		float angle = angleTo(this, p);
+		float angle2 = angleTo(this, p);
 		float g = -G*M/r^^2;
-		applyV(angle, g);
+		applyV(angle2, g);
 		}
 
 	void applyV(float applyAngle, float vel)
@@ -457,7 +457,7 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		// Planet Helper(s)
 		drawAngleHelper(this, v, angle, 25, COLOR(0,1,0,1)); 
 		drawPlanetHelper(this, g.world.planets[0], v);
-		drawPlanetHelper(this, g.world.planets[1], v);
+//		drawPlanetHelper(this, g.world.planets[1], v);
 
 		// draw angle text
 		al_draw_text(g.font1, white, x + v.x - v.ox + 30, y + v.y - v.oy - 30, 0, format("%3.2f", radToDeg(angle)).toStringz); 
@@ -613,6 +613,57 @@ class ship : unit
 		}
 	}
 	
+class dude : baseObject
+	{
+	// do dudes walk around the surface or bounce around the inside?
+	 
+	planet myPlanet;
+	
+	this(float relx, float rely, float _vx, float _vy, planet _myPlanet)
+		{
+		myPlanet = _myPlanet;
+		super(relx, rely, _vx, _vy, g.dude_bmp);
+		}
+
+	// originally a copy of structure.draw
+	override void draw(viewport v)
+		{
+		// we draw RELATIVE to planet.xy, so no using baseObject.draw
+		// TODO how do we rotate angle from center of planet properly? Or do we even need that?
+		float cx=myPlanet.x + x + v.x - v.ox;
+		float cy=myPlanet.y + y + v.y - v.oy;
+		al_draw_center_rotated_bitmap(bmp, cx, cy, 0, 0);
+		al_draw_filled_circle(cx, cy, 20, COLOR(1,0,0,.5));
+		}
+	
+	override void onTick()
+		{
+		import std.random : uniform;
+		x += vx;
+		y += vy;
+		float dist = sqrt(x^^2 + y^^2); //we're using relative-to-planet coordinates!
+		if(dist > myPlanet.r)
+			{
+			writefln("bounce at [%3.2f,%3.2f] d=%3.2f r=%3.2f", x, y, dist, myPlanet.r);
+
+			// position (shrink radius position of person inward toward planet)
+			writefln("initial xy = %3.2f, %3.2f", x, y);
+			float bangle = atan2(y, x);
+			float bd = sqrt(x^^2 + y^^2);
+			x = cos(bangle)*bd*.85;
+			y = sin(bangle)*bd*.85;
+			writefln("warping to [%3.2f,%3.2f] of bangle,bd [%3.2f,%3.2f]", x, y, radToDeg(bangle), bd);
+			
+			// velocity towards planet center
+			float cangle = atan2(y, x); // note not vy, vx! Also this is currently an angle AWAY from planet center.
+			float cd = sqrt(vx^^2 + vy^^2);
+			writefln("cangle: %3.2f d: %3.2f", radToDeg(cangle), cd);
+			vx = -cos(cangle)*cd;
+			vy = -sin(cangle)*cd;
+			}
+		}
+	}
+	
 class planet : baseObject
 	{
 	bool isOwned=false;
@@ -623,6 +674,7 @@ class planet : baseObject
 	float r = 100; /// radius
 	string name="Big Chungus";
 	structure_t[] structures;
+	dude[] dudes;
 	
 	@disable this();
 	this(string _name, float _x, float _y, float _r)
@@ -635,6 +687,18 @@ class planet : baseObject
 		structures ~= new structure_t(-r*.8, 0, g.chest_bmp, this);
 		structures ~= new structure_t(0,  r*.8, g.dwarf_bmp, this);
 		structures ~= new structure_t(0, -r*.8, g.goblin_bmp, this);
+		
+		for(int i = 0; i < 1; i++)
+			{
+			// note dudes have relative coordinates
+			float cx = uniform!"[]"(-r, r);
+			float cy = uniform!"[]"(-r, r);
+			float ca = uniform!"[]"(0, 2*PI);
+			float cd = 2;
+			float cvx = cos(ca)*cd;
+			float cvy = sin(ca)*cd;
+			dudes ~= new dude(cx, cy, cvx, cvy, this);
+			}
 		}
 	
 	void capture(team by)
@@ -657,6 +721,12 @@ class planet : baseObject
 			g.stats.number_of_drawn_structures++;
 			s.draw(v);
 			}
+
+		foreach(d; dudes) 
+			{
+//			g.stats.number_of_drawn_structures++;
+			d.draw(v);
+			}
 		
 		if(isOwned)drawOwnerFlag(v);
 		}
@@ -665,6 +735,7 @@ class planet : baseObject
 		{
 		// do structures  get handled by us or by root logic() call?
 		foreach(s; structures) s.onTick();
+		foreach(d; dudes) d.onTick();
 		}
 	}
 
@@ -689,8 +760,7 @@ class structure_t : baseObject
 //		assert(p !is null); // this works fine. wtf.
 //		p.money -= 250;
 		myPlanet = _myPlanet;
-		if(myPlanet.isOwned)
-			myPlanet.currentTeam.money -= 250; 
+		if(myPlanet.isOwned)myPlanet.currentTeam.money -= 250; 
 		}
 
 	override void draw(viewport v)
