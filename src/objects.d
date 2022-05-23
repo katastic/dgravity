@@ -644,20 +644,20 @@ class dude : baseObject
 		float dist = sqrt(x^^2 + y^^2); //we're using relative-to-planet coordinates!
 		if(dist > myPlanet.r)
 			{
-			writefln("bounce at [%3.2f,%3.2f] d=%3.2f r=%3.2f", x, y, dist, myPlanet.r);
+//			writefln("bounce at [%3.2f,%3.2f] d=%3.2f r=%3.2f", x, y, dist, myPlanet.r);
 
 			// position (shrink radius position of person inward toward planet)
-			writefln("initial xy = %3.2f, %3.2f", x, y);
+	//		writefln("initial xy = %3.2f, %3.2f", x, y);
 			float bangle = atan2(y, x);
 			float bd = sqrt(x^^2 + y^^2);
-			x = cos(bangle)*bd*.85;
-			y = sin(bangle)*bd*.85;
-			writefln("warping to [%3.2f,%3.2f] of bangle,bd [%3.2f,%3.2f]", x, y, radToDeg(bangle), bd);
+			x = cos(bangle)*bd*.95;
+			y = sin(bangle)*bd*.95;
+		//	writefln("warping to [%3.2f,%3.2f] of bangle,bd [%3.2f,%3.2f]", x, y, radToDeg(bangle), bd);
 			
 			// velocity towards planet center
-			float cangle = atan2(y, x); // note not vy, vx! Also this is currently an angle AWAY from planet center.
+			float cangle = atan2(y, x) + uniform!"[]"(-30.0, 30.0).degToRad; // note not vy, vx! Also this is currently an angle AWAY from planet center.
 			float cd = sqrt(vx^^2 + vy^^2);
-			writefln("cangle: %3.2f d: %3.2f", radToDeg(cangle), cd);
+		//	writefln("cangle: %3.2f d: %3.2f", radToDeg(cangle), cd);
 			vx = -cos(cangle)*cd;
 			vy = -sin(cangle)*cd;
 			}
@@ -688,7 +688,7 @@ class planet : baseObject
 		structures ~= new structure_t(0,  r*.8, g.dwarf_bmp, this);
 		structures ~= new structure_t(0, -r*.8, g.goblin_bmp, this);
 		
-		for(int i = 0; i < 1; i++)
+		for(int i = 0; i < 100; i++)
 			{
 			// note dudes have relative coordinates
 			float cx = uniform!"[]"(-r, r);
