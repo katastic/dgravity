@@ -26,9 +26,10 @@ COLOR blue  = COLOR(0,0,1,1);
 
 
 /// Draw a shield! ring
-void drawShield(pair pos, viewport v, float radius, float percent)
+void drawShield(pair pos, viewport v, float radius, float thickness, COLOR c, float shieldCoefficent)
 	{
-	al_draw_circle(pos.x, pos.y, float r, ALLEGRO_COLOR color, float thickness);	
+	al_draw_circle(pos.x, pos.y, radius, COLOR(0,0,.5,.50), thickness*shieldCoefficent);	
+	al_draw_circle(pos.x, pos.y, radius, COLOR(0,0,1,1), thickness*shieldCoefficent*.50);	
 	}
 
 /// TODO: NYI

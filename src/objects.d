@@ -511,6 +511,7 @@ class ship : unit
 
 	override void draw(viewport v)
 		{
+		drawShield(pair(x + v.x - v.ox,y + v.y - v.oy), v, 40, 5, COLOR(0,0,1,1), shieldHP/SHIELD_MAX);
 		super.draw(v);
 		}
 		
@@ -568,7 +569,8 @@ class ship : unit
 			shieldCooldown--; 
 			return;
 			}else{
-			shieldHP += SHIELD_RECHARGE_RATE;
+			if(shieldHP < SHIELD_MAX)shieldHP += SHIELD_RECHARGE_RATE;
+			if(shieldHP > SHIELD_MAX)shieldHP = SHIELD_MAX;
 			}
 		}
 

@@ -6,7 +6,7 @@
 
 // GLOBAL CONSTANTS
 // =============================================================================
-immutable bool DEBUG_NO_BACKGROUND = true; /// No graphical background so we draw a solid clear color. Does this do anything anymore?
+immutable bool DEBUG_NO_BACKGROUND = false; /// No graphical background so we draw a solid clear color. Does this do anything anymore?
 
 // =============================================================================
 
@@ -146,7 +146,7 @@ static if (false) // MULTISAMPLING. Not sure if helpful.
 	// FPS Handling
 	// --------------------------------------------------------
 	fps_timer 		= al_create_timer(1.0f);
-	screencap_timer = al_create_timer(10.0f);
+	screencap_timer = al_create_timer(5.0f);
 	al_register_event_source(queue, al_get_timer_event_source(fps_timer));
 	al_register_event_source(queue, al_get_timer_event_source(screencap_timer));
 	al_start_timer(fps_timer);
@@ -161,7 +161,7 @@ struct display_t
 		{
 		g.stats.reset();
 		reset_clipping(); //why would we need this? One possible is below! To clear to color the whole screen!
-		al_clear_to_color(ALLEGRO_COLOR(.2,.2,.2,1)); //only needed if we aren't drawing a background
+//		al_clear_to_color(ALLEGRO_COLOR(.2,.2,.2,1)); //only needed if we aren't drawing a background
 		}
 		
 	void end_frame()
