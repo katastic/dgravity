@@ -24,6 +24,13 @@ COLOR blue  = COLOR(0,0,1,1);
 	//COLOR(w, w, w, 1);
 	//}
 
+
+/// Draw a shield! ring
+void drawShield(pair pos, viewport v, float radius, float percent)
+	{
+	al_draw_circle(pos.x, pos.y, float r, ALLEGRO_COLOR color, float thickness);	
+	}
+
 /// TODO: NYI
 /// give me the necessary velocity (vx,vy) for a object to orbit a planet at distance D
 ///

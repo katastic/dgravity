@@ -10,6 +10,7 @@ import std.random;
 import std.stdio;
 import std.math;
 import std.string;
+import std.algorithm : remove;
 
 import g;
 import helper;
@@ -252,6 +253,15 @@ class bullet : baseObject
 			return false;
 			}
 		}
+		
+	void die()
+		{
+		isDead=true;
+		vx = 0;
+		vy = 0;
+		import std.random : uniform;
+		g.world.particles ~= particle(x, y, vx, vy, 0, uniform!"[]"(3, 6));
+		}
 	
 	override void onTick() // should we check for planets collision?
 		{
@@ -261,15 +271,24 @@ class bullet : baseObject
 			isDead=true;
 			}else{
 			applyGravity(g.world.planets[0]);
+			
 			foreach(p; g.world.planets) // NOTE. similar to ship.checkPlanetCollision
 				{
 				if(checkPlanetCollision(p))
 					{
-					isDead=true;
-					vx = 0;
-					vy = 0;
-					import std.random : uniform;
-					g.world.particles ~= particle(x, y, vx, vy, 0, uniform!"[]"(3, 6));
+					// if we're inside a planet, lets check it for people.
+					foreach(d; p.dudes)
+						{
+						if(x >= d.x + d.myPlanet.x - 10)
+						if(x <= d.x + d.myPlanet.x + 10)
+						if(y >= d.y + d.myPlanet.y - 10)
+						if(y <= d.y + d.myPlanet.y + 10)
+							{
+							d.isDead = true;
+							die();
+							}
+						}
+//					die(); // if we hit a planet
 					}
 				}
 			
@@ -475,6 +494,15 @@ class ship : unit
 	immutable float MAX_SAFE_LANDING_ANGLE = 45;
 	immutable float ROTATION_SPEED = 5;
 	immutable float BULLET_SPEED = 10;
+	immutable uint GUN_COOLDOWN = 5;
+	int gunCooldown = 0;
+	
+	immutable uint SHIELD_COOLDOWN = 60; /// frames till it can start recharging
+	immutable float SHIELD_RECHARGE_RATE = 1; /// once recharging starts rate of fill
+	immutable int SHIELD_MAX = 100; /// total shield health
+	float shieldHP = 0;
+	int shieldCooldown = 60;
+	//we could also have a shield break animation of the bubble popping
 	
 	this(float _x, float _y, float _xv, float _yv)
 		{
@@ -531,14 +559,25 @@ class ship : unit
 		assert(nearestD != float.max);
 		return nearestP;
 		}
+		
+		
+	void doShield()
+		{
+		if(shieldCooldown > 0)
+			{
+			shieldCooldown--; 
+			return;
+			}else{
+			shieldHP += SHIELD_RECHARGE_RATE;
+			}
+		}
 
 	override void onTick()
 		{
+		doShield();
 		if(!isLanded)
 			{
-			
 			applyGravity(findNearestPlanet());
-			
 			
 			foreach(p; g.world.planets)
 				{
@@ -605,11 +644,18 @@ class ship : unit
 		
 	override void left() { if(!isLanded){angle -= degToRad(ROTATION_SPEED); angle = wrapRad(angle);}}
 	override void right() { if(!isLanded){angle += degToRad(ROTATION_SPEED); angle = wrapRad(angle);}}
+
 	override void attack()
 		{
 		float _vx = vx + cos(angle)*BULLET_SPEED;
 		float _vy = vy + sin(angle)*BULLET_SPEED;
-		g.world.bullets ~= new bullet(x, y, _vx, _vy, angle, 0, 100);
+		if(gunCooldown == 0)
+			{
+			g.world.bullets ~= new bullet(x, y, _vx, _vy, angle, 0, 100);
+			gunCooldown = GUN_COOLDOWN;
+			}else{
+			gunCooldown--;
+			}
 		}
 	}
 	
@@ -730,13 +776,29 @@ class planet : baseObject
 		
 		if(isOwned)drawOwnerFlag(v);
 		}
+
+
 		
 	override void onTick()
 		{
+		import std.algorithm : remove;
 		// do structures  get handled by us or by root logic() call?
 		foreach(s; structures) s.onTick();
 		foreach(d; dudes) d.onTick();
+		prune(structures);
+		prune(dudes);
 		}
+
+	//prune ready-to-delete entries (copied from g)
+	void prune(T)(ref T obj)
+		{
+		for(size_t i = obj.length ; i-- > 0 ; )
+			{
+			if(obj[i].isDead)obj = obj.remove(i); continue;
+			}
+		//see https://forum.dlang.org/post/sagacsjdtwzankyvclxn@forum.dlang.org
+		}
+
 	}
 
 class structure_t : baseObject

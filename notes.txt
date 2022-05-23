@@ -1,4 +1,9 @@
 TODO
+	- can you hit yourself with your own bullets? that could be funny.
+	- if you take over a planet, do different color dudes start fighting each other like Pikmin?
+	- what if dudes build their town on a planet kind of like Populous
+	- do we want much larger planets so you can be on one side vs another side of a planet and have rival bases? 
+	+ rate limit guns
 	- shields. 
 	- ship hardpoints (that can get hit, like colony storage tanks)
 	- how can we shoot structures if the bullets hit the planet??? 
