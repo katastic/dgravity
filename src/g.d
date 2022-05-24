@@ -310,6 +310,8 @@ class world_t
 		
 		ship p = cast(ship)units[1]; // player
 		p.isPlayerControlled = true;
+		ship p2 = cast(ship)units[0]; // player
+		p2.isPlayerControlled = true;
 		viewports[0].ox = p.x - viewports[0].w/2;
 		viewports[0].oy = p.y - viewports[0].h/2;
 		timer++;
@@ -320,11 +322,18 @@ class world_t
 			float cy = planets[0].y + uniform!"[]"(-500, 500);
 			g.world.asteroids ~= new asteroid(cx, cy, 0, 0, uniform!"[]"(-10,10)/1000.0, uniform!"[]"(0,2));
 			}//float _x, float _y, float _vx, float _vy, float _va, int _size
+
 		if(key_w_down)p.up();
 		if(key_s_down)p.down();
 		if(key_a_down)p.left();
 		if(key_d_down)p.right();
 		if(key_space_down)p.attack();
+		
+		if(key_i_down)p2.up();
+		if(key_k_down)p2.down();
+		if(key_j_down)p2.left();
+		if(key_l_down)p2.right();
+		if(key_m_down)p2.attack();
 		
 		void tick(T)(ref T obj)
 			{
@@ -404,4 +413,10 @@ bool key_q_down = false;
 bool key_e_down = false;
 bool key_f_down = false;
 bool key_space_down = false;
+
+bool key_i_down = false;
+bool key_j_down = false;
+bool key_k_down = false;
+bool key_l_down = false;
+bool key_m_down = false;
 

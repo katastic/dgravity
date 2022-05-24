@@ -127,7 +127,7 @@ class asteroid : unit
 	
 	this(float _x, float _y, float _vx, float _vy, float _va, int _size)
 		{
-		writeln("asteroid.this, size: ", _size);
+//		writeln("asteroid.this, size: ", _size);
 		va = _va;
 		angle = uniform!"[]"(0, 2*PI);
 		size = _size;
@@ -237,6 +237,8 @@ class bullet : baseObject
 
 	bool checkUnitCollision(unit u)
 		{
+		writeln("[bullet] Death by unit contact.");
+
 //		writefln("[%f,%f] vs u.[%f,%f]", x, y, u.x, u.y);
 		if(x - 10 < u.x)
 		if(x + 10 > u.x)
@@ -253,6 +255,7 @@ class bullet : baseObject
 		{
 		if(distanceTo(this, a) < a.r)
 			{
+			writeln("[bullet] Death by asteroid.");
 			return true;
 			}else{
 			return false;
@@ -264,6 +267,7 @@ class bullet : baseObject
 		{
 		if(distanceTo(this, p) < p.r)
 			{
+			writeln("[bullet] Death by planet.");
 			return true;
 			}else{
 			return false;
@@ -702,7 +706,7 @@ class ship : unit
 	
 	this(float _x, float _y, float _xv, float _yv)
 		{
-		myGun = new gun(this);
+		myGun = new minigun(this);
 		super(1, _x, _y, _xv, _yv, ship_bmp);
 		}
 

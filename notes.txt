@@ -1,37 +1,41 @@
 TODO
-	- can you hit yourself with your own bullets? that could be funny.
+	- DOCK WITH CARRIERS to transfer fuel, re-arm, etc. BETTER NOT CRASH INTO IT THOUGH.
+	- can you hit yourself with your own bullets? that could be funny. [need cooldown to leave inital area though]
 	- if you take over a planet, do different color dudes start fighting each other like Pikmin?
 	- what if dudes build their town on a planet kind of like Populous
 	- do we want much larger planets so you can be on one side vs another side of a planet and have rival bases? 
+	- we could have actual population (like Populous) running around on the planet, and killable, as a growing resource that gets loaded into colony ships
+	+ capture planet on land. indicate captured planet team/player color
 	+ rate limit guns
-	- shields. 
+	+ shields. 
 		- flash shields when hit
 		- pop shields went empty
 	- ship hardpoints (that can get hit, like colony storage tanks)
-	- how can we shoot structures if the bullets hit the planet??? 
-	+ capture planet on land. indicate captured planet team/player color
+	+ how can we shoot structures if the bullets hit the planet??? 
 	- defensive satellites
-	- we could have actual population (like Populous) running around on the planet, and killable, as a growing resource that gets loaded into colony ships
 	- resource sending ships vs people ships
 		- the worlds craziest version of OpenTTD in space
+	
+	- different kinds of RESOURCE planets. water planet. ore planet. etc.
+	
 	- biome things like stellar formations / mist / etc that have effects in the game. Can't shoot in certain areas (probably not a good idea
 	for campers), or if you shoot you have to keep moving because fires start and spread. Nebulas and stuff.
 	
 	
 	- consider moving collision code that's duplicated into object or unit
 		- also some other duplicates in places
-	- asteroids don't APPEAR to be splitting into extra pieces, just shrinking
-	- NEAT but unsure: BULLETS are (heavily) affected by gravity and arc around planets
+	+ asteroids don't APPEAR to be splitting into extra pieces, just shrinking
+	= NEAT but unsure: BULLETS are (heavily) affected by gravity and arc around planets
 	- We could make "more damage to ship = more thrust random velocity variation" as a visual indicator
 	- add "interstellar dust" just random particles hitting objects to add "feel" and interaction (no damage, just particle fx)
 	- game mechanics: Spawn on nearest available spawn (carrier, planet, etc)
 
 	- asteroid fields like asteroid
-	- add landing 
-		- on planets
+	+ add landing 
+		+ on planets
 		- on carriers/starports
-	- add collision with objects
-	- add bullets/shooting
+	+ add collision with objects
+	+ add bullets/shooting
 
 	- its a little cludgy that we have viewportsmod.viewport viewports. the file name that is. it was cleaner looking with viewport_t for the type.
 	+ add std.chrono timing
@@ -39,7 +43,7 @@ TODO
 	- OH GOSH, none of the draw routines are built for zoom. OH NO.
 		- might only need to simply drawing certain things with a zoom factor / scale. But what about all the other stuff like text, helpers, etc.
 
-	- engine smoke
+	- engine smoke/jet flume
 	- damage smoking pieces coming off ala war thunder plane debris particles
 	
 	- PROPERLY TEST wrapRad()
@@ -51,6 +55,7 @@ TODO
 	- landing gently on planet for X (capture, for example)
 	- landing gently on orbiting carrier (gives you researched powerup)
 	- getting yourself into an orbit around a planet at correct altitude (new. research/bioscan planet for resources?)
+	- land on cruiser/carrier to dock and exchange resources
 
 rewards players for learning skills to naturally "unlock" aspects of the game.
 

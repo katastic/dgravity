@@ -358,6 +358,12 @@ void execute()
 					isKeySet(ALLEGRO_KEY_A, g.key_a_down);
 					isKeySet(ALLEGRO_KEY_D, g.key_d_down);
 										
+
+					isKeySet(ALLEGRO_KEY_M, g.key_m_down);
+					isKeySet(ALLEGRO_KEY_I, g.key_i_down);
+					isKeySet(ALLEGRO_KEY_J, g.key_j_down);
+					isKeySet(ALLEGRO_KEY_K, g.key_k_down);
+					isKeySet(ALLEGRO_KEY_L, g.key_l_down);
 					break;
 					}
 					
@@ -369,6 +375,11 @@ void execute()
 					isKeyRel(ALLEGRO_KEY_A, g.key_a_down);
 					isKeyRel(ALLEGRO_KEY_D, g.key_d_down);
 
+					isKeyRel(ALLEGRO_KEY_M, g.key_m_down);
+					isKeyRel(ALLEGRO_KEY_I, g.key_i_down);
+					isKeyRel(ALLEGRO_KEY_J, g.key_j_down);
+					isKeyRel(ALLEGRO_KEY_K, g.key_k_down);
+					isKeyRel(ALLEGRO_KEY_L, g.key_l_down);
 					break;
 					}
 
