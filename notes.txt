@@ -1,4 +1,10 @@
 TODO
+	- upgrade turrets like a tower defense game?
+	- max AI turret traverse speed
+	- turrets only fire when they're in approx angle range
+	- TURRET GUNS cannot escape gravity hahaha. Maybe make a separate gravity (or mass) field for turret ammo so only SHIP guns are affected massively.
+	- possibility of a TURRETED aimable gun that doesn't fire as good as others but lets you aim while flying around instead of just shooting forward
+	- add turrets to carriers, planets, etc
 	- DOCK WITH CARRIERS to transfer fuel, re-arm, etc. BETTER NOT CRASH INTO IT THOUGH.
 	- can you hit yourself with your own bullets? that could be funny. [need cooldown to leave inital area though]
 	- if you take over a planet, do different color dudes start fighting each other like Pikmin?

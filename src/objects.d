@@ -237,15 +237,13 @@ class bullet : baseObject
 
 	bool checkUnitCollision(unit u)
 		{
-		writeln("[bullet] Death by unit contact.");
-
 //		writefln("[%f,%f] vs u.[%f,%f]", x, y, u.x, u.y);
 		if(x - 10 < u.x)
 		if(x + 10 > u.x)
 		if(y - 10 < u.y)
 		if(y + 10 > u.y)
 			{
-			writeln("FOUND A UNIT");
+//		writeln("[bullet] Death by unit contact.");
 			return true;
 			}		
 		return false;
@@ -255,7 +253,7 @@ class bullet : baseObject
 		{
 		if(distanceTo(this, a) < a.r)
 			{
-			writeln("[bullet] Death by asteroid.");
+//			writeln("[bullet] Death by asteroid.");
 			return true;
 			}else{
 			return false;
@@ -267,7 +265,7 @@ class bullet : baseObject
 		{
 		if(distanceTo(this, p) < p.r)
 			{
-			writeln("[bullet] Death by planet.");
+	//		writeln("[bullet] Death by planet.");
 			return true;
 			}else{
 			return false;
@@ -562,11 +560,21 @@ class shotgun : gun
 		}
 	}
 
+class turretGun : gun //slow firing, normal gun
+	{
+	this(ship newOwner)
+		{
+		super(newOwner);
+		cooldown = uniform!"[]"(0,30);
+		gunCooldownTime = 30;
+		}
+	}
+
 class gun
 	{
 	float ammoLeft=100; // float in case we need to do some sort of "eats 1.5 units fluid per frame" logic
 	float damage=5;
-	int cooldown=0;
+	int cooldown=5;
 	int gunCooldownTime=5;
 	int roundsFired=1;
 	float speed=10;
@@ -592,14 +600,35 @@ class gun
 			}
 		}
 	
+	void fireProjectileRelative(baseObject secondOwner)
+		{
+		with(myOwner) //CAREFUL not to shadow variables here!
+			{
+			import std.random;
+			float _vx = vx + cos(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
+			float _vy = vy + sin(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
+			g.world.bullets ~= new bullet(secondOwner.x + x, secondOwner.y + y, _vx, _vy, angle, 0, 100, myOwner);
+			}
+		}
+	
 	void onTick()
 		{
 		if(cooldown > 0)
 			{
 			cooldown--;
+		//	writeln(cooldown);
 			}
 		}
 	
+	void actionFireRelative(baseObject secondOwner)
+		{
+		if(cooldown == 0)
+			{
+			for(int i = 0; i < roundsFired; i++)fireProjectileRelative(secondOwner);
+			cooldown = gunCooldownTime;
+			}
+		}
+
 	void actionFire()
 		{
 		if(cooldown == 0)
@@ -677,6 +706,38 @@ class freighter : ship
 		myGun.onTick();
 		
 		super.onTick();
+		}
+	}
+
+class turret : ship
+	{
+	// >>USING RELATIVE COORDINATES<<
+	BITMAP* turretGun_bmp;
+	baseObject myOwner;
+	
+	this(float _x, float _y, baseObject _myOwner)
+		{
+		super(_x, _y, 0, 0);
+
+		myGun = new turretGun(this);
+		turretGun_bmp = g.turret_bmp;
+		bmp = g.turret_base_bmp;
+		myOwner = _myOwner;
+		}
+
+	override void draw(viewport v)
+		{
+		al_draw_centered_bitmap(bmp, myOwner.x + x + v.x - v.ox, myOwner.y + y + v.y - v.oy, 0);
+		al_draw_center_rotated_bitmap(turretGun_bmp, myOwner.x + x + v.x - v.ox, myOwner.y + y + v.y - v.oy, angle, 0);
+		// super.draw(v); need RELATIVE coordinates
+		}
+
+	override void onTick()
+		{
+		pair p = pair(myOwner.x + x, myOwner.y + y);
+		angle = angleTo(g.world.units[1], p); //grab target()
+		myGun.onTick();
+		myGun.actionFireRelative(myOwner);
 		}
 	}
 
@@ -783,6 +844,7 @@ class ship : unit
 
 	override void onTick()
 		{
+		myGun.onTick();
 		doShield();
 		if(!isLanded)
 			{
@@ -922,6 +984,7 @@ class planet : baseObject
 	string name="Big Chungus";
 	structure_t[] structures;
 	dude[] dudes;
+	turret[] turrets;
 	
 	@disable this();
 	this(string _name, float _x, float _y, float _r)
@@ -934,6 +997,11 @@ class planet : baseObject
 		structures ~= new structure_t(-r*.8, 0, g.chest_bmp, this);
 		structures ~= new structure_t(0,  r*.8, g.dwarf_bmp, this);
 		structures ~= new structure_t(0, -r*.8, g.goblin_bmp, this);
+		
+		turrets ~= new turret(-r,0.0, this);
+		turrets ~= new turret( r,0.0, this);
+		turrets ~= new turret( 0, -r, this);
+		turrets ~= new turret( 0,  r, this);
 		
 		for(int i = 0; i < 100; i++)
 			{
@@ -961,19 +1029,16 @@ class planet : baseObject
 	
 	override void draw(viewport v)
 		{
-		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r, COLOR(.8,.8,.8,1));
-		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r * .80, COLOR(1,1,1,1));
+		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r, COLOR(.2,.2,.8,1));
+		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r * .80, COLOR(.6,.6,1,1));
 		foreach(s; structures) 
 			{
 			g.stats.number_of_drawn_structures++;
 			s.draw(v);
 			}
 
-		foreach(d; dudes) 
-			{
-//			g.stats.number_of_drawn_structures++;
-			d.draw(v);
-			}
+		foreach(d; dudes) d.draw(v);
+		foreach(t; turrets) t.draw(v);
 		
 		if(isOwned)drawOwnerFlag(v);
 		}
@@ -984,8 +1049,12 @@ class planet : baseObject
 		// do structures  get handled by us or by root logic() call?
 		foreach(s; structures) s.onTick();
 		foreach(d; dudes) d.onTick();
+		foreach(t; turrets) t.onTick();
 		prune(structures);
 		prune(dudes);
+		prune(turrets);
+		//x += vx;
+		//y += vy; //do we want this?
 		}
 
 	//prune ready-to-delete entries (copied from g)
