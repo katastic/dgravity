@@ -24,6 +24,7 @@ immutable PLANET_MASS_FOR_BULLETS = 20000;
 ALLEGRO_FONT* 	font1;
 
 ALLEGRO_BITMAP* ship_bmp;
+ALLEGRO_BITMAP* freighter_bmp;
 ALLEGRO_BITMAP* smoke_bmp;
 ALLEGRO_BITMAP* small_asteroid_bmp;
 ALLEGRO_BITMAP* medium_asteroid_bmp;
@@ -67,6 +68,7 @@ void loadResources()
 
 	bullet_bmp  			= getBitmap("./data/bullet.png");
 	ship_bmp			  	= getBitmap("./data/ship.png");
+	freighter_bmp		  	= getBitmap("./data/freighter.png");
 	small_asteroid_bmp  	= getBitmap("./data/small_asteroid.png");
 	medium_asteroid_bmp  	= getBitmap("./data/medium_asteroid.png");
 	large_asteroid_bmp  	= getBitmap("./data/large_asteroid.png");

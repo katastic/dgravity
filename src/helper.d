@@ -24,7 +24,6 @@ COLOR blue  = COLOR(0,0,1,1);
 	//COLOR(w, w, w, 1);
 	//}
 
-
 /// Draw a shield! ring
 void drawShield(pair pos, viewport v, float radius, float thickness, COLOR c, float shieldCoefficent)
 	{

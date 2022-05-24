@@ -18,7 +18,7 @@ import std.random;
 import std.algorithm;
 import std.traits; // EnumMembers
 import std.datetime;
-import std.datetime.stopwatch : benchmark, StopWatch;
+import std.datetime.stopwatch : benchmark, StopWatch, AutoStart;
 //thread yielding?
 //-------------------------------------------
 //import core.thread; //for yield... maybe?
@@ -87,6 +87,8 @@ enum keys_label
 
 bool initialize()
 	{
+	al_set_config_value(al_get_system_config(), "trace", "level", "info"); // enable logging. see https://github.com/liballeg/allegro5/issues/1339
+	// "debug"
 	if (!al_init())
 		{
 		auto ver 		= al_get_allegro_version();
@@ -95,12 +97,14 @@ bool initialize()
 		auto revision 	= (ver >> 8) & 255;
 		auto release 	= ver & 255;
 
-		writefln(
-"The system Allegro version (%s.%s.%s.%s) does not match the version of this binding (%s.%s.%s.%s)",
+		writefln("The system Allegro version (%s.%s.%s.%s) does not match the version of this binding (%s.%s.%s.%s)",
 			major, minor, revision, release,
 			ALLEGRO_VERSION, ALLEGRO_SUB_VERSION, ALLEGRO_WIP_VERSION, ALLEGRO_RELEASE_NUMBER);
 
-		assert(0, "The system Allegro version does not match the version of this binding!"); //why
+		assert(0, "The system Allegro version does not match the version of this binding!");
+		}else{
+				writefln("The Allegro version (%s.%s.%s.%s)",
+			ALLEGRO_VERSION, ALLEGRO_SUB_VERSION, ALLEGRO_WIP_VERSION, ALLEGRO_RELEASE_NUMBER);
 		}
 	
 static if (false) // MULTISAMPLING. Not sure if helpful.
@@ -277,6 +281,39 @@ void logic()
 	g.world.logic();
 	}
 
+/// This function corrects a bug/error/oversight in al_save_bitmap that dumps ALPHA channel from the screen into the picture
+///
+void al_save_screen(string path)
+	{
+	auto sw = StopWatch(AutoStart.yes);
+	auto disp = al_get_backbuffer(al_display);
+	auto w = disp.w;
+	auto h = disp.h;
+	ALLEGRO_BITMAP* temp = al_create_bitmap(w, h);
+	al_lock_bitmap(temp, al_get_bitmap_format(temp), ALLEGRO_LOCK_WRITEONLY);
+	al_lock_bitmap(disp, al_get_bitmap_format(temp), ALLEGRO_LOCK_READONLY); // makes HUGE difference (6.4 seconds vs 270 milliseconds)
+	al_set_target_bitmap(temp);
+//	al_clear_to_color(ALLEGRO_COLOR(0,0,0,1));
+//	al_draw_bitmap(disp, 0, 0, 0);
+	for(int j = 0; j < h; j++)
+		for(int i = 0; i < w; i++)
+			{
+			auto pixel = al_get_pixel(disp, i, j);
+			pixel.a = 1.0; // remove alpha
+			al_put_pixel(i, j, pixel);
+			}
+	al_unlock_bitmap(disp);
+	al_unlock_bitmap(temp);
+	al_save_bitmap(path.toStringz, temp);
+	al_reset_target();
+	al_destroy_bitmap(temp);
+	
+	sw.stop();
+	int secs, msecs;
+	sw.peek.split!("seconds", "msecs")(secs, msecs);
+	writefln("Saving screenshot took %d.%ds", secs, msecs);
+	}
+
 void execute()
 	{
 	ALLEGRO_EVENT event;
@@ -385,10 +422,16 @@ void execute()
 					{
 					if(event.timer.source == screencap_timer)
 						{
+						al_stop_timer(screencap_timer); // Do this FIRST so inner code cannot take so long as to re-trigger timers.
 						writeln("saving screenshot [screen.png]");
-						al_save_bitmap("screen.png", al_get_backbuffer(al_display));	
-						al_stop_timer(screencap_timer);
-						}						
+						al_save_screen("screen.png");	
+//	auto sw = StopWatch(AutoStart.yes);
+//						al_save_bitmap("screen.png", al_get_backbuffer(al_display));
+//				sw.stop();
+//	int secs, msecs;
+//	sw.peek.split!("seconds", "msecs")(secs, msecs);
+//	writefln("Saving screenshot took %d.%ds", secs, msecs);
+			}						
 					if(event.timer.source == fps_timer) //ONCE per second
 						{
 						g.stats.fps = g.stats.frames_passed;

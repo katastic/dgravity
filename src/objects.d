@@ -484,6 +484,15 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		draw_hp_bar(x, y - bmp.w/2, v, hp, 100);		
 		}
 	}
+	
+class freighter : ship
+	{
+	this(float _x, float _y, float _xv, float _yv)
+		{
+		super(_x, _y, _xv, _yv);
+		bmp = freighter_bmp;
+		}
+	}
 
 class ship : unit
 	{
@@ -779,8 +788,6 @@ class planet : baseObject
 		if(isOwned)drawOwnerFlag(v);
 		}
 
-
-		
 	override void onTick()
 		{
 		import std.algorithm : remove;
@@ -800,7 +807,6 @@ class planet : baseObject
 			}
 		//see https://forum.dlang.org/post/sagacsjdtwzankyvclxn@forum.dlang.org
 		}
-
 	}
 
 class structure_t : baseObject

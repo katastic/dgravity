@@ -1,0 +1,6 @@
+rdmd -debug -gs -g -L-L./lib/ './src/main.d'
+# why doesn't this need multiple source files? Is it traversing the module imports automatically?
+
+# work in progress
+#!/bin/sh
+#for f in ./src/*.d; do dmd -c $f -L-L./lib/; done
