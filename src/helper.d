@@ -5,6 +5,7 @@ import allegro5.allegro_font;
 import allegro5.allegro_ttf;
 import allegro5.allegro_color;
 
+import std.string;
 import std.format;
 import std.math;
 import std.random;
@@ -23,6 +24,27 @@ COLOR blue  = COLOR(0,0,1,1);
 	//{
 	//COLOR(w, w, w, 1);
 	//}
+
+/// Draw text using most common settings
+void drawText(A...)(float x, float y, COLOR c, string formatStr, A a)
+	{
+	al_draw_text(g.font1, c, x, y, ALLEGRO_ALIGN_LEFT, format(formatStr, a).toStringz); 
+	}
+
+/// Draw text using most common settings
+void drawTextCenter(A...)(float x, float y, COLOR c, string formatStr, A a)
+	{
+	al_draw_text(g.font1, c, x, y, ALLEGRO_ALIGN_CENTER, format(formatStr, a).toStringz); 
+	}
+
+	
+/// Draw text with help of textHelper auto-indenting
+void drawText2(A...)(float x, string formatStr, A a)
+	{
+	al_draw_text(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, textHelper(), ALLEGRO_ALIGN_LEFT, format(formatStr, a).toStringz); 
+	}
+			
+
 
 /// Draw a shield! ring
 void drawShield(pair pos, viewport v, float radius, float thickness, COLOR c, float shieldCoefficent)

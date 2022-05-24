@@ -141,7 +141,7 @@ class asteroid : unit
 		
 	this(asteroid a)
 		{
-		writeln("asteroid.this(a), size: ", a.size);
+//		writeln("asteroid.this(a), size: ", a.size);
 		va = a.va;
 		angle = a.angle;
 		size = a.size;
@@ -164,7 +164,7 @@ class asteroid : unit
 	/// become smaller and create 3 new identical smaller size asteroids
 	void split()
 		{
-		writeln("asteroid.split, size: ", size);
+//		writeln("asteroid.split, size: ", size);
 		g.world.particles ~= particle(x, y, vx, vy, 0, uniform!"[]"(30, 60));
 		size--;
 		if(size < 0)
@@ -189,7 +189,7 @@ class asteroid : unit
 		split();
 		}
 		
-	override void onHit(baseObject who)
+	override void onHit(bullet b)
 		{
 		split();
 		}
@@ -203,9 +203,11 @@ class bullet : baseObject
 	int type; // 0 = normal bullet whatever
 	int lifetime; // frames passed since firing
 	bool isDead=false; // to trim
+	unit myOwner;
 	
-	this(float _x, float _y, float _vx, float _vy, float _angle, int _type, int _lifetime)
+	this(float _x, float _y, float _vx, float _vy, float _angle, int _type, int _lifetime, unit _myOwner)
 		{
+		myOwner = _myOwner;
 		x = _x;
 		y = _y;
 		vx = _vx;
@@ -232,7 +234,21 @@ class bullet : baseObject
 		vx += cos(applyAngle)*vel;
 		vy += sin(applyAngle)*vel;
 		}
-	
+
+	bool checkUnitCollision(unit u)
+		{
+//		writefln("[%f,%f] vs u.[%f,%f]", x, y, u.x, u.y);
+		if(x - 10 < u.x)
+		if(x + 10 > u.x)
+		if(y - 10 < u.y)
+		if(y + 10 > u.y)
+			{
+			writeln("FOUND A UNIT");
+			return true;
+			}		
+		return false;
+		}
+			
 	bool checkAsteroidCollision(asteroid a) // TODO fix. currently radial collision setup
 		{
 		if(distanceTo(this, a) < a.r)
@@ -299,6 +315,18 @@ class bullet : baseObject
 					isDead=true;
 					a.onHit(this);
 					}
+				}
+			
+			foreach(u; g.world.units)
+				{
+				if(u != myOwner)
+					{
+					if(checkUnitCollision(u))
+						{
+						isDead=true;
+						u.onHit(this);
+						}
+					}					
 				}
 						
 			x += vx;
@@ -383,8 +411,8 @@ class item : baseObject
 
 class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it, make sure to override if you don't want those physics.
 	{
-	immutable float maxHP=100.0; /// Maximum health points
-	float hp=maxHP; /// Current health points
+	float maxHP=100.0; /// Maximum health points
+	float hp=100.0; /// Current health points
 	float ap=0; /// armor points (reduced on hits then armor breaks)
 	float armor=0; /// flat reduction (or percentage) on damages, haven't decided.
 	uint team=0;
@@ -439,7 +467,12 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		{
 		}
 		
-	void onHit(baseObject who)
+	void onHit(bullet b) //projectile based damage
+		{
+		// b.myOwner
+		}
+
+	void onCrash(unit byWho) //for crashing into each other/objects
 		{
 		}
 
@@ -485,43 +518,204 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		}
 	}
 	
+class laser : gun
+	{
+	this(ship newOwner)
+		{
+		super(newOwner);
+		gunCooldownTime = 0; //instant fire
+		damage = 1;
+		} // not sure how we spawn laser beams. Could be as simple as projecting a line.
+		
+	override void fireProjectile()
+		{
+		// spawn laser projectile. (still on g.world.bullets?)
+		// but it's a line.
+		// maybe a 'laser bullet' structure that requires source position (player) and destination pos?
+		}
+	}
+
+class minigun : gun
+	{
+	this(ship newOwner)
+		{
+		super(newOwner);
+		gunCooldownTime = 0;
+		spreadArc=5;
+		roundsFired=1;
+		speed=20;
+		}
+	}
+
+class shotgun : gun
+	{
+	this(ship newOwner)
+		{
+		super(newOwner);
+		gunCooldownTime = 30;
+		spreadArc=10;
+		roundsFired=20;
+		}
+	}
+
+class gun
+	{
+	float ammoLeft=100; // float in case we need to do some sort of "eats 1.5 units fluid per frame" logic
+	float damage=5;
+	int cooldown=0;
+	int gunCooldownTime=5;
+	int roundsFired=1;
+	float speed=10;
+	float spreadArc=0; // fixed spread arc degrees (degrees left and right. think 2x for total spread)
+	float recoil; // increases with more shots more often
+	float recoilCooldown; // nyi
+	bool isShotgun=false; //spread. needed?
+	unit myOwner;
+	
+	this(ship newOwner)
+		{
+		myOwner = newOwner;
+		}
+	
+	void fireProjectile()
+		{
+		with(myOwner) //CAREFUL not to shadow variables here!
+			{
+			import std.random;
+			float _vx = vx + cos(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
+			float _vy = vy + sin(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
+			g.world.bullets ~= new bullet(x, y, _vx, _vy, angle, 0, 100, myOwner);
+			}
+		}
+	
+	void onTick()
+		{
+		if(cooldown > 0)
+			{
+			cooldown--;
+			}
+		}
+	
+	void actionFire()
+		{
+		if(cooldown == 0)
+			{
+			for(int i = 0; i < roundsFired; i++)fireProjectile();
+			cooldown = gunCooldownTime;
+			}
+		}
+	}
+
+class hardpoint : unit
+	{
+	ship owner;
+	
+	this(ship _owner)
+		{
+		hp = 50;
+		owner = _owner;
+		super(0, owner.x, owner.y, 0, 0, g.trailer_bmp);
+		}
+	
+	override void draw(viewport v)
+		{
+		COLOR c = COLOR(1,1,1,hp/maxHP);
+		al_draw_tinted_rotated_bitmap(bmp, c,
+			bmp.w/2, bmp.h/2, 
+			owner.x + v.x - v.ox + cos(angle + PI/2f)*10f, 
+			owner.y + v.y - v.oy + sin(angle + PI/2f)*10f, angle, 0);
+		al_draw_tinted_rotated_bitmap(bmp, c,
+			bmp.w/2, bmp.h/2, 
+			owner.x + v.x - v.ox + cos(angle + PI/2f)*-10f, 
+			owner.y + v.y - v.oy + sin(angle + PI/2f)*-10f, angle, 0);
+		}
+		
+	override void onTick()
+		{
+		// need some vector rotations;
+		angle = owner.angle;
+		x = owner.x;
+		y = owner.y;
+		}
+	}
+
 class freighter : ship
 	{
+	hardpoint[] hardpoints;
+		
 	this(float _x, float _y, float _xv, float _yv)
 		{
-		super(_x, _y, _xv, _yv);
+		name = "USS Caramelee";
+		super(_x, _y, _xv, _yv); // THIS sets up gun. careful to be first.
+		myGun = new shotgun(this); // NOTE we're replacing an existing one from super(). That's a memory usage.
 		bmp = freighter_bmp;
+		SPEED = 0.2;
+		auto h = new hardpoint(this);
+		hardpoints ~= h;
+		}
+		
+	override void draw(viewport v)
+		{
+		foreach(h; hardpoints)
+			{
+			h.draw(v);
+			}
+		super.draw(v);
+		}
+
+	override void onTick()
+		{
+		foreach(h; hardpoints)
+			{
+			h.onTick();
+			}
+
+		myGun.onTick();
+		
+		super.onTick();
 		}
 	}
 
 class ship : unit
 	{
+	string name="";
 	bool isOwned=false;
 	player currentOwner;
 	bool isLanded=false;
-	immutable float MAX_LATCHING_SPEED = 3;
-	immutable float MAX_SAFE_LANDING_ANGLE = 45;
-	immutable float ROTATION_SPEED = 5;
-	immutable float BULLET_SPEED = 10;
-	immutable uint GUN_COOLDOWN = 5;
-	int gunCooldown = 0;
+	gun myGun;
 	
-	immutable uint SHIELD_COOLDOWN = 60; /// frames till it can start recharging
-	immutable float SHIELD_RECHARGE_RATE = 1; /// once recharging starts rate of fill
-	immutable int SHIELD_MAX = 100; /// total shield health
+	/// "constants" 
+	/// They are UPPER_CASE but they're not immutable so inherited classes can override them.
+	/// unless there's some other way to do that.
+	float MAX_LATCHING_SPEED = 3;
+	float MAX_SAFE_LANDING_ANGLE = 45;
+	float ROTATION_SPEED = 5;
+	uint  SHIELD_COOLDOWN = 60; /// frames till it can start recharging
+	float SHIELD_RECHARGE_RATE = 0.5; /// once recharging starts rate of fill
+	int   SHIELD_MAX = 100; /// total shield health
+	float SPEED = 0.1f;
+	
+//	int gunCooldown = 0;
 	float shieldHP = 0;
 	int shieldCooldown = 60;
 	//we could also have a shield break animation of the bubble popping
 	
 	this(float _x, float _y, float _xv, float _yv)
 		{
+		myGun = new gun(this);
 		super(1, _x, _y, _xv, _yv, ship_bmp);
 		}
 
 	override void draw(viewport v)
 		{
-		drawShield(pair(x + v.x - v.ox,y + v.y - v.oy), v, 40, 5, COLOR(0,0,1,1), shieldHP/SHIELD_MAX);
+		drawShield(pair(x + v.x - v.ox, y + v.y - v.oy), v, bmp.w, 5, COLOR(0,0,1,1), shieldHP/SHIELD_MAX);
 		super.draw(v);
+		
+		if(name != "")
+			{
+			drawTextCenter(x + v.x - v.ox, y + v.y - v.oy - bmp.w, white, "%s", name);
+			// using bmp.w because it's larger in non-rotated sprites
+			}
 		}
 		
 	void crash()
@@ -619,7 +813,7 @@ class ship : unit
 				if(checkAsteroidCollision(a))
 					{
 				//	isDead=true;
-					a.onHit(this);
+					a.onCrash(this);
 					}
 				}
 				
@@ -640,11 +834,11 @@ class ship : unit
 			isLanded = false;
 			x += cos(angle)*5f; 
 			y += sin(angle)*5f; 
-			applyV(angle, .1);
-			applyV(angle, .1);
-			applyV(angle, .1);
+			applyV(angle, SPEED);
+			applyV(angle, SPEED);
+			applyV(angle, SPEED);
 			}
-		applyV(angle, .1);
+		applyV(angle, SPEED);
 		spawnSmoke();
 		}
 		
@@ -658,15 +852,7 @@ class ship : unit
 
 	override void attack()
 		{
-		float _vx = vx + cos(angle)*BULLET_SPEED;
-		float _vy = vy + sin(angle)*BULLET_SPEED;
-		if(gunCooldown == 0)
-			{
-			g.world.bullets ~= new bullet(x, y, _vx, _vy, angle, 0, 100);
-			gunCooldown = GUN_COOLDOWN;
-			}else{
-			gunCooldown--;
-			}
+		if(!isLanded)myGun.actionFire();
 		}
 	}
 	
@@ -684,7 +870,7 @@ class dude : baseObject
 
 	// originally a copy of structure.draw
 	override void draw(viewport v)
-		{
+		{		
 		// we draw RELATIVE to planet.xy, so no using baseObject.draw
 		// TODO how do we rotate angle from center of planet properly? Or do we even need that?
 		float cx=myPlanet.x + x + v.x - v.ox;

@@ -234,21 +234,16 @@ struct display_t
 		display.reset_clipping();
 		al_draw_filled_rounded_rectangle(16, 32, 64+650, 105+32, 8, 8, ALLEGRO_COLOR(.7, .7, .7, .7));
 
-		void drawText(A...)(float x, string formatStr, A a)
-			{
-			al_draw_text(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, textHelper(), ALLEGRO_ALIGN_LEFT, format(formatStr, a).toStringz); 
-			}
-			
 		unit u = g.world.units[0];
-		drawText(20, "obj[%.2f,%.2f][%.2f %f.2] %.2f deg", u.x, u.y, u.vx, u.vy, u.angle.radToDeg);
-		drawText(20, "fps[%d] objrate[%d]", g.stats.fps, 
+		drawText2(20, "obj[%.2f,%.2f][%.2f %f.2] %.2f deg", u.x, u.y, u.vx, u.vy, u.angle.radToDeg);
+		drawText2(20, "fps[%d] objrate[%d]", g.stats.fps, 
 					(g.stats.number_of_drawn_particles +
 					g.stats.number_of_drawn_units + 
 					g.stats.number_of_drawn_particles + 
 					g.stats.number_of_drawn_structures) * g.stats.fps ); 
 		
-		drawText(20, "money [%d] deaths [%d]", g.world.players[0].myTeam.money, g.world.players[0].deaths);
-		drawText(20, "drawn: structs [%d] bg_tiles [%d] particles [%d] units [%d]", 
+		drawText2(20, "money [%d] deaths [%d]", g.world.players[0].myTeam.money, g.world.players[0].deaths);
+		drawText2(20, "drawn: structs [%d] bg_tiles [%d] particles [%d] units [%d]", 
 			g.stats.number_of_drawn_structures, 
 			g.stats.number_of_drawn_background_tiles, 
 			g.stats.number_of_drawn_particles,

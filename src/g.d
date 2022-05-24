@@ -32,6 +32,7 @@ ALLEGRO_BITMAP* large_asteroid_bmp;
 ALLEGRO_BITMAP* space_bmp;
 ALLEGRO_BITMAP* bullet_bmp;
 ALLEGRO_BITMAP* dude_bmp;
+ALLEGRO_BITMAP* trailer_bmp;
 
 ALLEGRO_BITMAP* dude_up_bmp;
 ALLEGRO_BITMAP* dude_down_bmp;
@@ -76,6 +77,7 @@ void loadResources()
 	space_bmp  				= getBitmap("./data/seamless_space.png");
 	bullet_bmp  			= getBitmap("./data/bullet.png");
 	dude_bmp	  			= getBitmap("./data/dude.png");
+	trailer_bmp	  			= getBitmap("./data/trailer.png");
 	
 	dude_up_bmp  		= getBitmap("./data/dude_up.png");
 	dude_down_bmp	  	= getBitmap("./data/dude_down.png");
@@ -208,13 +210,19 @@ class world_t
 	this()
 		{		
 		auto s = new ship(680, 360, 0, 0);	
+		s.name = "Interdicter";
 		units ~= s; //which comes first, player or the egg
 		players ~= new player(s);
 		teams ~= new team(players[0], blue);
 		players[0].myTeam = teams[0];
 		
+		auto s2 = new freighter(20, 20, 0, 0);
+	
 		s.isOwned = true;
 		s.currentOwner = players[0];
+		s2.isOwned = true;
+		s2.currentOwner = players[0];
+		units ~= s2;
 		
 		// note structures currently pre-req a player instantiated
 		planets ~= new planet("first", 400, 300, 200);
@@ -300,7 +308,7 @@ class world_t
 		testGraph.onTick();
 		testGraph2.onTick();
 		
-		ship p = cast(ship)units[0]; // player
+		ship p = cast(ship)units[1]; // player
 		p.isPlayerControlled = true;
 		viewports[0].ox = p.x - viewports[0].w/2;
 		viewports[0].oy = p.y - viewports[0].h/2;
