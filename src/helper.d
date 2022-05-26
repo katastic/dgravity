@@ -19,6 +19,8 @@ COLOR black = COLOR(0,0,0,1);
 COLOR red   = COLOR(1,0,0,1);
 COLOR green = COLOR(0,1,0,1);
 COLOR blue  = COLOR(0,0,1,1);
+COLOR yellow = COLOR(1,1,0,1);
+COLOR orange = COLOR(1,0.65,0,1);
 
 //mixin template grey(T)(T w)
 	//{
@@ -401,6 +403,11 @@ void al_draw_scaled_bitmap2(ALLEGRO_BITMAP *bitmap, float x, float y, float scal
 void al_draw_center_rotated_bitmap(BITMAP* bmp, float x, float y, float angle, int flags)
 	{
 	al_draw_rotated_bitmap(bmp, bmp.w/2, bmp.h/2, x, y, angle, flags);
+	}
+
+void al_draw_center_rotated_tinted_bitmap(BITMAP* bmp, COLOR tint, float x, float y, float angle, int flags)
+	{
+	al_draw_tinted_rotated_bitmap(bmp, tint, bmp.w/2, bmp.h/2, x, y, angle, flags);
 	}
 
 // you know, we could do some sort of scoped lambda like thing that auto resets the target

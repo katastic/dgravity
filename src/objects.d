@@ -205,9 +205,12 @@ class bullet : baseObject
 	int lifetime; // frames passed since firing
 	bool isDead=false; // to trim
 	unit myOwner;
+	bool isAffectedByGravity=true;
+	COLOR c;
 	
-	this(float _x, float _y, float _vx, float _vy, float _angle, int _type, int _lifetime, unit _myOwner)
+	this(float _x, float _y, float _vx, float _vy, float _angle, COLOR _c, int _type, int _lifetime, bool _isAffectedByGravity, unit _myOwner)
 		{
+		c = _c;
 		myOwner = _myOwner;
 		x = _x;
 		y = _y;
@@ -216,6 +219,7 @@ class bullet : baseObject
 		type = _type;
 		lifetime = _lifetime;
 		angle = _angle;
+		isAffectedByGravity = _isAffectedByGravity;
 		super(_x, _y, _vx, _vy, g.bullet_bmp);
 		}
 	
@@ -289,7 +293,7 @@ class bullet : baseObject
 			{
 			isDead=true;
 			}else{
-			applyGravity(g.world.planets[0]);
+			if(isAffectedByGravity) applyGravity(g.world.planets[0]);
 			
 			foreach(p; g.world.planets) // NOTE. similar to ship.checkPlanetCollision
 				{
@@ -342,7 +346,7 @@ class bullet : baseObject
 		float dx = x + v.x - v.ox;
 		float dy = y + v.y - v.oy;
 //		al_draw_bitmap(bmp, dx, dy, 0);
-		al_draw_center_rotated_bitmap(bmp, dx, dy, angle + degToRad(90), 0);
+		al_draw_center_rotated_tinted_bitmap(bmp, c, dx, dy, angle + degToRad(90), 0);
 		}
 	}
 	
@@ -519,7 +523,9 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 //		drawPlanetHelper(this, g.world.planets[1], v);
 
 		// draw angle text
-		al_draw_text(g.font1, white, x + v.x - v.ox + 30, y + v.y - v.oy - 30, 0, format("%3.2f", radToDeg(angle)).toStringz); 
+		al_draw_text(g.font1, white, 
+			x + v.x - v.ox + bmp.w, 
+			y + v.y - v.oy - bmp.w, 0, format("%3.2f", radToDeg(angle)).toStringz); 
 	
 		draw_hp_bar(x, y - bmp.w/2, v, hp, 100);		
 		}
@@ -529,7 +535,7 @@ class laser : gun
 	{
 	this(ship newOwner)
 		{
-		super(newOwner);
+		super(newOwner, red);
 		gunCooldownTime = 0; //instant fire
 		damage = 1;
 		} // not sure how we spawn laser beams. Could be as simple as projecting a line.
@@ -546,7 +552,7 @@ class minigun : gun
 	{
 	this(ship newOwner)
 		{
-		super(newOwner);
+		super(newOwner, red);
 		gunCooldownTime = 0;
 		spreadArc=5;
 		roundsFired=1;
@@ -558,20 +564,33 @@ class shotgun : gun
 	{
 	this(ship newOwner)
 		{
-		super(newOwner);
+		super(newOwner, blue);
 		gunCooldownTime = 30;
 		spreadArc=10;
 		roundsFired=20;
+		bulletColor = orange;
 		}
 	}
 
 class turretGun : gun //slow firing, normal gun
 	{
-	this(ship newOwner)
+	this(ship newOwner, COLOR _c)
 		{
-		super(newOwner);
+		super(newOwner, _c);
 		cooldown = uniform!"[]"(0,30);
 		gunCooldownTime = 30;
+		isAffectedByGravity = false; 
+		}
+	}
+
+class planetGun : turretGun // so bullets can leave, no gravity on them.
+	{
+	@disable this();
+		
+	this(ship newOwner)
+		{
+		super(newOwner, red);
+		isAffectedByGravity = false; 
 		}
 	}
 
@@ -589,9 +608,12 @@ class gun
 	float recoilCooldown; // nyi
 	bool isShotgun=false; //spread. needed?
 	unit myOwner;
+	bool isAffectedByGravity=true;
+	COLOR bulletColor;
 	
-	this(ship newOwner)
+	this(ship newOwner, COLOR _bulletColor)
 		{
+		bulletColor = _bulletColor;
 		myOwner = newOwner;
 		}
 	
@@ -602,7 +624,7 @@ class gun
 			import std.random;
 			float _vx = vx + cos(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
 			float _vy = vy + sin(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
-			g.world.bullets ~= new bullet(x, y, _vx, _vy, angle, 0, 100, myOwner);
+			g.world.bullets ~= new bullet(x, y, _vx, _vy, angle, bulletColor, 0, 100, isAffectedByGravity, myOwner);
 			}
 		}
 	
@@ -613,7 +635,7 @@ class gun
 			import std.random;
 			float _vx = vx + cos(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
 			float _vy = vy + sin(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
-			g.world.bullets ~= new bullet(secondOwner.x + x, secondOwner.y + y, _vx, _vy, angle, 0, 100, myOwner);
+			g.world.bullets ~= new bullet(secondOwner.x + x, secondOwner.y + y, _vx, _vy, angle, bulletColor, 0, 100, isAffectedByGravity, myOwner);
 			}
 		}
 	
@@ -720,18 +742,38 @@ class freighter : ship
 		}
 	}
 
+class planetTurret : turret
+	{
+	// >>USING RELATIVE COORDINATES<<
+	this(float _x, float _y, baseObject _myOwner)
+		{
+		super(_x, _y, _myOwner, true); // special constructor
+		myGun = new planetGun(this);
+		}
+	}
+
+
 class turret : ship
 	{
 	// >>USING RELATIVE COORDINATES<<
 	BITMAP* turretGun_bmp;
 	baseObject myOwner;
 	float TURRET_TRAVERSE_SPEED=degToRad(2);
+	float TURRET_FIRE_DISTANCE=400f;
+	
+	this(float _x, float _y, baseObject _myOwner, bool dontSetupGun=true) // special case for planetTurret that will setup the gun
+		{
+		super(_x, _y, 0, 0);
+		turretGun_bmp = g.turret_bmp;
+		bmp = g.turret_base_bmp;
+		myOwner = _myOwner;
+		}
 	
 	this(float _x, float _y, baseObject _myOwner)
 		{
 		super(_x, _y, 0, 0);
 
-		myGun = new turretGun(this);
+		myGun = new turretGun(this, yellow);
 		turretGun_bmp = g.turret_bmp;
 		bmp = g.turret_base_bmp;
 		myOwner = _myOwner;
@@ -746,16 +788,20 @@ class turret : ship
 
 	override void onTick()
 		{
-		pair p = pair(myOwner.x + x, myOwner.y + y);
+		pair absoluteP = pair(myOwner.x + x, myOwner.y + y); 
 	
 		// this simple section has turned into a nightmare of angles and tests not working
 		
 		// whenever we have "shoot the nearest enemy" we need to not shoot at our owner (or I guess our team, which counts as our owner)
 		// but also not HITTING our owner.
 	
-		float destinationAngle = angleTo(g.world.units[0], p);
+		float destinationAngle = angleTo(g.world.units[0], absoluteP);
+		float distance = distanceTo(g.world.units[0], absoluteP);
 		//writeln(angle, " ", destinationAngle);
 //		writeln(angle.radToDeg, " ", destinationAngle.radToDeg);
+
+// --------------> read this thoroughly
+// https://math.stackexchange.com/questions/110080/shortest-way-to-achieve-target-angle
 
 // TODO: FIX THESE		
 //		assert(angle == wrapRad(angle)); these are floats so we'd need to at least check a float /w range test
@@ -763,9 +809,10 @@ class turret : ship
 		angle = wrapRad(angle);
 		destinationAngle = wrapRad(destinationAngle);
 		
-		auto t = angleDiff2(angle, destinationAngle + PI/2); //FIXME: Why is this off by 90 degrees?!?!? but not for all turrets!? what the hell is going on.
+	//	auto t = angleDiff2(angle, destinationAngle + PI/2); //FIXME: Why is this off by 90 degrees?!?!? but not for all turrets!? what the hell is going on.
 //		writeln(angle.radToDeg, " ", destinationAngle.radToDeg, " = ", t.radToDeg);
-		if(t < 0)
+	//	if(t < 0)
+		if(angle > destinationAngle)
 			{
 //			writeln("down");
 			angle -= TURRET_TRAVERSE_SPEED;
@@ -777,9 +824,11 @@ class turret : ship
 		myGun.onTick();
 		vx = myOwner.vx; // note, these aren't "used" for our position, but are needed for spawning bullets
 		vy = myOwner.vy; // that add with our velocity.
-		myGun.actionFireRelative(myOwner);
+		
+		if(distance < TURRET_FIRE_DISTANCE) myGun.actionFireRelative(myOwner);
 		}
 	}
+
 
 /// modified from https://stackoverflow.com/questions/28036652/finding-the-shortest-distance-between-two-angles
 float angleDiff2( double angle1, double angle2 )
@@ -1099,10 +1148,10 @@ class planet : baseObject
 		structures ~= new structure_t(0,  r*.8, g.dwarf_bmp, this);
 		structures ~= new structure_t(0, -r*.8, g.goblin_bmp, this);
 		
-		turrets ~= new turret(-r,0.0, this);
-		turrets ~= new turret( r,0.0, this);
-		turrets ~= new turret( 0, -r, this);
-		turrets ~= new turret( 0,  r, this);
+		turrets ~= new planetTurret(-r,0.0, this);
+		turrets ~= new planetTurret( r,0.0, this);
+		turrets ~= new planetTurret( 0, -r, this);
+		turrets ~= new planetTurret( 0,  r, this);
 		
 		for(int i = 0; i < 100; i++)
 			{

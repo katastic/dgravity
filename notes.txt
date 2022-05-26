@@ -1,11 +1,14 @@
 TODO
-	- al_hold_bitmap_drawing(true)
+	- fix turret angle code
+	- fix freighter smoke position offset
+	- use al_hold_bitmap_drawing(true) in applicable areas
 	- fix space
 	- shield collision detection
 	- Smoke should SHOOT OUT away from the engine. (assuming it doesn't already)
 	- upgrade turrets like a tower defense game?
-	- max AI turret traverse speed This game doesn't value your time, or money.
+	+ max AI turret traverse speed 
 	- turrets only fire when they're in approx angle range
+		+ and inside [max firing distance]
 	- TURRET GUNS cannot escape gravity hahaha. Maybe make a separate gravity (or mass) field for turret ammo so only SHIP guns are affected massively.
 	- possibility of a TURRETED aimable gun that doesn't fire as good as others but lets you aim while flying around instead of just shooting forward
 	- add turrets to carriers, planets, etc
