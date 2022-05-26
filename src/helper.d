@@ -120,7 +120,9 @@ T wrapRad(T)(T angle)
 	if(angle >= 0)
 		angle = fmod(angle, 2.0*PI);
 	else
-		angle += 2.0*PI; // everyone does this. What if angle is more than 360 negative though?
+		angle += 2.0*PI;
+		angle = fmod(angle, 2.0*PI);
+			// everyone does this. What if angle is more than 360 negative though?
 			// it'll be wrong. though a few more "hits" though this function and it'll be fixed.
 			// otherwise, we could do a while loop but is that slower even when we don't need it?
 			// either find the answer or stop caring.
@@ -143,7 +145,7 @@ void wrapRadRef(T)(ref T angle)
 ///  	Verses :	float angle = atan2(y - g.world.units[0].y, x - g.world.units[0].x);
 float angleTo(T, U)(T _this, U fromThat) 
 	{
-	return atan2(_this.y - fromThat.y, _this.x - fromThat.x);
+	return atan2(_this.y - fromThat.y, _this.x - fromThat.x).wrapRad;
 	}
 
 float angleDiff(T)(T _thisAngle, T toThatAngle)

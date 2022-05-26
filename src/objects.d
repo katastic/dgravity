@@ -748,14 +748,31 @@ class turret : ship
 		{
 		pair p = pair(myOwner.x + x, myOwner.y + y);
 	
+		// this simple section has turned into a nightmare of angles and tests not working
+		
 		// whenever we have "shoot the nearest enemy" we need to not shoot at our owner (or I guess our team, which counts as our owner)
 		// but also not HITTING our owner.
 	
-		float destinationAngle = angleTo(g.world.units[0], p);		
-		// FIXME: these gimbal lock (or whatever) when they hit angle = 0. -330 is only 30 away from zero, but it'll spin 330 degrees the other way "towards" zero.
-		if(angle < destinationAngle)angle += TURRET_TRAVERSE_SPEED;
-		if(angle > destinationAngle)angle -= TURRET_TRAVERSE_SPEED;
+		float destinationAngle = angleTo(g.world.units[0], p);
+		//writeln(angle, " ", destinationAngle);
+//		writeln(angle.radToDeg, " ", destinationAngle.radToDeg);
+
+// TODO: FIX THESE		
+//		assert(angle == wrapRad(angle)); these are floats so we'd need to at least check a float /w range test
+//		assert(destinationAngle == wrapRad(destinationAngle));
+		angle = wrapRad(angle);
+		destinationAngle = wrapRad(destinationAngle);
 		
+		auto t = angleDiff2(angle, destinationAngle + PI/2); //FIXME: Why is this off by 90 degrees?!?!? but not for all turrets!? what the hell is going on.
+//		writeln(angle.radToDeg, " ", destinationAngle.radToDeg, " = ", t.radToDeg);
+		if(t < 0)
+			{
+//			writeln("down");
+			angle -= TURRET_TRAVERSE_SPEED;
+		}else{
+	//		writeln("up");
+			angle += TURRET_TRAVERSE_SPEED;
+			}
 		 //grab target()
 		myGun.onTick();
 		vx = myOwner.vx; // note, these aren't "used" for our position, but are needed for spawning bullets
@@ -763,6 +780,14 @@ class turret : ship
 		myGun.actionFireRelative(myOwner);
 		}
 	}
+
+/// modified from https://stackoverflow.com/questions/28036652/finding-the-shortest-distance-between-two-angles
+float angleDiff2( double angle1, double angle2 )
+	{
+	//δ=(T−C+540°)mod360°−180°
+	return (angle2 - angle1 + 540.degToRad) % 2*PI - PI;
+	}
+
 
 class ship : unit
 	{
