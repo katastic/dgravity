@@ -21,6 +21,12 @@ import graph;
 immutable PLANET_MASS = 4000;
 immutable PLANET_MASS_FOR_BULLETS = 20000;
 
+//ALLEGRO_CONFIG* 		cfg;  //whats this used for?
+ALLEGRO_DISPLAY* 		al_display;
+ALLEGRO_EVENT_QUEUE* 	queue;
+ALLEGRO_TIMER* 			fps_timer;
+ALLEGRO_TIMER* 			screencap_timer;
+
 ALLEGRO_FONT* 	font1;
 
 ALLEGRO_BITMAP* ship_bmp;
@@ -36,10 +42,6 @@ ALLEGRO_BITMAP* trailer_bmp;
 ALLEGRO_BITMAP* turret_bmp;
 ALLEGRO_BITMAP* turret_base_bmp;
 
-ALLEGRO_BITMAP* dude_up_bmp;
-ALLEGRO_BITMAP* dude_down_bmp;
-ALLEGRO_BITMAP* dude_left_bmp;
-ALLEGRO_BITMAP* dude_right_bmp;
 ALLEGRO_BITMAP* chest_bmp;
 ALLEGRO_BITMAP* chest_open_bmp;
 ALLEGRO_BITMAP* dwarf_bmp;
@@ -82,11 +84,6 @@ void loadResources()
 	trailer_bmp	  			= getBitmap("./data/trailer.png");
 	turret_bmp	  			= getBitmap("./data/turret.png");
 	turret_base_bmp			= getBitmap("./data/turret_base.png");
-	
-	dude_up_bmp  		= getBitmap("./data/dude_up.png");
-	dude_down_bmp	  	= getBitmap("./data/dude_down.png");
-	dude_left_bmp  		= getBitmap("./data/dude_left.png");
-	dude_right_bmp  	= getBitmap("./data/dude_right.png");
 	
 	sword_bmp  			= getBitmap("./data/sword.png");
 	carrot_bmp  		= getBitmap("./data/carrot.png");
@@ -135,6 +132,12 @@ struct apair
 	float a; /// angle
 	float m; /// magnitude
 	} // idea: some sort of automatic convertion between angle/magnitude, and xy velocities?
+
+struct rpair // relative pair. not sure best way to implement conversions
+	{
+	float x;
+	float y;
+	}
 
 struct pair
 	{
@@ -247,20 +250,32 @@ class world_t
 		stats.swDraw = StopWatch(AutoStart.no);
 		}
 		
-	void drawSpace(viewport v)
+	void drawSpace(viewport v) //FIXME
 		{
-		for(int i = -2; i < 2; i++)
-			for(int j = -2; j < 2; j++)
-				{
-				COLOR c = COLOR(1,1,1,1); 
-				al_draw_tinted_bitmap(g.space_bmp, c, 0 + v.x - v.ox/1.25 + g.space_bmp.w*i, 0 + v.y - v.oy/1.25 + g.space_bmp.h*j, 0);
+//		auto p = al_get_pixel(al_get_backbuffer(al_display), 0, 0);
+//		writefln("[temp1] R%f G%f B%f A%f", p.r, p.g, p.b, p.a);	
+	//	pair[] data;
+		
+		for(float i = -g.space_bmp.w; i < SCREEN_W; i += g.space_bmp.w)
+			for(float j = -g.space_bmp.h; j < SCREEN_H; j += g.space_bmp.h)
+				{					
+	//			data ~= pair(i, j);
+				al_draw_tinted_bitmap(g.space_bmp, COLOR(1,1,1,1), i, j, 0);
 				}
+		
+//		writefln("points drawn at: %s", data);
+		}
+/+
+//		auto p2 = al_get_pixel(al_get_backbuffer(al_display), 0, 0);
+//		writefln("[temp2] R%f G%f B%f A%f", p2.r, p2.g, p2.b, p2.a);	
 		for(int i = -2; i < 2; i++)
 			for(int j = -2; j < 2; j++)
 				{
 				COLOR c = COLOR(1,1,1,.5); 
 				al_draw_tinted_bitmap(g.space_bmp, c, 0 + v.x - v.ox/2 + g.space_bmp.w*i, 0 + v.y - v.oy/2 + g.space_bmp.h*j, 1);
 				}
+//		auto p3 = al_get_pixel(al_get_backbuffer(al_display), 0, 0);
+//		writefln("[temp3] R%f G%f B%f A%f", p3.r, p3.g, p3.b, p2.a);	
 		for(int i = -4; i < 4; i++)
 			for(int j = -4; j < 4; j++)
 				{
@@ -268,7 +283,7 @@ class world_t
 				al_draw_tinted_bitmap(g.space_bmp, c, 0 + v.x - v.ox/4 + g.space_bmp.w*i, 0 + v.y - v.oy/4 + g.space_bmp.h*j, 3);
 				}
 		}
-		
+	+/	
 	void draw(viewport v)
 		{
 		drawSpace(v);

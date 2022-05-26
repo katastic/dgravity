@@ -76,13 +76,14 @@ struct particle
 		{
 		BITMAP *b = g.smoke_bmp;
 		ALLEGRO_COLOR c = ALLEGRO_COLOR(1,1,1,cast(float)lifetime/cast(float)maxLifetime);
-		float cx = x + v.x - v.ox - b.w/2;
-		float cy = y + v.y - v.oy - b.h/2;
+		float cx = x + v.x - v.ox;
+		float cy = y + v.y - v.oy;
 		float scaleX = (cast(float)lifetime/cast(float)maxLifetime) * b.w;
 		float scaleY = (cast(float)lifetime/cast(float)maxLifetime) * b.h;
 		al_draw_tinted_scaled_bitmap(b, c,
 			0, 0, b.w, b.h,
-			cx, cy, scaleX, scaleY, rotation);
+			cx - b.w/2, cy - b.h/2, scaleX, scaleY, 
+			rotation);
 		}
 	
 	// NOTE. duplicate of ship.checkPlanetCollision
@@ -511,6 +512,10 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		// Planet Helper(s)
 		drawAngleHelper(this, v, angle, 25, COLOR(0,1,0,1)); 
 		drawPlanetHelper(this, g.world.planets[0], v);
+		
+		float angle3= angleTo(g.world.units[0], this);
+		drawAngleHelper(this, v, angle3, 25, COLOR(1,1,0,1)); 
+
 //		drawPlanetHelper(this, g.world.planets[1], v);
 
 		// draw angle text
@@ -573,6 +578,7 @@ class turretGun : gun //slow firing, normal gun
 class gun
 	{
 	float ammoLeft=100; // float in case we need to do some sort of "eats 1.5 units fluid per frame" logic
+	float ammoRechargeRate=1; // This lets us "rate limit" spamming. Fire, out, wait for it to refill. [Can still fire before its full]
 	float damage=5;
 	int cooldown=5;
 	int gunCooldownTime=5;
@@ -685,6 +691,11 @@ class freighter : ship
 		SPEED = 0.2;
 		auto h = new hardpoint(this);
 		hardpoints ~= h;
+		
+		turrets ~= new turret(bmp.w, 0, this);
+		turrets ~= new turret(-bmp.w, 0, this);
+		turrets ~= new turret(0, bmp.w, this);
+		turrets ~= new turret(0, -bmp.w, this);
 		}
 		
 	override void draw(viewport v)
@@ -714,6 +725,7 @@ class turret : ship
 	// >>USING RELATIVE COORDINATES<<
 	BITMAP* turretGun_bmp;
 	baseObject myOwner;
+	float TURRET_TRAVERSE_SPEED=degToRad(2);
 	
 	this(float _x, float _y, baseObject _myOwner)
 		{
@@ -735,8 +747,19 @@ class turret : ship
 	override void onTick()
 		{
 		pair p = pair(myOwner.x + x, myOwner.y + y);
-		angle = angleTo(g.world.units[1], p); //grab target()
+	
+		// whenever we have "shoot the nearest enemy" we need to not shoot at our owner (or I guess our team, which counts as our owner)
+		// but also not HITTING our owner.
+	
+		float destinationAngle = angleTo(g.world.units[0], p);		
+		// FIXME: these gimbal lock (or whatever) when they hit angle = 0. -330 is only 30 away from zero, but it'll spin 330 degrees the other way "towards" zero.
+		if(angle < destinationAngle)angle += TURRET_TRAVERSE_SPEED;
+		if(angle > destinationAngle)angle -= TURRET_TRAVERSE_SPEED;
+		
+		 //grab target()
 		myGun.onTick();
+		vx = myOwner.vx; // note, these aren't "used" for our position, but are needed for spawning bullets
+		vy = myOwner.vy; // that add with our velocity.
 		myGun.actionFireRelative(myOwner);
 		}
 	}
@@ -746,8 +769,11 @@ class ship : unit
 	string name="";
 	bool isOwned=false;
 	player currentOwner;
-	bool isLanded=false;
+	bool isLanded=false; /// on planet
+	bool isDocked=false; /// attached to object
+	unit dockingUnit;
 	gun myGun;
+	turret[] turrets;
 	
 	/// "constants" 
 	/// They are UPPER_CASE but they're not immutable so inherited classes can override them.
@@ -776,6 +802,9 @@ class ship : unit
 		drawShield(pair(x + v.x - v.ox, y + v.y - v.oy), v, bmp.w, 5, COLOR(0,0,1,1), shieldHP/SHIELD_MAX);
 		super.draw(v);
 		
+		foreach(t; turrets)t.draw(v);
+
+		
 		if(name != "")
 			{
 			drawTextCenter(x + v.x - v.ox, y + v.y - v.oy - bmp.w, white, "%s", name);
@@ -789,6 +818,20 @@ class ship : unit
 		y += -vy; // to 'undo' the last tick and unstick us, then set the new heading
 		vx *= -.80;
 		vy *= -.80;
+		}
+		
+	bool checkUnitCollision(unit u)
+		{
+//		writefln("[%f,%f] vs u.[%f,%f]", x, y, u.x, u.y);
+		if(x - 10 < u.x)
+		if(x + 10 > u.x)
+		if(y - 10 < u.y)
+		if(y + 10 > u.y)
+			{
+//		writeln("[bullet] Death by unit contact.");
+			return true;
+			}		
+		return false;
 		}
 		
 	bool checkAsteroidCollision(asteroid a) // TODO fix. currently radial collision setup
@@ -829,7 +872,6 @@ class ship : unit
 		return nearestP;
 		}
 		
-		
 	void doShield()
 		{
 		if(shieldCooldown > 0)
@@ -844,11 +886,42 @@ class ship : unit
 
 	override void onTick()
 		{
+		/// Subunit logic
 		myGun.onTick();
 		doShield();
+		foreach(t; turrets)t.onTick();
+		
+		/// Self logic
+		if(isDocked)
+			{
+			assert(dockingUnit !is null);
+			vx = 0;
+			vy = 0;
+			x = dockingUnit.x;
+			y = dockingUnit.y;
+			angle = dockingUnit.angle;
+			return; // <------- EARLY TERMINATION
+			}
+			
 		if(!isLanded)
 			{
 			applyGravity(findNearestPlanet());
+			
+			/// check for docking
+			if(!isDocked)
+				{
+				foreach(u; g.world.units)
+					{
+					if(checkUnitCollision(u))
+						{
+						if((u !is this) && cast(freighter)u !is null)
+							{
+							isDocked = true;
+							dockingUnit = u;
+							}
+						}
+					}
+				}
 			
 			foreach(p; g.world.planets)
 				{
@@ -890,13 +963,16 @@ class ship : unit
 
 	void spawnSmoke()
 		{
-		g.world.particles ~= particle(x, y, vx*.99, vy*.99, 0, 100, this);
+		float cvx = cos(angle)*0;
+		float cvy = sin(angle)*0;
+		g.world.particles ~= particle(x, y, vx + cvx, vy + cvy, 0, 100, this);
 		}
 
 	override void up()
 		{ 
-		if(isLanded)
+		if(isLanded || isDocked)
 			{				
+			isDocked = false;
 			isLanded = false;
 			x += cos(angle)*5f; 
 			y += sin(angle)*5f; 

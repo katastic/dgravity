@@ -1,9 +1,3 @@
-/*
-
-	-> Basic tiled and lightmap lighting?
-
-*/
-
 // GLOBAL CONSTANTS
 // =============================================================================
 immutable bool DEBUG_NO_BACKGROUND = false; /// No graphical background so we draw a solid clear color. Does this do anything anymore?
@@ -47,12 +41,8 @@ import helper;
 import objects;
 import viewportsmod;
 static import g;
+import g : queue, al_display, fps_timer, screencap_timer;
 
-//ALLEGRO_CONFIG* 		cfg;  //whats this used for?
-ALLEGRO_DISPLAY* 		al_display;
-ALLEGRO_EVENT_QUEUE* 	queue;
-ALLEGRO_TIMER* 			fps_timer;
-ALLEGRO_TIMER* 			screencap_timer;
 display_t display;
 
 //=============================================================================
@@ -356,8 +346,7 @@ void execute()
 					isKeySet(ALLEGRO_KEY_W, g.key_w_down);
 					isKeySet(ALLEGRO_KEY_S, g.key_s_down);
 					isKeySet(ALLEGRO_KEY_A, g.key_a_down);
-					isKeySet(ALLEGRO_KEY_D, g.key_d_down);
-										
+					isKeySet(ALLEGRO_KEY_D, g.key_d_down);		
 
 					isKeySet(ALLEGRO_KEY_M, g.key_m_down);
 					isKeySet(ALLEGRO_KEY_I, g.key_i_down);
