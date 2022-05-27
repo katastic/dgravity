@@ -475,7 +475,7 @@ void runAllegroTest()
 
 void setupFloatingPoint()
 	{
-	import std.math.hardware;
+	import std.math.hardware : FloatingPointControl;
 	FloatingPointControl fpctrl;
     fpctrl.enableExceptions(FloatingPointControl.severeExceptions);
 	// enables hardware trap exceptions on uninitialized floats (NaN), (I would imagine) division by zero, etc.

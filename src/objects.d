@@ -15,6 +15,8 @@ import std.algorithm : remove;
 import g;
 import helper;
 import viewportsmod;
+import particles;
+import guns;
 
 /*
 	Teams
@@ -26,98 +28,36 @@ name clashes
 	- we also can't use "with" for onCollision(baseObject with)
 */
 
-/// baseObject and handler for asteroids, 1st-order physics baseObjects that float and split on collision/firing
-/// 
-
-struct particle
+class satellite : ship
 	{
-	float x=0, y=0;
-	float vx=0, vy=0;
-	int type=0;
-	int lifetime=0;
-	int maxLifetime=0;
-	int rotation=0;
-	bool isDead=false;
+	planet myPlanet;
+	float radius;
+	float orbitAngle;
+	float orbitVelocity;
 
-	//particle(x, y, vx, vy, 0, 5);
-	/// spawn smoke without additional unit u
-	this(float _x, float _y, float _vx, float _vy, int _type, int  _lifetime)
+	@disable this();
+
+	this(planet _myPlanet, float _radius, float _orbitAngle, float _orbitVelocity)
 		{
-		import std.math : cos, sin;
-		x = _x;
-		y = _y;
-		vx = _vx + uniform!"[]"(-.1, .1);
-		vy = _vy + uniform!"[]"(-.1, .1);
-		type = _type;
-		lifetime = _lifetime;
-		maxLifetime = _lifetime;
-		rotation = uniform!"[]"(0, 3);
-		}
-	
-	/// spawn smoke with acceleration from unit u
-	this(float _x, float _y, float _vx, float _vy, int _type, int  _lifetime, unit u)
-		{
-		import std.math : cos, sin;
-		float thrustAngle = u.angle;
-		float thrustDistance = -30;
-		float thrustVelocity = -3;
-		
-		x = _x + cos(thrustAngle)*thrustDistance;
-		y = _y + sin(thrustAngle)*thrustDistance;
-		vx = _vx + uniform!"[]"(-.1, .1) + cos(thrustAngle)*thrustVelocity;
-		vy = _vy + uniform!"[]"(-.1, .1) + sin(thrustAngle)*thrustVelocity;
-		type = _type;
-		lifetime = _lifetime;
-		maxLifetime = _lifetime;
-		rotation = uniform!"[]"(0, 3);
+		myPlanet = _myPlanet;
+		radius = _radius;
+		orbitAngle = _orbitAngle;
+		orbitVelocity = _orbitVelocity;
+		assert(myPlanet !is null);
+		super(0, 0, 0, 0);
+		bmp = g.satellite_bmp;
 		}
 		
-	void draw(viewport v)
+	override void onTick()
 		{
-		BITMAP *b = g.smoke_bmp;
-		ALLEGRO_COLOR c = ALLEGRO_COLOR(1,1,1,cast(float)lifetime/cast(float)maxLifetime);
-		float cx = x + v.x - v.ox;
-		float cy = y + v.y - v.oy;
-		float scaleX = (cast(float)lifetime/cast(float)maxLifetime) * b.w;
-		float scaleY = (cast(float)lifetime/cast(float)maxLifetime) * b.h;
-		al_draw_tinted_scaled_bitmap(b, c,
-			0, 0, b.w, b.h,
-			cx - b.w/2, cy - b.h/2, scaleX, scaleY, 
-			rotation);
+		orbitAngle += orbitVelocity;
+		orbitAngle.wrapRadRef;
+		
+		x = myPlanet.x + cos(orbitAngle)*radius;
+		y = myPlanet.y + sin(orbitAngle)*radius;
+		// doing it this way should let us keep base-class draw routine
 		}
-	
-	// NOTE. duplicate of ship.checkPlanetCollision
-	bool checkPlanetCollision(planet p)
-		{
-		if(distanceTo(this, p) < p.r)
-			{
-			return true;
-			}else{
-			return false;
-			}
-		}
-	
-	void onTick() // should we check for planets collision?
-		{
-		lifetime--;
-		if(lifetime == 0)
-			{
-			isDead=true;
-			}else{
-				
-			foreach(p; g.world.planets) // NOTE. similar to ship.checkPlanetCollision
-				{
-				if(checkPlanetCollision(p))
-					{
-					vx = 0;
-					vy = 0;
-					}
-				}
-			
-			x += vx;
-			y += vy;
-			}
-		}	
+		
 	}
 
 class asteroid : unit
@@ -558,125 +498,6 @@ class laser : gun
 		}
 	}
 
-class minigun : gun
-	{
-	this(ship newOwner)
-		{
-		super(newOwner, red);
-		gunCooldownTime = 0;
-		spreadArc=5;
-		roundsFired=1;
-		speed=20;
-		}
-	}
-
-class shotgun : gun
-	{
-	this(ship newOwner)
-		{
-		super(newOwner, blue);
-		gunCooldownTime = 30;
-		spreadArc=10;
-		roundsFired=20;
-		bulletColor = orange;
-		}
-	}
-
-class turretGun : gun //slow firing, normal gun
-	{
-	this(ship newOwner, COLOR _c)
-		{
-		super(newOwner, _c);
-		cooldown = uniform!"[]"(0,30);
-		gunCooldownTime = 30;
-		isAffectedByGravity = false; 
-		}
-	}
-
-class planetGun : turretGun // so bullets can leave, no gravity on them.
-	{
-	@disable this();
-		
-	this(ship newOwner)
-		{
-		super(newOwner, red);
-		isAffectedByGravity = false; 
-		}
-	}
-
-class gun
-	{
-	float ammoLeft=100; // float in case we need to do some sort of "eats 1.5 units fluid per frame" logic
-	float ammoRechargeRate=1; // This lets us "rate limit" spamming. Fire, out, wait for it to refill. [Can still fire before its full]
-	float damage=5;
-	int cooldown=5;
-	int gunCooldownTime=5;
-	int roundsFired=1;
-	float speed=10;
-	float spreadArc=0; // fixed spread arc degrees (degrees left and right. think 2x for total spread)
-	float recoil; // increases with more shots more often
-	float recoilCooldown; // nyi
-	bool isShotgun=false; //spread. needed?
-	unit myOwner;
-	bool isAffectedByGravity=true;
-	COLOR bulletColor;
-	
-	this(ship newOwner, COLOR _bulletColor)
-		{
-		bulletColor = _bulletColor;
-		myOwner = newOwner;
-		}
-	
-	void fireProjectile()
-		{
-		with(myOwner) //CAREFUL not to shadow variables here!
-			{
-			import std.random;
-			float _vx = vx + cos(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
-			float _vy = vy + sin(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
-			g.world.bullets ~= new bullet(x, y, _vx, _vy, angle, bulletColor, 0, 100, isAffectedByGravity, myOwner);
-			}
-		}
-	
-	void fireProjectileRelative(baseObject secondOwner)
-		{
-		with(myOwner) //CAREFUL not to shadow variables here!
-			{
-			import std.random;
-			float _vx = vx + cos(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
-			float _vy = vy + sin(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
-			g.world.bullets ~= new bullet(secondOwner.x + x, secondOwner.y + y, _vx, _vy, angle, bulletColor, 0, 100, isAffectedByGravity, myOwner);
-			}
-		}
-	
-	void onTick()
-		{
-		if(cooldown > 0)
-			{
-			cooldown--;
-		//	writeln(cooldown);
-			}
-		}
-	
-	void actionFireRelative(baseObject secondOwner)
-		{
-		if(cooldown == 0)
-			{
-			for(int i = 0; i < roundsFired; i++)fireProjectileRelative(secondOwner);
-			cooldown = gunCooldownTime;
-			}
-		}
-
-	void actionFire()
-		{
-		if(cooldown == 0)
-			{
-			for(int i = 0; i < roundsFired; i++)fireProjectile();
-			cooldown = gunCooldownTime;
-			}
-		}
-	}
-
 class hardpoint : unit
 	{
 	ship owner;
@@ -839,14 +660,6 @@ class turret : ship
 		}
 	}
 
-
-/// modified from https://stackoverflow.com/questions/28036652/finding-the-shortest-distance-between-two-angles
-float angleDiff2( double angle1, double angle2 )
-	{
-	//δ=(T−C+540°)mod360°−180°
-	return (angle2 - angle1 + 540.degToRad) % 2*PI - PI;
-	}
-
 class ship : unit
 	{
 	string name="";
@@ -857,6 +670,7 @@ class ship : unit
 	unit dockingUnit;
 	gun myGun;
 	turret[] turrets;
+	int numDudesInside; // NYI, we don't need (at least at this point) to keep actual unique dude classes inside. Just delete them and keep track of how many we had. (ala all level-1 blue pikmin are the same)
 	
 	/// "constants" 
 	/// They are UPPER_CASE but they're not immutable so inherited classes can override them.
@@ -882,7 +696,7 @@ class ship : unit
 
 	override void draw(viewport v)
 		{
-		drawShield(pair(x + v.x - v.ox, y + v.y - v.oy), v, bmp.w, 5, COLOR(0,0,1,1), shieldHP/SHIELD_MAX);
+		drawShield(pair(x, y), v, bmp.w, 5, COLOR(0,0,1,1), shieldHP/SHIELD_MAX);
 		super.draw(v);
 		
 		foreach(t; turrets)t.draw(v);
@@ -936,7 +750,7 @@ class ship : unit
 			isLanded = true;
 			vx = 0;
 			vy = 0;
-			p.capture(currentOwner.myTeamIndex);
+			p.capture(currentOwner.myTeamIndex, this);
 			}else{
 			// ships that aren't being used by a player cannot capture. IF that needs to change, we currently cannot follow a null reference to a player class.
 			}
@@ -1089,7 +903,9 @@ class ship : unit
 class dude : baseObject
 	{
 	// do dudes walk around the surface or bounce around the inside?
-	 
+	bool isRunningForShip=false;
+	ship landedShip;
+
 	planet myPlanet;
 	
 	this(float relx, float rely, float _vx, float _vy, planet _myPlanet)
@@ -1112,6 +928,15 @@ class dude : baseObject
 	override void onTick()
 		{
 		import std.random : uniform;
+		
+		if(isRunningForShip)
+			{
+			pair p = pair(myPlanet.x + x, myPlanet.y + y);
+			float angle=angleTo(landedShip, p);
+			vx = cos(angle)*1;
+			vy = sin(angle)*1;
+			}
+		
 		x += vx;
 		y += vy;
 		float dist = sqrt(x^^2 + y^^2); //we're using relative-to-planet coordinates!
@@ -1149,6 +974,7 @@ class planet : baseObject
 	structure_t[] structures;
 	dude[] dudes;
 	turret[] turrets;
+	satellite[] satellites; // not sure if turrets+satellites should be combined into a units array
 	
 	@disable this();
 	this(string _name, float _x, float _y, float _r)
@@ -1167,6 +993,8 @@ class planet : baseObject
 		turrets ~= new planetTurret( 0, -r, this);
 		turrets ~= new planetTurret( 0,  r, this);
 		
+		satellites ~= new satellite(this, r*1.5, 0, degToRad(1));
+		
 		for(int i = 0; i < 100; i++)
 			{
 			// note dudes have relative coordinates
@@ -1180,10 +1008,17 @@ class planet : baseObject
 			}
 		}
 	
-	void capture(int byTeamIndex)
+	void capture(int byTeamIndex, ship by) // do we need byTeamIndex if we have a ship now?
 		{
 		isOwned = true;
 		currentTeamIndex = byTeamIndex;
+		
+		foreach(d; dudes)
+			{
+			d.isRunningForShip = true;
+			d.landedShip = by;
+			}
+		
 		}
 		
 	void drawOwnerFlag(viewport v)
@@ -1203,6 +1038,7 @@ class planet : baseObject
 
 		foreach(d; dudes) d.draw(v);
 		foreach(t; turrets) t.draw(v);
+		foreach(s; satellites) s.draw(v);
 		
 		if(isOwned)drawOwnerFlag(v);
 		}
@@ -1214,9 +1050,11 @@ class planet : baseObject
 		foreach(s; structures) s.onTick();
 		foreach(d; dudes) d.onTick();
 		foreach(t; turrets) t.onTick();
+		foreach(s; satellites) s.onTick();
 		prune(structures);
 		prune(dudes);
 		prune(turrets);
+		prune(satellites);
 		//x += vx;
 		//y += vy; //do we want this?
 		}

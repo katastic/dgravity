@@ -1,4 +1,20 @@
 TODO
+	- Q: wouldn't it be really funny if instead of space, we made it space cowboys with folk/bluegrass music (ala dr strangelove and spaceward ho):
+		https://www.youtube.com/watch?v=b-kaG1NuLZM (copyrighted)
+		in light of the chaotic nature of the gameplay
+		
+		... maybe.
+		
+		or tracker music
+		https://www.youtube.com/watch?v=gHQYYh7J1O4
+		
+		trance:
+		https://www.youtube.com/watch?v=a5TIWp16_sc&list=PLBaGOSPArE_NtLJY8edDeRBLy0_cvpKSS
+
+	- if you land (only certain ships?) tons of planetDudes try to pile into your ship.
+
+	- can a planet be destroyed? It would look beautiful but i don't know if it would improve gameplay unless its lategame only
+
 	- asteroidCluster
 		- a group of asteroids, that all move together and keep relative positions to each other. Maybe the entire field can move to gravity, or more in general, but the individuals form a "pattern" that can then be navigated through for "Fun(TM)"
 	- findNextShip() doesn't bother with teams yet

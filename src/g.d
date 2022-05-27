@@ -6,6 +6,7 @@ import allegro5.allegro_ttf;
 import allegro5.allegro_color;
 
 import std.stdio;
+import std.math;
 import std.conv;
 import std.string;
 import std.random;
@@ -17,9 +18,10 @@ import helper;
 import objects;
 import viewportsmod;
 import graph;
+import particles;
 
 immutable PLANET_MASS = 4000;
-immutable PLANET_MASS_FOR_BULLETS = 20000;
+immutable PLANET_MASS_FOR_BULLETS = 20_000;
 
 //ALLEGRO_CONFIG* 		cfg;  //whats this used for?
 ALLEGRO_DISPLAY* 		al_display;
@@ -41,6 +43,7 @@ ALLEGRO_BITMAP* dude_bmp;
 ALLEGRO_BITMAP* trailer_bmp;
 ALLEGRO_BITMAP* turret_bmp;
 ALLEGRO_BITMAP* turret_base_bmp;
+ALLEGRO_BITMAP* satellite_bmp;
 
 ALLEGRO_BITMAP* chest_bmp;
 ALLEGRO_BITMAP* chest_open_bmp;
@@ -84,6 +87,7 @@ void loadResources()
 	trailer_bmp	  			= getBitmap("./data/trailer.png");
 	turret_bmp	  			= getBitmap("./data/turret.png");
 	turret_base_bmp			= getBitmap("./data/turret_base.png");
+	satellite_bmp			= getBitmap("./data/satellite.png");
 	
 	sword_bmp  			= getBitmap("./data/sword.png");
 	carrot_bmp  		= getBitmap("./data/carrot.png");
@@ -283,16 +287,22 @@ class world_t
 		}
 		
 		// note structures currently pre-req a player instantiated
-		auto pl = new planet("first", 400, 300, 200);
+		float r = 200;
+		auto pl = new planet("first", 400, 300, r);
 		planets ~= pl;
 	//	planets ~= new planet("second", 1210, 410, 100);
 //		planets[1].m = PLANET_MASS*.25; // we get CLOSER to SMALLER planets making gravity much larger if its the same mass!
 	//	planets ~= new planet("third", 1720, 520, 50);
 	//	planets[2].m = PLANET_MASS*.05;
-		float rng=500;
 		
-		for(int i = 0; i < 50; i++)
-			asteroids ~= new asteroid(pl.x + uniform!"[]"(-rng,rng), pl.y + uniform!"[]"(-rng,rng), 0.1, 0, .02, uniform!"[]"(0,2));
+		for(int i = 0; i < 25; i++)
+			{
+			float angle = uniform!"[]"(0, 2*PI);
+			float distance = uniform!"[]"(2*r, 3*r);
+			float cx = pl.x + cos(angle)*distance;
+			float cy = pl.y + sin(angle)*distance;
+			asteroids ~= new asteroid(cx, cy, 0.1, 0, .02, uniform!"[]"(0,2));
+			}
 
 		testGraph = new intrinsicGraph!float("Draw (ms)", g.stats.nsDraw, 100, 200 - 50, COLOR(1,0,0,1), 1_000_000);
 		testGraph2 = new intrinsicGraph!float("Logic (ms)", g.stats.msLogic, 100, 320 - 50, COLOR(1,0,0,1), 1_000_000);
@@ -387,7 +397,6 @@ class world_t
 		players[0].onTick();
 //		viewports[0].ox = p.x - viewports[0].w/2;
 	//	viewports[0].oy = p.y - viewports[0].h/2;
-		
 		
 		timer++;
 		if(timer > 200)

@@ -42,14 +42,14 @@ void drawTextCenter(A...)(float x, float y, COLOR c, string formatStr, A a)
 /// Draw text with help of textHelper auto-indenting
 void drawText2(A...)(float x, string formatStr, A a)
 	{
-	al_draw_text(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), 20, textHelper(), ALLEGRO_ALIGN_LEFT, format(formatStr, a).toStringz); 
+	al_draw_text(g.font1, ALLEGRO_COLOR(0, 0, 0, 1), x, textHelper(), ALLEGRO_ALIGN_LEFT, format(formatStr, a).toStringz); 
 	}
 	
 /// Draw a shield! ring
 void drawShield(pair pos, viewport v, float radius, float thickness, COLOR c, float shieldCoefficent)
 	{
-	al_draw_circle(pos.x, pos.y, radius, COLOR(0,0,.5,.50), thickness*shieldCoefficent);	
-	al_draw_circle(pos.x, pos.y, radius, COLOR(0,0,1,1), thickness*shieldCoefficent*.50);	
+	al_draw_circle(pos.x + v.x - v.ox, pos.y + v.y - v.oy, radius, COLOR(0,0,.5,.50), thickness*shieldCoefficent);	
+	al_draw_circle(pos.x + v.x - v.ox, pos.y + v.y - v.oy, radius, COLOR(0,0,1,1), thickness*shieldCoefficent*.50);	
 	}
 
 /// TODO: NYI
@@ -153,6 +153,13 @@ float angleTo(T, U)(T _this, U fromThat)
 float angleDiff(T)(T _thisAngle, T toThatAngle)
 	{
 	return abs(_thisAngle - toThatAngle);
+	}
+
+/// modified from https://stackoverflow.com/questions/28036652/finding-the-shortest-distance-between-two-angles
+float angleDiff2( double angle1, double angle2 )
+	{
+	//δ=(T−C+540°)mod360°−180°
+	return (angle2 - angle1 + 540.degToRad) % 2*PI - PI;
 	}
 
 float distanceTo(T, U)(T t, U u)
