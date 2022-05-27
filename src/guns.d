@@ -14,6 +14,23 @@ import std.stdio;
 import std.math;
 import std.random;
 
+class laser : gun
+	{
+	this(ship newOwner)
+		{
+		super(newOwner, red);
+		gunCooldownTime = 0; //instant fire
+		damage = 1;
+		} // not sure how we spawn laser beams. Could be as simple as projecting a line.
+		
+	override void fireProjectile()
+		{
+		// spawn laser projectile. (still on g.world.bullets?)
+		// but it's a line.
+		// maybe a 'laser bullet' structure that requires source position (player) and destination pos?
+		}
+	}
+
 class minigun : gun
 	{
 	this(ship newOwner)

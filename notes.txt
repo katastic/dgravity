@@ -1,4 +1,8 @@
 TODO
+
+	--> if you land (only certain ships?) tons of planetDudes try to pile into your ship.
+	- hit hardpoints
+
 	- Q: wouldn't it be really funny if instead of space, we made it space cowboys with folk/bluegrass music (ala dr strangelove and spaceward ho):
 		https://www.youtube.com/watch?v=b-kaG1NuLZM (copyrighted)
 		in light of the chaotic nature of the gameplay
@@ -11,7 +15,8 @@ TODO
 		trance:
 		https://www.youtube.com/watch?v=a5TIWp16_sc&list=PLBaGOSPArE_NtLJY8edDeRBLy0_cvpKSS
 
-	- if you land (only certain ships?) tons of planetDudes try to pile into your ship.
+	- do we want two kinds of asteroid? relativeAsteroid for auto floating around planets (asteroid belts) vs freeAsteroid's?
+
 
 	- can a planet be destroyed? It would look beautiful but i don't know if it would improve gameplay unless its lategame only
 

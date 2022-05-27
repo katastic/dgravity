@@ -27,9 +27,9 @@ name clashes
 	- we cannot use "object" since that's a D keyword. 
 	- we also can't use "with" for onCollision(baseObject with)
 */
-
 class satellite : ship
 	{
+	BITMAP* gun_bmp;
 	planet myPlanet;
 	float radius;
 	float orbitAngle;
@@ -46,6 +46,7 @@ class satellite : ship
 		assert(myPlanet !is null);
 		super(0, 0, 0, 0);
 		bmp = g.satellite_bmp;
+		gun_bmp = g.ship_bmp;
 		}
 		
 	override void onTick()
@@ -58,6 +59,12 @@ class satellite : ship
 		// doing it this way should let us keep base-class draw routine
 		}
 		
+	override void draw(viewport v)
+		{
+		super.draw(v);
+		al_draw_center_rotated_bitmap(gun_bmp, x + v.x - v.ox, y + v.y - v.oy, angle, 0);
+		}
+	
 	}
 
 class asteroid : unit
@@ -244,7 +251,8 @@ class bullet : baseObject
 			isDead=true;
 			}else{
 			if(isAffectedByGravity) applyGravity(g.world.planets[0]);
-			
+
+/+			
 			foreach(p; g.world.planets) // NOTE. similar to ship.checkPlanetCollision
 				{
 				if(checkPlanetCollision(p))
@@ -261,10 +269,11 @@ class bullet : baseObject
 							die();
 							}
 						}
-//					die(); // if we hit a planet
+						
+//					die(); // if we hit a planet itself
 					}
 				}
-			
++/			
 			foreach(a; g.world.asteroids)
 				{
 				if(checkAsteroidCollision(a))
@@ -467,37 +476,20 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		drawAngleHelper(this, v, angle, 25, COLOR(0,1,0,1)); 
 		drawPlanetHelper(this, g.world.planets[0], v);
 		
-		float angle3= angleTo(g.world.units[0], this);
+		float angle3 = angleTo(g.world.units[0], this);
 		drawAngleHelper(this, v, angle3, 25, COLOR(1,1,0,1)); 
 
 //		drawPlanetHelper(this, g.world.planets[1], v);
 
 		// draw angle text
 		al_draw_text(g.font1, white, 
-			x + v.x - v.ox + bmp.w, 
+			x + v.x - v.ox + bmp.w + 30, 
 			y + v.y - v.oy - bmp.w, 0, format("%3.2f", radToDeg(angle)).toStringz); 
 	
 		draw_hp_bar(x, y - bmp.w/2, v, hp, 100);		
 		}
 	}
 	
-class laser : gun
-	{
-	this(ship newOwner)
-		{
-		super(newOwner, red);
-		gunCooldownTime = 0; //instant fire
-		damage = 1;
-		} // not sure how we spawn laser beams. Could be as simple as projecting a line.
-		
-	override void fireProjectile()
-		{
-		// spawn laser projectile. (still on g.world.bullets?)
-		// but it's a line.
-		// maybe a 'laser bullet' structure that requires source position (player) and destination pos?
-		}
-	}
-
 class hardpoint : unit
 	{
 	ship owner;
@@ -538,7 +530,7 @@ class freighter : ship
 	this(float _x, float _y, float _xv, float _yv)
 		{
 		name = "USS Caramelee";
-		super(_x, _y, _xv, _yv); // THIS sets up gun. careful to be first.
+		super(_x, _y, _xv, _yv); // THIS sets up a gun. careful to call first.
 		myGun = new shotgun(this); // NOTE we're replacing an existing one from super(). That's a memory usage.
 		bmp = freighter_bmp;
 		SPEED = 0.2;
@@ -583,7 +575,6 @@ class planetTurret : turret
 		}
 	}
 
-
 class turret : ship
 	{
 	// >>USING RELATIVE COORDINATES<<
@@ -617,7 +608,7 @@ class turret : ship
 		// super.draw(v); need RELATIVE coordinates
 		}
 
-	override void onTick()
+	void alignTurretandFire()
 		{
 		pair absoluteP = pair(myOwner.x + x, myOwner.y + y); 
 	
@@ -658,6 +649,11 @@ class turret : ship
 		
 		if(distance < TURRET_FIRE_DISTANCE) myGun.actionFireRelative(myOwner);
 		}
+
+	override void onTick()
+		{
+		alignTurretandFire();
+		}
 	}
 
 class ship : unit
@@ -671,6 +667,7 @@ class ship : unit
 	gun myGun;
 	turret[] turrets;
 	int numDudesInside; // NYI, we don't need (at least at this point) to keep actual unique dude classes inside. Just delete them and keep track of how many we had. (ala all level-1 blue pikmin are the same)
+	int numDudesInsideMax = 20;
 	
 	/// "constants" 
 	/// They are UPPER_CASE but they're not immutable so inherited classes can override them.
@@ -688,6 +685,18 @@ class ship : unit
 	int shieldCooldown = 60;
 	//we could also have a shield break animation of the bubble popping
 	
+	bool requestBoarding(dude d)
+		{
+		// we send dude type just in case there's multiple classes or something.
+		if(numDudesInside < numDudesInsideMax)
+			{
+			numDudesInside++;
+			return true;
+			}else{
+			return false; // we full
+			}
+		}
+	
 	this(float _x, float _y, float _xv, float _yv)
 		{
 		myGun = new minigun(this);
@@ -696,17 +705,22 @@ class ship : unit
 
 	override void draw(viewport v)
 		{
-		drawShield(pair(x, y), v, bmp.w, 5, COLOR(0,0,1,1), shieldHP/SHIELD_MAX);
+		//drawShield(pair(x, y), v, bmp.w, 5, COLOR(0,0,1,1), shieldHP/SHIELD_MAX);
 		super.draw(v);
 		
 		foreach(t; turrets)t.draw(v);
-
 		
 		if(name != "")
 			{
-			drawTextCenter(x + v.x - v.ox, y + v.y - v.oy - bmp.w, white, "%s", name);
+			if(numDudesInside == 0)
+				drawTextCenter(x + v.x - v.ox, y + v.y - v.oy - bmp.w, white, "%s", name);
+			else
+				drawTextCenter(x + v.x - v.ox, y + v.y - v.oy - bmp.w, white, "%s [+%d]", name, numDudesInside);
+					
 			// using bmp.w because it's larger in non-rotated sprites
 			}
+		
+		
 		}
 		
 	void crash()
@@ -905,7 +919,6 @@ class dude : baseObject
 	// do dudes walk around the surface or bounce around the inside?
 	bool isRunningForShip=false;
 	ship landedShip;
-
 	planet myPlanet;
 	
 	this(float relx, float rely, float _vx, float _vy, planet _myPlanet)
@@ -924,21 +937,9 @@ class dude : baseObject
 		al_draw_center_rotated_bitmap(bmp, cx, cy, 0, 0);
 		al_draw_filled_circle(cx, cy, 20, COLOR(1,0,0,.5));
 		}
-	
-	override void onTick()
-		{
-		import std.random : uniform;
-		
-		if(isRunningForShip)
-			{
-			pair p = pair(myPlanet.x + x, myPlanet.y + y);
-			float angle=angleTo(landedShip, p);
-			vx = cos(angle)*1;
-			vy = sin(angle)*1;
-			}
-		
-		x += vx;
-		y += vy;
+
+	void checkPlanetBoundaries()
+		{	
 		float dist = sqrt(x^^2 + y^^2); //we're using relative-to-planet coordinates!
 		if(dist > myPlanet.r)
 			{
@@ -959,6 +960,44 @@ class dude : baseObject
 			vx = -cos(cangle)*cd;
 			vy = -sin(cangle)*cd;
 			}
+		}
+	
+	void checkForShipPickup(ship s)
+		{
+		pair p = pair(myPlanet.x + x, myPlanet.y + y);
+		
+		if(p.x - 10 < s.x)
+		if(p.x + 10 > s.x)
+		if(p.y - 10 < s.y)
+		if(p.y + 10 > s.y)
+			{
+			//if (ship isn't full)
+			if(s.requestBoarding(this))
+				{
+				isDead = true;
+				}else{
+				isRunningForShip = false;
+				}
+			}
+		}
+	
+	override void onTick()
+		{
+		import std.random : uniform;
+		
+		if(isRunningForShip)
+			{
+			pair p = pair(myPlanet.x + x, myPlanet.y + y);
+			float angle=angleTo(landedShip, p);
+			vx = cos(angle)*1;
+			vy = sin(angle)*1;
+			checkForShipPickup(landedShip);
+			}
+		
+		x += vx;
+		y += vy;
+
+		checkPlanetBoundaries();
 		}
 	}
 	
