@@ -174,7 +174,7 @@ viewport[2] viewports;
 
 class player
 	{
-	team myTeam;
+	int myTeamIndex;
 	ship currentShip; //current. Also how do we handle with units die / switch active ship (if that's an option)
 //	int money=1000; //we might have team based money accounts. doesn't matter yet.
 	int kills=0;
@@ -185,6 +185,20 @@ class player
 		{
 		currentShip = who;
 		}
+		
+	void findNextShip()
+		{
+		foreach(u; g.world.units)
+			{
+			ship s = cast(ship)u;
+			if( s !is null)
+				if( s !is currentShip)
+					if( s.myTeamIndex == myTeamIndex)
+						{
+						}
+			}
+		}
+		
 	}
 	
 class team
@@ -221,7 +235,7 @@ class world_t
 		units ~= s; //which comes first, player or the egg
 		players ~= new player(s);
 		teams ~= new team(players[0], blue);
-		players[0].myTeam = teams[0];
+		players[0].myTeamIndex = 0; // teams[0];
 		
 		auto s2 = new freighter(20, 20, 0, 0);
 	

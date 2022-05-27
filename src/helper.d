@@ -14,11 +14,11 @@ import viewportsmod;
 import g;
 import objects;
 
-COLOR white = COLOR(1,1,1,1);
-COLOR black = COLOR(0,0,0,1);
-COLOR red   = COLOR(1,0,0,1);
-COLOR green = COLOR(0,1,0,1);
-COLOR blue  = COLOR(0,0,1,1);
+COLOR white  = COLOR(1,1,1,1);
+COLOR black  = COLOR(0,0,0,1);
+COLOR red    = COLOR(1,0,0,1);
+COLOR green  = COLOR(0,1,0,1);
+COLOR blue   = COLOR(0,0,1,1);
 COLOR yellow = COLOR(1,1,0,1);
 COLOR orange = COLOR(1,0.65,0,1);
 

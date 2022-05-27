@@ -232,7 +232,7 @@ struct display_t
 					g.stats.number_of_drawn_particles + 
 					g.stats.number_of_drawn_structures) * g.stats.fps ); 
 		
-		drawText2(20, "money [%d] deaths [%d]", g.world.players[0].myTeam.money, g.world.players[0].deaths);
+//		drawText2(20, "money [%d] deaths [%d]", g.world.players[0].myTeamIndex.money, g.world.players[0].deaths);
 		drawText2(20, "drawn: structs [%d] bg_tiles [%d] particles [%d] units [%d]", 
 			g.stats.number_of_drawn_structures, 
 			g.stats.number_of_drawn_background_tiles, 

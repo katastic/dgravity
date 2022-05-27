@@ -422,7 +422,7 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 	float hp=100.0; /// Current health points
 	float ap=0; /// armor points (reduced on hits then armor breaks)
 	float armor=0; /// flat reduction (or percentage) on damages, haven't decided.
-	uint team=0;
+	int myTeamIndex=0;
 	bool isPlayerControlled=false;
 	float weapon_damage = 5;
 
@@ -498,9 +498,9 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		hp -= amount;
 		}
 	
-	this(uint _team, float _x, float _y, float _vx, float _vy, ALLEGRO_BITMAP* b)
+	this(uint _teamIndex, float _x, float _y, float _vx, float _vy, ALLEGRO_BITMAP* b)
 		{
-		team = _team; 
+		myTeamIndex = _teamIndex; 
 		super(_x, _y, _vx, _vy, b);
 		}
 
@@ -837,7 +837,6 @@ float angleDiff2( double angle1, double angle2 )
 	return (angle2 - angle1 + 540.degToRad) % 2*PI - PI;
 	}
 
-
 class ship : unit
 	{
 	string name="";
@@ -920,12 +919,12 @@ class ship : unit
 	
 	void doLand(planet p)
 		{
-		if(isOwned)p.currentTeam = currentOwner.myTeam;
+		if(isOwned)p.currentTeamIndex = currentOwner.myTeamIndex;
 		angle = angleTo(this, p);
 		isLanded = true;
 		vx = 0;
 		vy = 0;
-		p.capture(currentOwner.myTeam);
+		p.capture(currentOwner.myTeamIndex);
 		}
 
 	planet findNearestPlanet()
@@ -1127,7 +1126,7 @@ class planet : baseObject
 	{
 	bool isOwned=false;
 	//player currentOwner;
-	team currentTeam;
+	int currentTeamIndex;
 	
 	float m = PLANET_MASS;
 	float r = 100; /// radius
@@ -1166,15 +1165,15 @@ class planet : baseObject
 			}
 		}
 	
-	void capture(team by)
+	void capture(int byTeamIndex)
 		{
 		isOwned = true;
-		currentTeam = by;
+		currentTeamIndex = byTeamIndex;
 		}
 		
 	void drawOwnerFlag(viewport v)
 		{
-		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, 20, currentTeam.color);
+		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, 20, g.world.teams[currentTeamIndex].color);
 		}
 	
 	override void draw(viewport v)
@@ -1239,7 +1238,7 @@ class structure_t : baseObject
 //		assert(p !is null); // this works fine. wtf.
 //		p.money -= 250;
 		myPlanet = _myPlanet;
-		if(myPlanet.isOwned)myPlanet.currentTeam.money -= 250; 
+		if(myPlanet.isOwned)g.world.teams[myPlanet.currentTeamIndex].money -= 250; 
 		}
 
 	override void draw(viewport v)

@@ -1,8 +1,12 @@
 TODO
+	- select previous, next vehicle from team
+	- when undocking at speed, the child object needs to launch from the initial vx, vy from the carrier
+	- bullets check for TEAM/owner. make sure all relevant objects are using teams
 	- fix turret angle code
 	- fix freighter smoke position offset
 	- use al_hold_bitmap_drawing(true) in applicable areas
 	- fix space
+	- add some point well have to decide which blending mode we want for "coloring" bullets (additive, subtractive, etc. I think its currently multiplying which is subtracting)
 	- shield collision detection
 	- Smoke should SHOOT OUT away from the engine. (assuming it doesn't already)
 	- upgrade turrets like a tower defense game?
@@ -37,7 +41,7 @@ TODO
 	
 	- consider moving collision code that's duplicated into object or unit
 		- also some other duplicates in places
-	+ asteroids don't APPEAR to be splitting into extra pieces, just shrinking
+	+ asteroids dont APPEAR to be splitting into extra pieces, just shrinking
 	= NEAT but unsure: BULLETS are (heavily) affected by gravity and arc around planets
 	- We could make "more damage to ship = more thrust random velocity variation" as a visual indicator
 	- add "interstellar dust" just random particles hitting objects to add "feel" and interaction (no damage, just particle fx)
