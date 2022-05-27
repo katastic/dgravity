@@ -308,7 +308,7 @@ class bullet : baseObject
 		al_draw_center_rotated_tinted_bitmap(bmp, c, dx, dy, angle + degToRad(90), 0);
 		}
 	}
-	
+/+
 class bulletHandler
 	{
 	bullet[] bullets;
@@ -342,7 +342,7 @@ class bulletHandler
 			if(b.lifetime <= 0)b.isDead = true;
 			}
 		}
-	}
+	}+/
 
 class item : baseObject
 	{
@@ -442,7 +442,7 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		{
 		}
 
-	void doAttackStructure(structure_t s)
+	void doAttackStructure(structure s)
 		{
 		s.onHit(this, weapon_damage);
 		}
@@ -1012,7 +1012,7 @@ class planet : baseObject
 	float m = PLANET_MASS;
 	float r = 100; /// radius
 	string name="Big Chungus";
-	structure_t[] structures;
+	structure[] structures;
 	dude[] dudes;
 	turret[] turrets;
 	satellite[] satellites; // not sure if turrets+satellites should be combined into a units array
@@ -1023,11 +1023,11 @@ class planet : baseObject
 		name = _name;
 		r = _r;
 		super(_x, _y, 0, 0, g.tree_bmp); // works perfect		
-		structures ~= new structure_t(0, 0, g.fountain_bmp, this);
-		structures ~= new structure_t( r*.8, 0, g.tree_bmp, this);
-		structures ~= new structure_t(-r*.8, 0, g.chest_bmp, this);
-		structures ~= new structure_t(0,  r*.8, g.dwarf_bmp, this);
-		structures ~= new structure_t(0, -r*.8, g.goblin_bmp, this);
+		structures ~= new structure(0, 0, g.fountain_bmp, this);
+		structures ~= new structure( r*.8, 0, g.tree_bmp, this);
+		structures ~= new structure(-r*.8, 0, g.chest_bmp, this);
+		structures ~= new structure(0,  r*.8, g.dwarf_bmp, this);
+		structures ~= new structure(0, -r*.8, g.goblin_bmp, this);
 		
 		turrets ~= new planetTurret(-r,0.0, this);
 		turrets ~= new planetTurret( r,0.0, this);
@@ -1111,7 +1111,7 @@ class planet : baseObject
 		}
 	}
 
-class structure_t : baseObject
+class structure : baseObject
 	{
 	immutable float maxHP=500.0;
 	float hp=maxHP;
