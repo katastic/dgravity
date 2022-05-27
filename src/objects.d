@@ -885,7 +885,7 @@ class ship : unit
 		}
 
 	override void up()
-		{ 
+		{		
 		if(isLanded || isDocked)
 			{				
 			isDocked = false;
@@ -959,6 +959,8 @@ class dude : baseObject
 		//	writefln("cangle: %3.2f d: %3.2f", radToDeg(cangle), cd);
 			vx = -cos(cangle)*cd;
 			vy = -sin(cangle)*cd;
+			
+			isRunningForShip = false;
 			}
 		}
 	
