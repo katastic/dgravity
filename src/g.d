@@ -186,16 +186,39 @@ class player
 		currentShip = who;
 		}
 		
+	void onTick()
+		{
+		if(cooldown > 0)cooldown--;
+		}
+		
+	int cooldown = 0; // to prevent rapid spamming
 	void findNextShip()
 		{
+		if(cooldown > 0){return;}
+		cooldown = 20;
+		bool hasFoundMe=false;
+		int idx = 0;
 		foreach(u; g.world.units)
 			{
+			if(g.world.units[$-1] is currentShip){hasFoundMe=true;} // degenerate case of we're last item in array, so we start "viable" candidate at start. This would be super easy if everything was in terms of indexes instead of pointers
+			idx++;
 			ship s = cast(ship)u;
-			if( s !is null)
-				if( s !is currentShip)
-					if( s.myTeamIndex == myTeamIndex)
+//			writefln("looking at [%s] index %d of %d name=%s",u, idx, g.world.units.length, s.name);
+			if(s !is null)
+				if(s !is currentShip)
+					{
+					if(hasFoundMe)
+//					if(s.myTeamIndex == myTeamIndex)
 						{
+	//					writeln("found");
+						currentShip = s;
+						g.viewports[0].attach(s);
+						break;
 						}
+					}else{
+//					writeln("same ship");
+					hasFoundMe = true;
+					}
 			}
 		}
 		
@@ -245,18 +268,32 @@ class world_t
 		s2.currentOwner = players[0];
 		units ~= s2;
 		
+		assert(viewports[0] !is null);
+		viewports[0].attach(s);
+
+		{
+		auto s3 = new ship(500, 100, 0, 0);
+		s3.name = "Tacobus";
+		units ~= s3;
+		}
+		{
+		auto s4 = new ship(500, 100, 0, 0);
+		s4.name = "Timid";
+		units ~= s4;
+		}
+		
 		// note structures currently pre-req a player instantiated
-		planets ~= new planet("first", 400, 300, 200);
+		auto pl = new planet("first", 400, 300, 200);
+		planets ~= pl;
 	//	planets ~= new planet("second", 1210, 410, 100);
 //		planets[1].m = PLANET_MASS*.25; // we get CLOSER to SMALLER planets making gravity much larger if its the same mass!
 	//	planets ~= new planet("third", 1720, 520, 50);
 	//	planets[2].m = PLANET_MASS*.05;
-		asteroids ~= new asteroid(400+150, 550, 0.1, 0, .02, 2);
-		asteroids ~= new asteroid(400-150, 550, 0.1, 0, .02, 1);
-		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
-		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
-		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
-		asteroids ~= new asteroid(400-150 + uniform!"[]"(-300,300), 550 + uniform!"[]"(-300,300), 0.1, 0, .02, 0);
+		float rng=500;
+		
+		for(int i = 0; i < 50; i++)
+			asteroids ~= new asteroid(pl.x + uniform!"[]"(-rng,rng), pl.y + uniform!"[]"(-rng,rng), 0.1, 0, .02, uniform!"[]"(0,2));
+
 		testGraph = new intrinsicGraph!float("Draw (ms)", g.stats.nsDraw, 100, 200 - 50, COLOR(1,0,0,1), 1_000_000);
 		testGraph2 = new intrinsicGraph!float("Logic (ms)", g.stats.msLogic, 100, 320 - 50, COLOR(1,0,0,1), 1_000_000);
 	
@@ -345,8 +382,13 @@ class world_t
 		p.isPlayerControlled = true;
 		ship p2 = cast(ship)units[0]; // player
 		p2.isPlayerControlled = true;
-		viewports[0].ox = p.x - viewports[0].w/2;
-		viewports[0].oy = p.y - viewports[0].h/2;
+		
+		viewports[0].onTick();
+		players[0].onTick();
+//		viewports[0].ox = p.x - viewports[0].w/2;
+	//	viewports[0].oy = p.y - viewports[0].h/2;
+		
+		
 		timer++;
 		if(timer > 200)
 			{
@@ -356,11 +398,12 @@ class world_t
 			g.world.asteroids ~= new asteroid(cx, cy, 0, 0, uniform!"[]"(-10,10)/1000.0, uniform!"[]"(0,2));
 			}//float _x, float _y, float _vx, float _vy, float _va, int _size
 
-		if(key_w_down)p.up();
-		if(key_s_down)p.down();
-		if(key_a_down)p.left();
-		if(key_d_down)p.right();
-		if(key_space_down)p.attack();
+		if(key_w_down)players[0].currentShip.up();
+		if(key_s_down)players[0].currentShip.down();
+		if(key_a_down)players[0].currentShip.left();
+		if(key_d_down)players[0].currentShip.right();
+		if(key_space_down)players[0].currentShip.attack();
+		if(key_q_down)players[0].findNextShip();
 		
 		if(key_i_down)p2.up();
 		if(key_k_down)p2.down();

@@ -1,4 +1,10 @@
 TODO
+	- asteroidCluster
+		- a group of asteroids, that all move together and keep relative positions to each other. Maybe the entire field can move to gravity, or more in general, but the individuals form a "pattern" that can then be navigated through for "Fun(TM)"
+	- findNextShip() doesn't bother with teams yet
+		
+	- https://dlang.org/library/std/math/operations/approx_equal.html (depreciated)
+		- https://dlang.org/library/std/math/operations/is_close.html
 	- select previous, next vehicle from team
 	- when undocking at speed, the child object needs to launch from the initial vx, vy from the carrier
 	- bullets check for TEAM/owner. make sure all relevant objects are using teams

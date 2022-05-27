@@ -125,6 +125,8 @@ class asteroid : unit
 	int size=200; // 2 = large, 1 = medium, 0 = small
 	float va=0; // velocity of rotation (angular velocity)
 	int r=0; // radius, quick collision checking value. 
+	bool isAffectedByGravity=false;
+	bool doesCollideWithPlanets=false; // WARNING we haven't implemented the case where it's affected by gravity but no collision
 	
 	this(float _x, float _y, float _vx, float _vy, float _va, int _size)
 		{
@@ -137,6 +139,7 @@ class asteroid : unit
 		if(size == 1){b = g.medium_asteroid_bmp; r = b.w/2;} 
 		if(size == 2){b = g.large_asteroid_bmp; r = b.w/2;}
 		assert(b !is null);
+		assert(size >= 0 && size <= 2);
 		super(0, _x, _y, _vx, _vy, b);
 		}
 		
@@ -159,7 +162,14 @@ class asteroid : unit
 		{
 		angle += va;
 		wrapRadRef(angle);
-		super.onTick(); //apply unit physics
+		
+		if(doesCollideWithPlanets && isAffectedByGravity)
+			{
+			super.onTick(); //apply unit physics
+			}else{
+			x += vx;
+			y += vy;
+			}
 		}
 		
 	/// become smaller and create 3 new identical smaller size asteroids
@@ -919,12 +929,17 @@ class ship : unit
 	
 	void doLand(planet p)
 		{
-		if(isOwned)p.currentTeamIndex = currentOwner.myTeamIndex;
-		angle = angleTo(this, p);
-		isLanded = true;
-		vx = 0;
-		vy = 0;
-		p.capture(currentOwner.myTeamIndex);
+		if(isOwned)
+			{
+			p.currentTeamIndex = currentOwner.myTeamIndex;
+			angle = angleTo(this, p);
+			isLanded = true;
+			vx = 0;
+			vy = 0;
+			p.capture(currentOwner.myTeamIndex);
+			}else{
+			// ships that aren't being used by a player cannot capture. IF that needs to change, we currently cannot follow a null reference to a player class.
+			}
 		}
 
 	planet findNearestPlanet()

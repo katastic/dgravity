@@ -1,5 +1,11 @@
+import objects;
+import g;
+
 class viewport
 	{
+	bool isAttached=false;
+	unit attachedUnit;
+
 	/// Screen coordinates
 	int x;
 	int y;
@@ -10,6 +16,9 @@ class viewport
 	float ox; /// offset_x, how much scrolling. subtracted from drawing calls.
 	float oy; /// offset_y
 	float zoom = 1.0;
+	
+	float vx; //for free floating camera (keeps moving after you die)
+	float vy;
 	
 	int* screen_w; // mirror of g.screen_w 
 	int* screen_h; // used anywhere?? are these even set or just left null right now?
@@ -24,5 +33,21 @@ class viewport
 		h = _h;
 		ox = _ox;
 		oy = _oy;
+		}
+		
+	void attach(unit u)
+		{
+		attachedUnit = u;
+		isAttached = true;
+		}
+		
+	void onTick()
+		{
+		if(attachedUnit is null)isAttached = false;
+		if(isAttached)
+			{
+			ox = (attachedUnit.x - w/2);
+			oy = (attachedUnit.y - h/2);
+			}
 		}
 	}

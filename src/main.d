@@ -129,13 +129,13 @@ static if (false) // MULTISAMPLING. Not sure if helpful.
 	// --------------------------------------------------------
 	g.loadResources();
 
-	// SETUP world
-	// --------------------------------------------------------
-	g.world = new g.world_t;
-	
 	// SETUP viewports
 	// --------------------------------------------------------
 	g.viewports[0] = new viewport(0, 0, g.SCREEN_W, g.SCREEN_H, 0, 0);
+
+	// SETUP world
+	// --------------------------------------------------------
+	g.world = new g.world_t;
 	
 	// FPS Handling
 	// --------------------------------------------------------
@@ -353,6 +353,7 @@ void execute()
 					isKeySet(ALLEGRO_KEY_J, g.key_j_down);
 					isKeySet(ALLEGRO_KEY_K, g.key_k_down);
 					isKeySet(ALLEGRO_KEY_L, g.key_l_down);
+					isKeySet(ALLEGRO_KEY_Q, g.key_q_down);
 					break;
 					}
 					
@@ -369,6 +370,7 @@ void execute()
 					isKeyRel(ALLEGRO_KEY_J, g.key_j_down);
 					isKeyRel(ALLEGRO_KEY_K, g.key_k_down);
 					isKeyRel(ALLEGRO_KEY_L, g.key_l_down);
+					isKeyRel(ALLEGRO_KEY_Q, g.key_q_down);
 					break;
 					}
 
@@ -450,10 +452,42 @@ void shutdown()
 	{
 		
 	}
+	
+void runAllegroTest()
+	{
+	unit[] units;
+	units ~= new ship(0, 0, 1, 1);
+	units ~= new freighter(0, 0, 1, 1);
+	
+	ship s0 = cast(ship)units[0];
+	ship s1 = cast(ship)units[1];
+	
+	writeln(s0 is null);
+	writeln(s1 is null);
+	writeln(s0.classinfo);
+	writeln(s1.classinfo);
+	writeln(s0 == s1);
+	writeln(s0 is s1);
+	
+	ship refs1 = s0;
+	writeln(s0 is refs1);
+	}
+
+void setupFloatingPoint()
+	{
+	import std.math.hardware;
+	FloatingPointControl fpctrl;
+    fpctrl.enableExceptions(FloatingPointControl.severeExceptions);
+	// enables hardware trap exceptions on uninitialized floats (NaN), (I would imagine) division by zero, etc.
+	// see 
+	// 		https://dlang.org/library/std/math/hardware/floating_point_control.html
+	// we could disable this on [release] mode if necessary for performance
+	}
 
 //=============================================================================
 int main(string [] args)
 	{
+	setupFloatingPoint();	
 	writeln("args length = ", args.length);
 	foreach(size_t i, string arg; args)
 		{
@@ -471,7 +505,11 @@ int main(string [] args)
 		{
 		initialize();
 		execute();
+		runAllegroTest();
 		shutdown();
 		return 0;
-		} );
+		});
+
+
+	return 0;
 	}
