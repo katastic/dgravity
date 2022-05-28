@@ -75,6 +75,13 @@ class asteroid : unit
 	bool isAffectedByGravity=false;
 	bool doesCollideWithPlanets=false; // WARNING we haven't implemented the case where it's affected by gravity but no collision
 	
+	override void onCrash(unit byWho)
+		{
+		isDead = true;
+		split();
+		}
+
+	
 	this(float _x, float _y, float _vx, float _vy, float _va, int _size)
 		{
 //		writeln("asteroid.this, size: ", _size);
@@ -411,7 +418,7 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 			return false;
 			}
 		}
-
+		
 	override void onTick()
 		{
 		applyGravity(g.world.planets[0]);
@@ -425,6 +432,7 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 				vy *= -.80;
 				}
 			}
+
 		x += vx;
 		y += vy;
 		}
@@ -472,19 +480,26 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		float angle2 = atan2(vy, vx);
 		drawAngleHelper(this, v, angle2, mag, COLOR(1,0,0,1)); 
 		
+//		drawAngleHelper(this, v, angle, 25, COLOR(0,1,0,1)); // my pointing direction
+
 		// Planet Helper(s)
-		drawAngleHelper(this, v, angle, 25, COLOR(0,1,0,1)); 
-		drawPlanetHelper(this, g.world.planets[0], v);
+		if(isPlayerControlled) 
+			{
+			drawPlanetHelper(this, g.world.planets[0], v);
+
+			pair p1 = pair(x + v.x - v.ox - bmp.w, y + v.y - v.oy - bmp.h);
+			pair p2 = pair(x + v.x - v.ox + bmp.w, y + v.y - v.oy + bmp.h);
+			drawSplitRectangle(p1, p2, 20, 1, white);
+
+			// draw angle text
+			al_draw_text(g.font1, white, 
+				x + v.x - v.ox + bmp.w + 30, 
+				y + v.y - v.oy - bmp.w, 0, format("%3.2f", radToDeg(angle)).toStringz); 
+			}
 		
-		float angle3 = angleTo(g.world.units[0], this);
-		drawAngleHelper(this, v, angle3, 25, COLOR(1,1,0,1)); 
-
-//		drawPlanetHelper(this, g.world.planets[1], v);
-
-		// draw angle text
-		al_draw_text(g.font1, white, 
-			x + v.x - v.ox + bmp.w + 30, 
-			y + v.y - v.oy - bmp.w, 0, format("%3.2f", radToDeg(angle)).toStringz); 
+		// Point to other player (could for nearby enemy units) once seen (but not before)
+		//float angle3 = angleTo(g.world.units[0], this);
+		//drawAngleHelper(this, v, angle3, 25, COLOR(1,1,0,1)); 
 	
 		draw_hp_bar(x, y - bmp.w/2, v, hp, 100);		
 		}
@@ -684,7 +699,7 @@ class ship : unit
 	float shieldHP = 0;
 	int shieldCooldown = 60;
 	//we could also have a shield break animation of the bubble popping
-	
+		
 	bool requestBoarding(dude d)
 		{
 		// we send dude type just in case there's multiple classes or something.

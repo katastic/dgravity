@@ -27,6 +27,20 @@ COLOR orange = COLOR(1,0.65,0,1);
 	//COLOR(w, w, w, 1);
 	//}
 
+
+void drawSplitRectangle(pair ul, pair lr, float legSize, float thickness, COLOR c)
+	{
+	// upper left
+	al_draw_line(ul.x, ul.y, ul.x + legSize, ul.y, c, thickness); // horizontal
+	al_draw_line(ul.x, ul.y, ul.x, ul.y + legSize, c, thickness); // vertical
+	
+	// lower right
+	al_draw_line(lr.x, lr.y, lr.x - legSize, lr.y, c, thickness); // horizontal
+	al_draw_line(lr.x, lr.y, lr.x, lr.y - legSize, c, thickness); // vertical
+	}
+
+
+
 /// Draw text using most common settings
 void drawText(A...)(float x, float y, COLOR c, string formatStr, A a)
 	{

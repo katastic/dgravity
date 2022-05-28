@@ -215,7 +215,9 @@ class player
 //					if(s.myTeamIndex == myTeamIndex)
 						{
 	//					writeln("found");
+						currentShip.isPlayerControlled = false;
 						currentShip = s;
+						currentShip.isPlayerControlled = true;
 						g.viewports[0].attach(s);
 						break;
 						}
@@ -276,12 +278,12 @@ class world_t
 		viewports[0].attach(s);
 
 		{
-		auto s3 = new ship(500, 100, 0, 0);
+		auto s3 = new ship(600, 200, 0, 0);
 		s3.name = "Tacobus";
 		units ~= s3;
 		}
 		{
-		auto s4 = new ship(500, 100, 0, 0);
+		auto s4 = new ship(600, 200, 0, 0);
 		s4.name = "Timid";
 		units ~= s4;
 		}
