@@ -27,7 +27,7 @@ COLOR orange = COLOR(1,0.65,0,1);
 	//COLOR(w, w, w, 1);
 	//}
 
-
+/// Draws a rectangle but it's missing the inside of lines. Currently just top left and bottom right corners.
 void drawSplitRectangle(pair ul, pair lr, float legSize, float thickness, COLOR c)
 	{
 	// upper left
@@ -38,8 +38,6 @@ void drawSplitRectangle(pair ul, pair lr, float legSize, float thickness, COLOR 
 	al_draw_line(lr.x, lr.y, lr.x - legSize, lr.y, c, thickness); // horizontal
 	al_draw_line(lr.x, lr.y, lr.x, lr.y - legSize, c, thickness); // vertical
 	}
-
-
 
 /// Draw text using most common settings
 void drawText(A...)(float x, float y, COLOR c, string formatStr, A a)

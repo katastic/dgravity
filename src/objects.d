@@ -81,7 +81,6 @@ class asteroid : unit
 		split();
 		}
 
-	
 	this(float _x, float _y, float _vx, float _vy, float _va, int _size)
 		{
 //		writeln("asteroid.this, size: ", _size);
@@ -770,6 +769,17 @@ class ship : unit
 			}		
 		}
 	
+	void dumpDudes(planet p)
+		{
+		for(int i = 0; i < numDudesInside; i++)
+			p.dudes ~= new dude(0, 0, uniform!"[]"(-1.0,1.0), uniform!"[]"(-1.0,1.0), p); 
+		numDudesInside = 0;
+		// todo: 
+		// - Check for max planet capacity.
+		// - make dudes spawn properly from ship and have normal angle/pos
+		// - make a better dude constructor
+		}
+	
 	void doLand(planet p)
 		{
 		if(isOwned)
@@ -780,6 +790,7 @@ class ship : unit
 			vx = 0;
 			vy = 0;
 			p.capture(currentOwner.myTeamIndex, this);
+			dumpDudes(p);
 			}else{
 			// ships that aren't being used by a player cannot capture. IF that needs to change, we currently cannot follow a null reference to a player class.
 			}
@@ -950,7 +961,11 @@ class dude : baseObject
 		float cx=myPlanet.x + x + v.x - v.ox;
 		float cy=myPlanet.y + y + v.y - v.oy;
 		al_draw_center_rotated_bitmap(bmp, cx, cy, 0, 0);
-		al_draw_filled_circle(cx, cy, 20, COLOR(1,0,0,.5));
+		if(isRunningForShip)
+			al_draw_filled_circle(cx, cy, 20, COLOR(0,1,0,.5));
+			else
+			al_draw_filled_circle(cx, cy, 20, COLOR(0,0,1,.5));
+			
 		}
 
 	void checkPlanetBoundaries()
@@ -1033,7 +1048,7 @@ class planet : baseObject
 	satellite[] satellites; // not sure if turrets+satellites should be combined into a units array
 	
 	@disable this();
-	this(string _name, float _x, float _y, float _r)
+	this(string _name, float _x, float _y, float _r, int dudePopulation)
 		{
 		name = _name;
 		r = _r;
@@ -1051,7 +1066,8 @@ class planet : baseObject
 		
 		satellites ~= new satellite(this, r*1.5, 0, degToRad(1));
 		
-		for(int i = 0; i < 100; i++)
+		assert(dudePopulation >= 0);
+		for(int i = 0; i < dudePopulation; i++)
 			{
 			// note dudes have relative coordinates
 			float cx = uniform!"[]"(-r, r);

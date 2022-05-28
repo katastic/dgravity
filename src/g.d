@@ -290,10 +290,10 @@ class world_t
 		
 		// note structures currently pre-req a player instantiated
 		float r = 200;
-		auto pl = new planet("first", 400, 300, r);
+		auto pl = new planet("first", 400, 300, r, 25);
 		planets ~= pl;
-	//	planets ~= new planet("second", 1210, 410, 100);
-//		planets[1].m = PLANET_MASS*.25; // we get CLOSER to SMALLER planets making gravity much larger if its the same mass!
+		planets ~= new planet("second", 1210, 410, 100, 0);
+		planets[1].m = PLANET_MASS*.25; // we get CLOSER to SMALLER planets making gravity much larger if its the same mass!
 	//	planets ~= new planet("third", 1720, 520, 50);
 	//	planets[2].m = PLANET_MASS*.05;
 		
