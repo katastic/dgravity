@@ -161,6 +161,7 @@ class asteroid : unit
 	
 class bullet : baseObject
 	{
+	bool isDebugging=false;
 	float x=0, y=0;
 	float vx=0, vy=0;
 	float angle=0;
@@ -171,8 +172,9 @@ class bullet : baseObject
 	bool isAffectedByGravity=true;
 	COLOR c;
 	
-	this(float _x, float _y, float _vx, float _vy, float _angle, COLOR _c, int _type, int _lifetime, bool _isAffectedByGravity, unit _myOwner)
+	this(float _x, float _y, float _vx, float _vy, float _angle, COLOR _c, int _type, int _lifetime, bool _isAffectedByGravity, unit _myOwner, bool _isDebugging)
 		{
+		isDebugging = _isDebugging;
 		c = _c;
 		myOwner = _myOwner;
 		x = _x;
@@ -240,13 +242,14 @@ class bullet : baseObject
 			}
 		}
 		
-	void die()
+	void die(unit from)
 		{
 		isDead=true;
 		vx = 0;
 		vy = 0;
 		import std.random : uniform;
 		g.world.particles ~= particle(x, y, vx, vy, 0, uniform!"[]"(3, 6));
+		if(isDebugging) writefln("[debug] bullet at [%3.2f, %3.2f] died from [%s]", x, y, from);
 		}
 	
 	override void onTick() // should we check for planets collision?
@@ -259,6 +262,7 @@ class bullet : baseObject
 			if(isAffectedByGravity) applyGravity(g.world.planets[0]);
 
 /+			
+// bullet check against planets
 			foreach(p; g.world.planets) // NOTE. similar to ship.checkPlanetCollision
 				{
 				if(checkPlanetCollision(p))
@@ -284,22 +288,29 @@ class bullet : baseObject
 				{
 				if(checkAsteroidCollision(a))
 					{
-					isDead=true;
 					a.onHit(this);
+					die(a);
 					}
 				}
 			
-			foreach(u; g.world.units)
+			writeln("---FRAME---");
+			foreach(u; g.world.units) // NOTE: this is only scanning units not SUBARRAYS containing turrets
 				{
+
 				if(u != myOwner)
 					{
-					auto t = cast(turret)u;
-					if(t !is null && u != t.myOwner)continue;
-					
+					auto t = cast(attachedTurret)myOwner; //if we're from a turret, check against our turrets owner
+					if(t !is null && u == t.myOwner)
+						{
+						writefln("[%s] found. I am a: [%s] owned by a [%s] -- TURRET", u, t, t.myOwner);
+						continue; //we cannot hit our own unit (a ship, or a turret), or, if our spawner is a turret, we cannot hit the turrets owner (a ship/freighter)
+						}
+					writefln("[%s] found. I am a: [%s]", u, myOwner);
+						
 					if(checkUnitCollision(u))
 						{
-						isDead=true;
 						u.onHit(this);
+						die(u);
 						}
 					}					
 				}
@@ -549,12 +560,16 @@ class freighter : ship
 		name = "USS Caramelee";
 		super(_x, _y, _xv, _yv); // THIS sets up a gun. careful to call first.
 		myGun = new shotgun(this); // NOTE we're replacing an existing one from super(). That's a memory usage.
+		
+//		myGun.isDebugging = true; //DEBUG
+		
 		bmp = freighter_bmp;
 		SPEED = 0.2;
 		auto h = new hardpoint(this);
 		hardpoints ~= h;
 		
 		turrets ~= new attachedTurret(0, 0, this);
+		turrets[0].isDebugging = true; //DEBUG
 		}
 		
 	override void draw(viewport v)
@@ -597,6 +612,7 @@ class attachedTurret : turret
 	this(float _x, float _y, baseObject _myOwner)
 		{
 		super(_x, _y, _myOwner);
+		isDebugging = true;
 		}
 
 	override void draw(viewport v)
@@ -611,13 +627,13 @@ class attachedTurret : turret
 	
 	override void onTick()
 		{
+//		writeln("I am a attachedTurret.ontick()");
 		alignTurretandFire(); //TODO FIX ME. Change the coordinates
 		}
 	}
 
 class turret : ship
 	{
-	bool isStationary=false; //doesn't rotate with ship (floating gunpods in space) 
 	// >>USING RELATIVE COORDINATES<<
 	BITMAP* turretGun_bmp;
 	baseObject myOwner;
@@ -687,7 +703,8 @@ class turret : ship
 		vx = myOwner.vx; // note, these aren't "used" for our position, but are needed for spawning bullets
 		vy = myOwner.vy; // that add with our velocity.
 		
-		if(distance < TURRET_FIRE_DISTANCE) myGun.actionFireRelative(myOwner);
+//		if(distance < TURRET_FIRE_DISTANCE)
+		myGun.actionFireRelative(myOwner);
 		}
 
 	override void onTick()
@@ -699,6 +716,7 @@ class turret : ship
 class ship : unit
 	{
 	string name="";
+	bool isDebugging=false;
 	bool isOwned=false;
 	player currentOwner;
 	bool isLanded=false; /// on planet
@@ -1085,10 +1103,10 @@ class planet : baseObject
 		structures ~= new structure(0,  r*.8, g.dwarf_bmp, this);
 		structures ~= new structure(0, -r*.8, g.goblin_bmp, this);
 		
-		turrets ~= new planetTurret(-r,0.0, this);
-		turrets ~= new planetTurret( r,0.0, this);
-		turrets ~= new planetTurret( 0, -r, this);
-		turrets ~= new planetTurret( 0,  r, this);
+//		turrets ~= new planetTurret(-r,0.0, this);
+//		turrets ~= new planetTurret( r,0.0, this);
+//		turrets ~= new planetTurret( 0, -r, this);
+//		turrets ~= new planetTurret( 0,  r, this);
 		
 		satellites ~= new satellite(this, r*1.5, 0, degToRad(1));
 		

@@ -1,6 +1,9 @@
 TODO/notes
 --------------------------------------------------------------------------------------------------
 
+	- TURRET AIM code does NOT take into account any velocity
+		- we could have a "intelligence" coefficient with 1.0 being "aim at linear projected x/y from vx,vy" 
+			and 0.0 being "aim at current x/y"
 	- attachedTurret needs vector code for offseting bullet spawning and position of turret
 
 	--> if you land (only certain ships?) tons of planetDudes try to pile into your ship.

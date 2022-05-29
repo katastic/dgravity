@@ -62,7 +62,7 @@ class turretGun : gun //slow firing, normal gun
 		super(newOwner, _c);
 		cooldown = uniform!"[]"(0,30);
 		gunCooldownTime = 30;
-		isAffectedByGravity = false; 
+		isAffectedByGravity = false;
 		}
 	}
 
@@ -79,6 +79,7 @@ class planetGun : turretGun // so bullets can leave, no gravity on them.
 
 class gun
 	{
+	bool isDebugging=false;
 	float ammoLeft=100; // float in case we need to do some sort of "eats 1.5 units fluid per frame" logic
 	float ammoRechargeRate=1; // This lets us "rate limit" spamming. Fire, out, wait for it to refill. [Can still fire before its full]
 	float damage=5;
@@ -106,7 +107,7 @@ class gun
 			{
 			float _vx = vx + cos(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
 			float _vy = vy + sin(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
-			g.world.bullets ~= new bullet(x, y, _vx, _vy, angle, bulletColor, 0, 100, isAffectedByGravity, myOwner);
+			g.world.bullets ~= new bullet(x, y, _vx, _vy, angle, bulletColor, 0, 100, isAffectedByGravity, myOwner, isDebugging);
 			}
 		}
 	
@@ -116,7 +117,7 @@ class gun
 			{
 			float _vx = vx + cos(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
 			float _vy = vy + sin(angle + uniform!"[]"(-spreadArc, spreadArc).degToRad)*speed;
-			g.world.bullets ~= new bullet(secondOwner.x + x, secondOwner.y + y, _vx, _vy, angle, bulletColor, 0, 100, isAffectedByGravity, myOwner);
+			g.world.bullets ~= new bullet(secondOwner.x + x, secondOwner.y + y, _vx, _vy, angle, bulletColor, 0, 100, isAffectedByGravity, myOwner, isDebugging);
 			}
 		}
 	
@@ -133,7 +134,8 @@ class gun
 		{
 		if(cooldown == 0)
 			{
-			for(int i = 0; i < roundsFired; i++)fireProjectileRelative(secondOwner);
+			for(int i = 0; i < roundsFired; i++){writeln("gun.fireRel()");
+fireProjectileRelative(secondOwner);}
 			cooldown = gunCooldownTime;
 			}
 		}
@@ -142,7 +144,8 @@ class gun
 		{
 		if(cooldown == 0)
 			{
-			for(int i = 0; i < roundsFired; i++)fireProjectile();
+			for(int i = 0; i < roundsFired; i++){writeln("gun.fire()");
+fireProjectile();}
 			cooldown = gunCooldownTime;
 			}
 		}
