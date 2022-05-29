@@ -1,5 +1,6 @@
 TODO/notes
 --------------------------------------------------------------------------------------------------
+	-- add pve stuff so there's something to do
 
 	- freighter SHOOTS SHIPS INSIDE IT. lmfao.
 	- if ship updates after (or before ?) freighter does, the ship is moved incorrectly (falling behind the ship)

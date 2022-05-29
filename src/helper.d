@@ -13,6 +13,8 @@ import std.conv;
 import viewportsmod;
 import g;
 import objects;
+import planetsmod;
+
 
 COLOR white  = COLOR(1,1,1,1);
 COLOR black  = COLOR(0,0,0,1);

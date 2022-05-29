@@ -9,6 +9,7 @@ import g;
 import viewportsmod;
 import objects;
 import helper;
+import planetsmod;
 
 import std.stdio;
 import std.math;

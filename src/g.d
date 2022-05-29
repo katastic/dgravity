@@ -19,6 +19,7 @@ import objects;
 import viewportsmod;
 import graph;
 import particles;
+import planetsmod;
 
 immutable PLANET_MASS = 4000;
 immutable PLANET_MASS_FOR_BULLETS = 20_000;
@@ -298,8 +299,9 @@ class world_t
 		planets ~= pl;
 		planets ~= new planet("second", 1210, 410, 100, 0);
 		planets[1].m = PLANET_MASS*.25; // we get CLOSER to SMALLER planets making gravity much larger if its the same mass!
-	//	planets ~= new planet("third", 1720, 520, 50);
-	//	planets[2].m = PLANET_MASS*.05;
+		planets ~= new planet("third", 1720, 520, 50, 0);
+		planets[2].m = PLANET_MASS*.05;
+		planets[2].isProducer = true;
 		
 		for(int i = 0; i < 25; i++)
 			{
@@ -417,14 +419,14 @@ class world_t
 		if(key_s_down)players[0].currentShip.down();
 		if(key_a_down)players[0].currentShip.left();
 		if(key_d_down)players[0].currentShip.right();
-		if(key_space_down)players[0].currentShip.attack();
+		if(key_space_down)players[0].currentShip.actionFire();
 		if(key_q_down)players[0].findNextShip();
 		
 		if(key_i_down)p2.up();
 		if(key_k_down)p2.down();
 		if(key_j_down)p2.left();
 		if(key_l_down)p2.right();
-		if(key_m_down)p2.attack();
+		if(key_m_down)p2.actionFire();
 		
 		void tick(T)(ref T obj)
 			{

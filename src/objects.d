@@ -17,6 +17,7 @@ import helper;
 import viewportsmod;
 import particles;
 import guns;
+import planetsmod;
 
 /*
 	Teams
@@ -293,7 +294,7 @@ class bullet : baseObject
 					}
 				}
 			
-			writeln("---FRAME---");
+		//	writeln("---FRAME---");
 			foreach(u; g.world.units) // NOTE: this is only scanning units not SUBARRAYS containing turrets
 				{
 
@@ -302,10 +303,10 @@ class bullet : baseObject
 					auto t = cast(attachedTurret)myOwner; //if we're from a turret, check against our turrets owner
 					if(t !is null && u == t.myOwner)
 						{
-						writefln("[%s] found. I am a: [%s] owned by a [%s] -- TURRET", u, t, t.myOwner);
+//						writefln("[%s] found. I am a: [%s] owned by a [%s] -- TURRET", u, t, t.myOwner);
 						continue; //we cannot hit our own unit (a ship, or a turret), or, if our spawner is a turret, we cannot hit the turrets owner (a ship/freighter)
 						}
-					writefln("[%s] found. I am a: [%s]", u, myOwner);
+	//				writefln("[%s] found. I am a: [%s]", u, myOwner);
 						
 					if(checkUnitCollision(u))
 						{
@@ -716,6 +717,7 @@ class turret : ship
 class ship : unit
 	{
 	string name="";
+	bool isControlledByAI=false;
 	bool isDebugging=false;
 	bool isOwned=false;
 	player currentOwner;
@@ -869,6 +871,40 @@ class ship : unit
 			if(shieldHP > SHIELD_MAX)shieldHP = SHIELD_MAX;
 			}
 		}
+		
+	void runAI()
+		{
+		// Mode: attack
+		// we can add randomness (on spawn) to certain parameters to make it more 'human' / imperfect
+		// Overshooting (detect turn left, but then we keep turning left until we get a stop turning
+		// or turn right command, then we reduce the tickrate of the AI)
+		// - could implement some sort of PID controller
+		//		desired_pos(player)
+		//		this:
+		//			current_pos
+		//			current_vel
+		//			current_angle
+		// 
+		// at the very least, a PID of "distance to target" plus our velocity equation
+		//	https://en.wikipedia.org/wiki/PID_controller
+		// ALSO, ships currently have LINEAR velocity. Do we want SQUARED so they can't speed up as fast?
+		//	K.E. = 1/2mv^^2
+	
+		immutable float MAX_AI_SPEED = 2;		// jet till we hit max speed
+		immutable float BOOST_DISTANCE = 100; 	// jet until we close distance (what about manuevering for close combat vs closing the distance?)
+		immutable float ENGAGE_DISTANCE = 400;
+		immutable float SHOT_PERCENT = 25;		// 1/60th frame rate, 25% = ~15 shots / second max (not including cooldown) 
+		immutable float SHOT_ANGLE_RANGE = 30;  // NYI, don't shoot unless we're SOMEWHAT close to being able to hit (don't shoot backwards). Unless we want to look stupid sometimes. Add a percentage chance for that based on AI_STUPIDITY.
+		
+		unit target = g.world.units[0];
+		float a = angleTo(target, this);
+		// FIXME: WARNING. This will cap max speed... even if we're going max speed opposite direction!
+		if(distanceTo(target, this) > BOOST_DISTANCE /*&& distance(vx, vy) < MAX_AI_SPEED*/){up();}
+		if(distanceTo(target, this) < ENGAGE_DISTANCE && percent(SHOT_PERCENT)){actionFire();}		
+		if(isLanded)up();
+		if(angle > a)left();
+		if(angle < a)right();
+		}
 
 	override void onTick()
 		{
@@ -876,6 +912,7 @@ class ship : unit
 		myGun.onTick();
 		doShield();
 		foreach(t; turrets)t.onTick();
+		if(isControlledByAI)runAI();
 		
 		/// Self logic
 		if(isDocked)
@@ -978,7 +1015,7 @@ class ship : unit
 	override void left() { if(!isLanded){angle -= degToRad(ROTATION_SPEED); angle = wrapRad(angle);}}
 	override void right() { if(!isLanded){angle += degToRad(ROTATION_SPEED); angle = wrapRad(angle);}}
 
-	override void attack()
+	override void actionFire()
 		{
 		if(!isLanded)myGun.actionFire();
 		}
@@ -1077,115 +1114,6 @@ class dude : baseObject
 		}
 	}
 	
-class planet : baseObject
-	{
-	bool isOwned=false;
-	//player currentOwner;
-	int currentTeamIndex;
-	
-	float m = PLANET_MASS;
-	float r = 100; /// radius
-	string name="Big Chungus";
-	structure[] structures;
-	dude[] dudes;
-	turret[] turrets;
-	satellite[] satellites; // not sure if turrets+satellites should be combined into a units array
-	
-	@disable this();
-	this(string _name, float _x, float _y, float _r, int dudePopulation)
-		{
-		name = _name;
-		r = _r;
-		super(_x, _y, 0, 0, g.tree_bmp); // works perfect		
-		structures ~= new structure(0, 0, g.fountain_bmp, this);
-		structures ~= new structure( r*.8, 0, g.tree_bmp, this);
-		structures ~= new structure(-r*.8, 0, g.chest_bmp, this);
-		structures ~= new structure(0,  r*.8, g.dwarf_bmp, this);
-		structures ~= new structure(0, -r*.8, g.goblin_bmp, this);
-		
-//		turrets ~= new planetTurret(-r,0.0, this);
-//		turrets ~= new planetTurret( r,0.0, this);
-//		turrets ~= new planetTurret( 0, -r, this);
-//		turrets ~= new planetTurret( 0,  r, this);
-		
-		satellites ~= new satellite(this, r*1.5, 0, degToRad(1));
-		
-		assert(dudePopulation >= 0);
-		for(int i = 0; i < dudePopulation; i++)
-			{
-			// note dudes have relative coordinates
-			float cx = uniform!"[]"(-r, r);
-			float cy = uniform!"[]"(-r, r);
-			float ca = uniform!"[]"(0, 2*PI);
-			float cd = 2;
-			float cvx = cos(ca)*cd;
-			float cvy = sin(ca)*cd;
-			dudes ~= new dude(cx, cy, cvx, cvy, this);
-			}
-		}
-	
-	void capture(int byTeamIndex, ship by) // do we need byTeamIndex if we have a ship now?
-		{
-		isOwned = true;
-		currentTeamIndex = byTeamIndex;
-		
-		foreach(d; dudes)
-			{
-			d.isRunningForShip = true;
-			d.landedShip = by;
-			}
-		
-		}
-		
-	void drawOwnerFlag(viewport v)
-		{
-		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, 20, g.world.teams[currentTeamIndex].color);
-		}
-	
-	override void draw(viewport v)
-		{
-		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r, COLOR(.2,.2,.8,1));
-		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r * .80, COLOR(.6,.6,1,1));
-		foreach(s; structures) 
-			{
-			g.stats.number_of_drawn_structures++;
-			s.draw(v);
-			}
-
-		foreach(d; dudes) d.draw(v);
-		foreach(t; turrets) t.draw(v);
-		foreach(s; satellites) s.draw(v);
-		
-		if(isOwned)drawOwnerFlag(v);
-		}
-
-	override void onTick()
-		{
-		import std.algorithm : remove;
-		// do structures  get handled by us or by root logic() call?
-		foreach(s; structures) s.onTick();
-		foreach(d; dudes) d.onTick();
-		foreach(t; turrets) t.onTick();
-		foreach(s; satellites) s.onTick();
-		prune(structures);
-		prune(dudes);
-		prune(turrets);
-		prune(satellites);
-		//x += vx;
-		//y += vy; //do we want this?
-		}
-
-	//prune ready-to-delete entries (copied from g)
-	void prune(T)(ref T obj)
-		{
-		for(size_t i = obj.length ; i-- > 0 ; )
-			{
-			if(obj[i].isDead)obj = obj.remove(i); continue;
-			}
-		//see https://forum.dlang.org/post/sagacsjdtwzankyvclxn@forum.dlang.org
-		}
-	}
-
 class structure : baseObject
 	{
 	immutable float maxHP=500.0;
@@ -1260,7 +1188,7 @@ class baseObject
 	void down(){y+= 10;}
 	void left(){x-= 10;}
 	void right(){x+= 10;}
-	void attack()
+	void actionFire()
 		{
 		}
 	

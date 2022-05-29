@@ -134,7 +134,7 @@ class gun
 		{
 		if(cooldown == 0)
 			{
-			for(int i = 0; i < roundsFired; i++){writeln("gun.fireRel()");
+			for(int i = 0; i < roundsFired; i++){//writeln("gun.fireRel()");
 fireProjectileRelative(secondOwner);}
 			cooldown = gunCooldownTime;
 			}
@@ -144,7 +144,7 @@ fireProjectileRelative(secondOwner);}
 		{
 		if(cooldown == 0)
 			{
-			for(int i = 0; i < roundsFired; i++){writeln("gun.fire()");
+			for(int i = 0; i < roundsFired; i++){//writeln("gun.fire()");
 fireProjectile();}
 			cooldown = gunCooldownTime;
 			}
