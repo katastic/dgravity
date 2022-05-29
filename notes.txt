@@ -1,6 +1,15 @@
 TODO/notes
 --------------------------------------------------------------------------------------------------
 
+	- freighter SHOOTS SHIPS INSIDE IT. lmfao.
+	- if ship updates after (or before ?) freighter does, the ship is moved incorrectly (falling behind the ship)
+	- we can carry infinite number of ships in freighter currently
+	- MAKE SURE docked ships cannot fire/do stuff. Luckily we're not storing anything at 0,0 but if we did
+		(or in some other rare cases) you could have a bullet COLLIDE with an invisible stack of stored objects. (like dudes, if we weren't deleting them.)
+		
+	---> start thinking about memory allocations at some point. Dude copy/deleting might be sluggish.
+
+	- TURRET BULLET SPAWN comes from owning ship center.xy not the turret location!
 	- TURRET AIM code does NOT take into account any velocity
 		- we could have a "intelligence" coefficient with 1.0 being "aim at linear projected x/y from vx,vy" 
 			and 0.0 being "aim at current x/y"
