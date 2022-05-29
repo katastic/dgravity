@@ -1,6 +1,10 @@
 TODO/notes
 --------------------------------------------------------------------------------------------------
 	-- add pve stuff so there's something to do
+		- PID controller
+	- consider moving more "object" code into separate files.
+		- split "helper" into graphics tools, vs more generic tools
+		- move random object.d code in classes that should be helpers
 
 	- freighter SHOOTS SHIPS INSIDE IT. lmfao.
 	- if ship updates after (or before ?) freighter does, the ship is moved incorrectly (falling behind the ship)
