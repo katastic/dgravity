@@ -1,10 +1,19 @@
 TODO/notes
 --------------------------------------------------------------------------------------------------
 
+	- attachedTurret needs vector code for offseting bullet spawning and position of turret
+
 	--> if you land (only certain ships?) tons of planetDudes try to pile into your ship.
 		- figure out how to handle when to dump and when to pickup dudes
 		- drop from ship (towards center) not directly on center of planet
 		- different team dudes dropping, and fighting
+		
+		
+		- orbital drop mechs, tanks, people
+			- you can dump slightly early/much velocity but too far and they explode
+	
+		- do dudes (tanks, etc) walk inside the planet, or, on the outside
+		- large radius planets for battlefields
 		
 		we could have different planets that do different functions
 			- resource planets gen X resource every minute

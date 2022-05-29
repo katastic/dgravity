@@ -293,6 +293,9 @@ class bullet : baseObject
 				{
 				if(u != myOwner)
 					{
+					auto t = cast(turret)u;
+					if(t !is null && u != t.myOwner)continue;
+					
 					if(checkUnitCollision(u))
 						{
 						isDead=true;
@@ -551,10 +554,7 @@ class freighter : ship
 		auto h = new hardpoint(this);
 		hardpoints ~= h;
 		
-		turrets ~= new turret(bmp.w, 0, this);
-		turrets ~= new turret(-bmp.w, 0, this);
-		turrets ~= new turret(0, bmp.w, this);
-		turrets ~= new turret(0, -bmp.w, this);
+		turrets ~= new attachedTurret(0, 0, this);
 		}
 		
 	override void draw(viewport v)
@@ -589,8 +589,35 @@ class planetTurret : turret
 		}
 	}
 
+class attachedTurret : turret
+	{
+	float attachmentX;
+	float attachmentY; // offset from 0,0 attachment point so we can rotate around it
+
+	this(float _x, float _y, baseObject _myOwner)
+		{
+		super(_x, _y, _myOwner);
+		}
+
+	override void draw(viewport v)
+		{
+		float dist = 50;
+		float cangle = myOwner.angle;
+		float cx = myOwner.x + v.x - v.ox + cos(cangle)*dist; // NOTE. we're currently NOT USING x,y
+		float cy = myOwner.y + v.y - v.oy + sin(cangle)*dist; // because vector addition hard. apparently.
+//			al_draw_centered_bitmap(bmp, cx, cy, 0);
+		al_draw_center_rotated_bitmap(turretGun_bmp, cx, cy, angle, 0);
+		}
+	
+	override void onTick()
+		{
+		alignTurretandFire(); //TODO FIX ME. Change the coordinates
+		}
+	}
+
 class turret : ship
 	{
+	bool isStationary=false; //doesn't rotate with ship (floating gunpods in space) 
 	// >>USING RELATIVE COORDINATES<<
 	BITMAP* turretGun_bmp;
 	baseObject myOwner;
@@ -619,7 +646,6 @@ class turret : ship
 		{
 		al_draw_centered_bitmap(bmp, myOwner.x + x + v.x - v.ox, myOwner.y + y + v.y - v.oy, 0);
 		al_draw_center_rotated_bitmap(turretGun_bmp, myOwner.x + x + v.x - v.ox, myOwner.y + y + v.y - v.oy, angle, 0);
-		// super.draw(v); need RELATIVE coordinates
 		}
 
 	void alignTurretandFire()

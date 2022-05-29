@@ -261,6 +261,7 @@ class world_t
 		{		
 		auto s = new ship(400, 100, 0, 0);	
 		s.name = "Interdicter";
+		s.myTeamIndex = 1;
 		units ~= s; //which comes first, player or the egg
 		players ~= new player(s);
 		teams ~= new team(players[0], blue);
@@ -270,6 +271,7 @@ class world_t
 	
 		s.isOwned = true;
 		s.currentOwner = players[0];
+		s2.myTeamIndex = 1;
 		s2.isOwned = true;
 		s2.currentOwner = players[0];
 		units ~= s2;
@@ -280,11 +282,13 @@ class world_t
 		{
 		auto s3 = new ship(600, 200, 0, 0);
 		s3.name = "Tacobus";
+		s3.myTeamIndex = 2;
 		units ~= s3;
 		}
 		{
 		auto s4 = new ship(600, 200, 0, 0);
 		s4.name = "Timid";
+		s4.myTeamIndex = 2;
 		units ~= s4;
 		}
 		
