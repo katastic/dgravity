@@ -879,16 +879,28 @@ class ship : unit
 		// Overshooting (detect turn left, but then we keep turning left until we get a stop turning
 		// or turn right command, then we reduce the tickrate of the AI)
 		// - could implement some sort of PID controller
-		//		desired_pos(player)
+		//		desired_pos(player)		-- set point (SP)
 		//		this:
-		//			current_pos
+		//			current_pos			-- 
 		//			current_vel
 		//			current_angle
 		// 
 		// at the very least, a PID of "distance to target" plus our velocity equation
 		//	https://en.wikipedia.org/wiki/PID_controller
+		//
+		//	P proportional error vs desired
+		//	D derivative, for dampening overshoot
+		//  I integral (not needed?) for removing residuals
+		// 
 		// ALSO, ships currently have LINEAR velocity. Do we want SQUARED so they can't speed up as fast?
 		//	K.E. = 1/2mv^^2
+		/+
+			ALSO (not necessarily needed) but look up PID velocity and position control
+				because if we're taking an integral or derivative of position (or velocity)...
+				we're already using those terms and may plug them in. (del pos/time = velocity right?)
+			
+			we might use a more advanced version for getting AI ships to land on planets carefully (desired end velocity=0)
+		+/
 	
 		immutable float MAX_AI_SPEED = 2;		// jet till we hit max speed
 		immutable float BOOST_DISTANCE = 100; 	// jet until we close distance (what about manuevering for close combat vs closing the distance?)
