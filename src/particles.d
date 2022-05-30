@@ -58,7 +58,7 @@ struct particle
 		rotation = uniform!"[]"(0, 3);
 		}
 		
-	void draw(viewport v)
+	bool draw(viewport v)
 		{
 		BITMAP *b = g.smoke_bmp;
 		ALLEGRO_COLOR c = ALLEGRO_COLOR(1,1,1,cast(float)lifetime/cast(float)maxLifetime);
@@ -68,10 +68,14 @@ struct particle
 		float scaleY = (cast(float)lifetime/cast(float)maxLifetime) * b.h;
 
 		if(cx > 0 && cx < SCREEN_W && cy > 0 && cy < SCREEN_H)
+			{
 			al_draw_tinted_scaled_bitmap(b, c,
 				0, 0, b.w, b.h,
 				cx - b.w/2, cy - b.h/2, scaleX, scaleY, 
 				rotation);
+			return true;
+			}
+		return false;
 		}
 	
 	// NOTE. duplicate of ship.checkPlanetCollision

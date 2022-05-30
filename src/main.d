@@ -222,7 +222,11 @@ struct display_t
 		
 		// Draw FPS and other text
 		display.reset_clipping();
-		al_draw_filled_rounded_rectangle(16, 32, 64+650, 105+32, 8, 8, ALLEGRO_COLOR(.7, .7, .7, .7));
+		
+		float last_position_plus_one = textHelper(false); // we use the auto-intent of one initial frame to find the total text length for the box
+		textHelper(true);  //reset
+
+		al_draw_filled_rounded_rectangle(16, 32, 64+800, last_position_plus_one+32, 8, 8, ALLEGRO_COLOR(.7, .7, .7, .7));
 
 		unit u = g.world.units[0];
 		drawText2(20, "obj[%.2f,%.2f][%.2f %f.2] %.2f deg", u.x, u.y, u.vx, u.vy, u.angle.radToDeg);
@@ -231,16 +235,41 @@ struct display_t
 					g.stats.number_of_drawn_units + 
 					g.stats.number_of_drawn_particles + 
 					g.stats.number_of_drawn_bullets + 
+					g.stats.number_of_drawn_dudes +  
 					g.stats.number_of_drawn_structures) * g.stats.fps ); 
 		
 //		drawText2(20, "money [%d] deaths [%d]", g.world.players[0].myTeamIndex.money, g.world.players[0].deaths);
-		drawText2(20, "drawn: structs [%d] particles [%d] bullets [%d] units [%d]", 
+		drawText2(20, "drawn  : structs [%d] particles [%d] bullets [%d] dudes [%d] units [%d]", 
 			g.stats.number_of_drawn_structures, 
 			g.stats.number_of_drawn_particles,
 			g.stats.number_of_drawn_bullets,
+			g.stats.number_of_drawn_dudes,
 			g.stats.number_of_drawn_units);
-			
-		textHelper(true);  //reset
+
+		drawText2(20, "clipped: structs [%d] particles [%d] bullets [%d] dudes [%d] units [%d]", 
+			g.stats.number_of_drawn_structures_clipped, 
+			g.stats.number_of_drawn_particles_clipped,
+			g.stats.number_of_drawn_bullets_clipped,
+			g.stats.number_of_drawn_dudes_clipped,
+			g.stats.number_of_drawn_units_clipped);
+
+		float ifNotZeroPercent(T)(T drawn, T clipped)
+			{
+			if(drawn + clipped == 0)
+				return 100;
+			else
+				return cast(float)clipped / (cast(float)drawn + cast(float)clipped) * 100.0;
+			}
+
+		with(g.stats)
+			{
+		drawText2(20, "percent: structs [%3.2f%%] particles [%3.2f%%] bullets [%3.2f%%] dudes [%3.2f%%] units [%3.2f%%]", 
+			ifNotZeroPercent(number_of_drawn_structures, number_of_drawn_structures_clipped), 
+			ifNotZeroPercent(number_of_drawn_particles, number_of_drawn_particles_clipped), 
+			ifNotZeroPercent(number_of_drawn_bullets, number_of_drawn_bullets_clipped),
+			ifNotZeroPercent(number_of_drawn_dudes, number_of_drawn_dudes_clipped),
+			ifNotZeroPercent(number_of_drawn_units, number_of_drawn_units_clipped));
+			}
 		
 		draw_target_dot(g.mouse_x, g.mouse_y);		// DRAW MOUSE PIXEL HELPER/FINDER
 

@@ -85,7 +85,7 @@ class planet : baseObject
 		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, 20, g.world.teams[currentTeamIndex].color);
 		}
 	
-	override void draw(viewport v)
+	override bool draw(viewport v)
 		{
 		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r, COLOR(.2,.2,.8,1));
 		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r * .80, COLOR(.6,.6,1,1));
@@ -95,11 +95,12 @@ class planet : baseObject
 			s.draw(v);
 			}
 
-		foreach(d; dudes) d.draw(v);
-		foreach(t; turrets) t.draw(v);
-		foreach(s; satellites) s.draw(v);
+		foreach(d; dudes) {d.draw(v); g.stats.number_of_drawn_dudes++;}
+		foreach(t; turrets) {t.draw(v); g.stats.number_of_drawn_units++;}
+		foreach(s; satellites) {s.draw(v); g.stats.number_of_drawn_units++;}
 		
 		if(isOwned)drawOwnerFlag(v);
+		return true;
 		}
 
 	void handleStructures()

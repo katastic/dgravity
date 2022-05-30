@@ -60,10 +60,11 @@ class satellite : ship
 		// doing it this way should let us keep base-class draw routine
 		}
 		
-	override void draw(viewport v)
+	override bool draw(viewport v)
 		{
 		super.draw(v);
 		al_draw_center_rotated_bitmap(gun_bmp, x + v.x - v.ox, y + v.y - v.oy, angle, 0);
+		return true;
 		}
 	
 	}
@@ -321,12 +322,16 @@ class bullet : baseObject
 			}
 		}
 	
-	override void draw(viewport v)
+	override bool draw(viewport v)
 		{		
 		float cx = x + v.x - v.ox;
 		float cy = y + v.y - v.oy;
 		if(cx > 0 && cx < SCREEN_W && cy > 0 && cy < SCREEN_H)
+			{
 			al_draw_center_rotated_tinted_bitmap(bmp, c, cx, cy, angle + degToRad(90), 0);
+			return true;
+			}
+		return false;
 		}
 	}
 /+
@@ -376,12 +381,14 @@ class item : baseObject
 		super(_x, _y, _vx, _vy, b);
 		}
 		
-	override void draw(viewport v)
+	override bool draw(viewport v)
 		{
 		if(!isInside)
 			{
 			super.draw(v);
+			return true;
 			}
+		return false;
 		}
 		
 	override void onTick()
@@ -485,7 +492,7 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		super(_x, _y, _vx, _vy, b);
 		}
 
-	override void draw(viewport v)
+	override bool draw(viewport v)
 		{
 		super.draw(v);
 		
@@ -516,6 +523,7 @@ class unit : baseObject // WARNING: This applies PHYSICS. If you inherit from it
 		//drawAngleHelper(this, v, angle3, 25, COLOR(1,1,0,1)); 
 	
 		draw_hp_bar(x, y - bmp.w/2, v, hp, 100);		
+		return true;
 		}
 	}
 	
@@ -530,7 +538,7 @@ class hardpoint : unit
 		super(0, owner.x, owner.y, 0, 0, g.trailer_bmp);
 		}
 	
-	override void draw(viewport v)
+	override bool draw(viewport v)
 		{
 		COLOR c = COLOR(1,1,1,hp/maxHP);
 		al_draw_tinted_rotated_bitmap(bmp, c,
@@ -541,6 +549,7 @@ class hardpoint : unit
 			bmp.w/2, bmp.h/2, 
 			owner.x + v.x - v.ox + cos(angle + PI/2f)*-10f, 
 			owner.y + v.y - v.oy + sin(angle + PI/2f)*-10f, angle, 0);
+		return true;
 		}
 		
 	override void onTick()
@@ -573,13 +582,14 @@ class freighter : ship
 		turrets[0].isDebugging = true; //DEBUG
 		}
 		
-	override void draw(viewport v)
+	override bool draw(viewport v)
 		{
 		foreach(h; hardpoints)
 			{
 			h.draw(v);
 			}
 		super.draw(v);
+		return true;
 		}
 
 	override void onTick()
@@ -616,7 +626,7 @@ class attachedTurret : turret
 		isDebugging = true;
 		}
 
-	override void draw(viewport v)
+	override bool draw(viewport v)
 		{
 		float dist = 50;
 		float cangle = myOwner.angle;
@@ -624,6 +634,7 @@ class attachedTurret : turret
 		float cy = myOwner.y + v.y - v.oy + sin(cangle)*dist; // because vector addition hard. apparently.
 //			al_draw_centered_bitmap(bmp, cx, cy, 0);
 		al_draw_center_rotated_bitmap(turretGun_bmp, cx, cy, angle, 0);
+		return true;
 		}
 	
 	override void onTick()
@@ -659,10 +670,11 @@ class turret : ship
 		myOwner = _myOwner;
 		}
 
-	override void draw(viewport v)
+	override bool draw(viewport v)
 		{
 		al_draw_centered_bitmap(bmp, myOwner.x + x + v.x - v.ox, myOwner.y + y + v.y - v.oy, 0);
 		al_draw_center_rotated_bitmap(turretGun_bmp, myOwner.x + x + v.x - v.ox, myOwner.y + y + v.y - v.oy, angle, 0);
+		return true;
 		}
 
 	void alignTurretandFire()
@@ -763,7 +775,7 @@ class ship : unit
 		super(1, _x, _y, _xv, _yv, ship_bmp);
 		}
 
-	override void draw(viewport v)
+	override bool draw(viewport v)
 		{
 		//drawShield(pair(x, y), v, bmp.w, 5, COLOR(0,0,1,1), shieldHP/SHIELD_MAX);
 		super.draw(v);
@@ -780,7 +792,7 @@ class ship : unit
 			// using bmp.w because it's larger in non-rotated sprites
 			}
 		
-		
+		return true;
 		}
 		
 	void crash()
@@ -1047,7 +1059,7 @@ class dude : baseObject
 		}
 
 	// originally a copy of structure.draw
-	override void draw(viewport v)
+	override bool draw(viewport v)
 		{		
 		// we draw RELATIVE to planet.xy, so no using baseObject.draw
 		// TODO how do we rotate angle from center of planet properly? Or do we even need that?
@@ -1058,7 +1070,7 @@ class dude : baseObject
 			al_draw_filled_circle(cx, cy, 20, COLOR(0,1,0,.5));
 			else
 			al_draw_filled_circle(cx, cy, 20, COLOR(0,0,1,.5));
-			
+		return true;
 		}
 
 	void checkPlanetBoundaries()
@@ -1150,7 +1162,7 @@ class structure : baseObject
 		if(myPlanet.isOwned)g.world.teams[myPlanet.currentTeamIndex].money -= 250; 
 		}
 
-	override void draw(viewport v)
+	override bool draw(viewport v)
 		{
 		// we draw RELATIVE to planet.xy, so no using baseObject.draw
 		// TODO how do we rotate angle from center of planet properly? Or do we even need that?
@@ -1158,7 +1170,7 @@ class structure : baseObject
 		float cy=myPlanet.y + y + v.y - v.oy;
 		al_draw_center_rotated_bitmap(bmp, cx, cy, 0, 0);
 		draw_hp_bar(x, y, v, hp, maxHP);
-		import std.format : format;
+		return true;
 		}
 
 	void onHit(unit u, float damage)
@@ -1186,12 +1198,14 @@ class baseObject
 		bmp = _bmp;
 		}
 		
-	void draw(viewport v)
+	bool draw(viewport v)
 		{
 		al_draw_center_rotated_bitmap(bmp, 
 			x - v.ox + v.x, 
 			y - v.oy + v.y, 
 			angle, 0);
+
+		return true;
 		}
 	
 	// INPUTS (do we support mouse input?)

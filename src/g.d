@@ -312,8 +312,8 @@ class world_t
 			asteroids ~= new asteroid(cx, cy, 0.1, 0, .02, uniform!"[]"(0,2));
 			}
 
-		testGraph = new intrinsicGraph!float("Draw (ms)", g.stats.nsDraw, 100, 200 - 50, COLOR(1,0,0,1), 1_000_000);
-		testGraph2 = new intrinsicGraph!float("Logic (ms)", g.stats.msLogic, 100, 320 - 50, COLOR(1,0,0,1), 1_000_000);
+		testGraph = new intrinsicGraph!float("Draw (ms)", g.stats.nsDraw, 100, 200, COLOR(1,0,0,1), 1_000_000);
+		testGraph2 = new intrinsicGraph!float("Logic (ms)", g.stats.msLogic, 100, 320, COLOR(1,0,0,1), 1_000_000);
 	
 		stats.swLogic = StopWatch(AutoStart.no);
 		stats.swDraw = StopWatch(AutoStart.no);
@@ -357,6 +357,7 @@ class world_t
 		{
 		drawSpace(v);
 		stats.swDraw.start();
+
 		void draw(T)(ref T obj)
 			{
 			foreach(ref o; obj)
@@ -373,12 +374,25 @@ class world_t
 				o.draw(v);
 				}
 			}
+
+		void drawStat2(T, U)(ref T obj, ref U stat, ref U clippedStat)
+			{
+			foreach(ref o; obj)
+				{
+				if(o.draw(v))
+					{
+					stat++;
+					}else{
+					clippedStat++;
+					}
+				}
+			}
 		
-		drawStat(planets, 	stats.number_of_drawn_units);
-		drawStat(asteroids, stats.number_of_drawn_asteroids);
-		drawStat(bullets, 	stats.number_of_drawn_bullets);
-		drawStat(particles, stats.number_of_drawn_particles);
-		drawStat(units, 	stats.number_of_drawn_units);
+		drawStat2(planets, 	stats.number_of_drawn_units, 	stats.number_of_drawn_units_clipped);
+		drawStat2(asteroids, stats.number_of_drawn_asteroids, stats.number_of_drawn_asteroids_clipped);
+		drawStat2(bullets, 	stats.number_of_drawn_bullets, 	stats.number_of_drawn_bullets_clipped);
+		drawStat2(particles, stats.number_of_drawn_particles, stats.number_of_drawn_particles_clipped);
+		drawStat2(units, 	stats.number_of_drawn_units, stats.number_of_drawn_units_clipped);
 //		drawStat(structures, stats.number_of_drawn_structures);		
 
 		testGraph.draw(v);
@@ -474,6 +488,14 @@ struct statistics_t
 	ulong number_of_drawn_structures=0;
 	ulong number_of_drawn_asteroids=0;
 	ulong number_of_drawn_bullets=0;
+	ulong number_of_drawn_dudes=0;
+
+	ulong number_of_drawn_units_clipped=0;
+	ulong number_of_drawn_particles_clipped=0;
+	ulong number_of_drawn_structures_clipped=0;
+	ulong number_of_drawn_asteroids_clipped=0;
+	ulong number_of_drawn_bullets_clipped=0;
+	ulong number_of_drawn_dudes_clipped=0;
 	
 	ulong fps=0;
 	ulong frames_passed=0;
@@ -490,6 +512,14 @@ struct statistics_t
 		number_of_drawn_structures = 0;
 		number_of_drawn_asteroids = 0;
 		number_of_drawn_bullets = 0;
+		number_of_drawn_dudes = 0;
+
+		number_of_drawn_units_clipped = 0;
+		number_of_drawn_particles_clipped = 0;
+		number_of_drawn_structures_clipped = 0;
+		number_of_drawn_asteroids_clipped = 0;
+		number_of_drawn_bullets_clipped = 0;
+		number_of_drawn_dudes_clipped = 0;
 		}
 	}
 
