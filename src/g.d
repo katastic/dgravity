@@ -375,8 +375,8 @@ class world_t
 			}
 		
 		drawStat(planets, 	stats.number_of_drawn_units);
-		drawStat(asteroids, stats.number_of_drawn_units);
-		drawStat(bullets, 	stats.number_of_drawn_particles);
+		drawStat(asteroids, stats.number_of_drawn_asteroids);
+		drawStat(bullets, 	stats.number_of_drawn_bullets);
 		drawStat(particles, stats.number_of_drawn_particles);
 		drawStat(units, 	stats.number_of_drawn_units);
 //		drawStat(structures, stats.number_of_drawn_structures);		
@@ -472,7 +472,8 @@ struct statistics_t
 	ulong number_of_drawn_units=0;
 	ulong number_of_drawn_particles=0;
 	ulong number_of_drawn_structures=0;
-	ulong number_of_drawn_background_tiles=0;
+	ulong number_of_drawn_asteroids=0;
+	ulong number_of_drawn_bullets=0;
 	
 	ulong fps=0;
 	ulong frames_passed=0;
@@ -486,9 +487,9 @@ struct statistics_t
 		{ // note we do NOT reset fps and frames_passed here as they are cumulative or handled elsewhere.
 		number_of_drawn_units = 0;
 		number_of_drawn_particles = 0;
-		number_of_drawn_background_tiles = 0;
-		number_of_drawn_structures=0;
-		number_of_drawn_units=0;
+		number_of_drawn_structures = 0;
+		number_of_drawn_asteroids = 0;
+		number_of_drawn_bullets = 0;
 		}
 	}
 

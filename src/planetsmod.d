@@ -116,6 +116,7 @@ class planet : baseObject
 		}
 
 	int cooldown=0;
+	int SPAWN_COOLDOWN=60;
 	override void onTick()
 		{
 		handleStructures();
@@ -123,9 +124,10 @@ class planet : baseObject
 		//y += vy; //do we planets moving? Also, do we want them moving on a set orbit path (ala KSP) not gravity
 		if(isProducer)
 			{
+			if(cooldown > 0)cooldown--;
 			if(cooldown == 0)
 				{
-				cooldown = 300;
+				cooldown = SPAWN_COOLDOWN;
 				auto s = new ship(x, y - r*2, -1, 0);
 				s.isControlledByAI = true;
 				g.world.units ~= s;

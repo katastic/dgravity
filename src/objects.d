@@ -323,10 +323,10 @@ class bullet : baseObject
 	
 	override void draw(viewport v)
 		{		
-		float dx = x + v.x - v.ox;
-		float dy = y + v.y - v.oy;
-//		al_draw_bitmap(bmp, dx, dy, 0);
-		al_draw_center_rotated_tinted_bitmap(bmp, c, dx, dy, angle + degToRad(90), 0);
+		float cx = x + v.x - v.ox;
+		float cy = y + v.y - v.oy;
+		if(cx > 0 && cx < SCREEN_W && cy > 0 && cy < SCREEN_H)
+			al_draw_center_rotated_tinted_bitmap(bmp, c, cx, cy, angle + degToRad(90), 0);
 		}
 	}
 /+
