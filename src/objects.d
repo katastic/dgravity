@@ -777,17 +777,20 @@ class ship : unit
 
 	override bool draw(viewport v)
 		{
+		float cx = x + v.x - v.ox;
+		float cy = y + v.y - v.oy;
+		if(cx < 0 || cx > SCREEN_W || cy < 0 || cy > SCREEN_H)return false;
 		//drawShield(pair(x, y), v, bmp.w, 5, COLOR(0,0,1,1), shieldHP/SHIELD_MAX);
 		super.draw(v);
 		
-		foreach(t; turrets)t.draw(v);
+		foreach(t; turrets){t.draw(v); g.stats.number_of_drawn_units++; }
 		
 		if(name != "")
 			{
 			if(numDudesInside == 0)
-				drawTextCenter(x + v.x - v.ox, y + v.y - v.oy - bmp.w, white, "%s", name);
+				drawTextCenter(cx, cy - bmp.w, white, "%s", name);
 			else
-				drawTextCenter(x + v.x - v.ox, y + v.y - v.oy - bmp.w, white, "%s [+%d]", name, numDudesInside);
+				drawTextCenter(cx, cy - bmp.w, white, "%s [+%d]", name, numDudesInside);
 					
 			// using bmp.w because it's larger in non-rotated sprites
 			}
@@ -1065,6 +1068,8 @@ class dude : baseObject
 		// TODO how do we rotate angle from center of planet properly? Or do we even need that?
 		float cx=myPlanet.x + x + v.x - v.ox;
 		float cy=myPlanet.y + y + v.y - v.oy;
+		if(cx < 0 || cx > SCREEN_W || cy < 0 || cy > SCREEN_H)return false;
+
 		al_draw_center_rotated_bitmap(bmp, cx, cy, 0, 0);
 		if(isRunningForShip)
 			al_draw_filled_circle(cx, cy, 20, COLOR(0,1,0,.5));

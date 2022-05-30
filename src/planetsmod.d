@@ -91,13 +91,34 @@ class planet : baseObject
 		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r * .80, COLOR(.6,.6,1,1));
 		foreach(s; structures) 
 			{
-			g.stats.number_of_drawn_structures++;
-			s.draw(v);
+			if(s.draw(v))
+				g.stats.number_of_drawn_structures++;
+			else
+				g.stats.number_of_drawn_structures_clipped++;			
 			}
 
-		foreach(d; dudes) {d.draw(v); g.stats.number_of_drawn_dudes++;}
-		foreach(t; turrets) {t.draw(v); g.stats.number_of_drawn_units++;}
-		foreach(s; satellites) {s.draw(v); g.stats.number_of_drawn_units++;}
+		foreach(d; dudes) 
+			{
+			if(d.draw(v))
+				g.stats.number_of_drawn_dudes++;
+			else
+				g.stats.number_of_drawn_dudes_clipped++;			
+			}
+		foreach(t; turrets)
+			{
+			if(t.draw(v))
+				g.stats.number_of_drawn_units++;
+			else
+				g.stats.number_of_drawn_units_clipped++;			
+			}
+
+		foreach(s; satellites)			{
+			if(s.draw(v))
+				g.stats.number_of_drawn_units++;
+			else
+				g.stats.number_of_drawn_units_clipped++;			
+			}
+
 		
 		if(isOwned)drawOwnerFlag(v);
 		return true;
