@@ -87,8 +87,11 @@ class planet : baseObject
 	
 	override bool draw(viewport v)
 		{
-		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r, COLOR(.2,.2,.8,1));
-		al_draw_filled_circle(x + v.x - v.ox, y + v.y - v.oy, r * .80, COLOR(.6,.6,1,1));
+		float cx = x + v.x - v.ox;
+		float cy = y + v.y - v.oy;
+		if(cx < 0 || cx > SCREEN_W || cy < 0 || cy > SCREEN_H)return false;
+		al_draw_filled_circle(cx, cy, r, COLOR(.2,.2,.8,1));
+		al_draw_filled_circle(cx, cy, r * .80, COLOR(.6,.6,1,1));
 		foreach(s; structures) 
 			{
 			if(s.draw(v))
@@ -104,6 +107,7 @@ class planet : baseObject
 			else
 				g.stats.number_of_drawn_dudes_clipped++;			
 			}
+
 		foreach(t; turrets)
 			{
 			if(t.draw(v))
