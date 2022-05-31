@@ -9,6 +9,7 @@ import g;
 import viewportsmod;
 import objects;
 import helper;
+import turretmod;
 
 import std.stdio;
 import std.math;
@@ -52,7 +53,7 @@ class planet : baseObject
 //		turrets ~= new planetTurret( 0, -r, this);
 //		turrets ~= new planetTurret( 0,  r, this);
 		
-		satellites ~= new satellite(this, r*1.5, 0, degToRad(1));
+		satellites ~= new satellite(this, r*1.5, 0, degToRad(.25));
 		
 		assert(dudePopulation >= 0);
 		for(int i = 0; i < dudePopulation; i++)
@@ -64,7 +65,7 @@ class planet : baseObject
 			float cd = 2;
 			float cvx = cos(ca)*cd;
 			float cvy = sin(ca)*cd;
-			dudes ~= new dude(cx, cy, cvx, cvy, this);
+			dudes ~= new dude(rpair(cx, cy), cvx, cvy, this);
 			}
 		}
 	
@@ -89,7 +90,8 @@ class planet : baseObject
 		{
 		float cx = x + v.x - v.ox;
 		float cy = y + v.y - v.oy;
-		if(cx < 0 || cx > SCREEN_W || cy < 0 || cy > SCREEN_H)return false;
+// this pruning doesn't work for really big (bigger than screen) planets
+//		if(cx < r || cx > SCREEN_W + r || cy < r || cy > SCREEN_H + r)return false;
 		al_draw_filled_circle(cx, cy, r, COLOR(.2,.2,.8,1));
 		al_draw_filled_circle(cx, cy, r * .80, COLOR(.6,.6,1,1));
 		foreach(s; structures) 
@@ -116,21 +118,20 @@ class planet : baseObject
 				g.stats.number_of_drawn_units_clipped++;			
 			}
 
-		foreach(s; satellites)			{
+		foreach(s; satellites)	
+			{
 			if(s.draw(v))
 				g.stats.number_of_drawn_units++;
 			else
 				g.stats.number_of_drawn_units_clipped++;			
 			}
 
-		
 		if(isOwned)drawOwnerFlag(v);
 		return true;
 		}
 
 	void handleStructures()
 		{
-//		import std.algorithm : remove;
 		foreach(s; structures) s.onTick();
 		foreach(d; dudes) d.onTick();
 		foreach(t; turrets) t.onTick();
@@ -159,15 +160,5 @@ class planet : baseObject
 				g.world.units ~= s;
 				}
 			}
-		}
-
-	//prune ready-to-delete entries (copied from g)
-	void prune(T)(ref T obj)
-		{
-		for(size_t i = obj.length ; i-- > 0 ; )
-			{
-			if(obj[i].isDead)obj = obj.remove(i); continue;
-			}
-		//see https://forum.dlang.org/post/sagacsjdtwzankyvclxn@forum.dlang.org
 		}
 	}

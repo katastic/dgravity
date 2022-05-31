@@ -18,6 +18,7 @@ import viewportsmod;
 import particles;
 import guns;
 import planetsmod;
+import turretmod;
 
 /*
 	Teams
@@ -28,6 +29,8 @@ name clashes
 	- we cannot use "object" since that's a D keyword. 
 	- we also can't use "with" for onCollision(baseObject with)
 */
+
+// Do we want LINEAR or ANGULAR velocity?
 class satellite : ship
 	{
 	BITMAP* gun_bmp;
@@ -35,6 +38,9 @@ class satellite : ship
 	float radius;
 	float orbitAngle;
 	float orbitVelocity;
+	turret[] turrets;
+//	float TURRET_TRAVERSE_SPEED = degToRad(2); // should we be extending TURRET instead of ship?
+	// or how about we just put a TURRET on top of a satellite base?
 
 	@disable this();
 
@@ -47,7 +53,9 @@ class satellite : ship
 		assert(myPlanet !is null);
 		super(0, 0, 0, 0);
 		bmp = g.satellite_bmp;
-		gun_bmp = g.ship_bmp;
+	//	gun_bmp = g.ship_bmp;
+	//	myGun = new minigun(this);
+		turrets ~= new turret(this);
 		}
 		
 	override void onTick()
@@ -58,12 +66,22 @@ class satellite : ship
 		x = myPlanet.x + cos(orbitAngle)*radius;
 		y = myPlanet.y + sin(orbitAngle)*radius;
 		// doing it this way should let us keep base-class draw routine
+	
+		float desiredAngle = angleTo(g.world.units[0], this); // point turret
+	//	if(angle < desiredAngle)angle -= TURRET_TRAVERSE_SPEED;
+	//	if(angle > desiredAngle)angle += TURRET_TRAVERSE_SPEED;
+
+		foreach(t; turrets)
+			{
+			t.onTick();
+			}		
 		}
 		
 	override bool draw(viewport v)
 		{
-		super.draw(v);
-		al_draw_center_rotated_bitmap(gun_bmp, x + v.x - v.ox, y + v.y - v.oy, angle, 0);
+		super.draw(v); // draws base
+		foreach(t; turrets){t.draw(v); g.stats.number_of_drawn_units++;}
+//		al_draw_center_rotated_bitmap(gun_bmp, x + v.x - v.ox, y + v.y - v.oy, angle, 0);
 		return true;
 		}
 	
@@ -307,6 +325,13 @@ class bullet : baseObject
 //						writefln("[%s] found. I am a: [%s] owned by a [%s] -- TURRET", u, t, t.myOwner);
 						continue; //we cannot hit our own unit (a ship, or a turret), or, if our spawner is a turret, we cannot hit the turrets owner (a ship/freighter)
 						}
+						
+					auto f = cast(freighter)myOwner;
+					if(f !is null && f.hasDocked)
+						{
+						if(u == f.dockedShip)continue;
+						// ignore docked ships
+						}
 	//				writefln("[%s] found. I am a: [%s]", u, myOwner);
 						
 					if(checkUnitCollision(u))
@@ -334,41 +359,6 @@ class bullet : baseObject
 		return false;
 		}
 	}
-/+
-class bulletHandler
-	{
-	bullet[] bullets;
-	
-	void add(float _x, float _y, float _vx, float _vy)
-		{
-		bullet b;
-		b.x = _x;
-		b.y = _y;
-		b.vx = _vx;
-		b.vy = _vy;
-		bullets ~= b;
-		}
-	
-	void draw(viewport v)
-		{
-		foreach(ref b; bullets)
-			{
-			// draw
-			al_draw_bitmap(g.stone_bmp, b.x + v.x - v.ox, b.y + v.y - v.oy, 0);
-			}
-		}
-		
-	void onTick()
-		{
-		foreach(ref b; bullets)
-			{
-			b.x += b.vx;
-			b.y += b.vy;
-			b.lifetime--;
-			if(b.lifetime <= 0)b.isDead = true;
-			}
-		}
-	}+/
 
 class item : baseObject
 	{
@@ -563,7 +553,28 @@ class hardpoint : unit
 
 class freighter : ship
 	{
+	bool hasDocked=false;
 	hardpoint[] hardpoints;
+	ship dockedShip;
+		
+	bool attach(ship s)
+		{
+		if(hasDocked == false)
+			{
+			s.isDocked = true;
+			hasDocked = true;
+			dockedShip = s;
+			return true;
+			}
+		return false;
+		}
+	
+	void release(ship s)
+		{
+		hasDocked = false;
+		s.isDocked = false;
+		dockedShip = null;
+		}
 		
 	this(float _x, float _y, float _xv, float _yv)
 		{
@@ -605,127 +616,6 @@ class freighter : ship
 		}
 	}
 
-class planetTurret : turret
-	{
-	// >>USING RELATIVE COORDINATES<<
-	this(float _x, float _y, baseObject _myOwner)
-		{
-		super(_x, _y, _myOwner, true); // special constructor
-		myGun = new planetGun(this);
-		}
-	}
-
-class attachedTurret : turret
-	{
-	float attachmentX;
-	float attachmentY; // offset from 0,0 attachment point so we can rotate around it
-
-	this(float _x, float _y, baseObject _myOwner)
-		{
-		super(_x, _y, _myOwner);
-		isDebugging = true;
-		}
-
-	override bool draw(viewport v)
-		{
-		float dist = 50;
-		float cangle = myOwner.angle;
-		float cx = myOwner.x + v.x - v.ox + cos(cangle)*dist; // NOTE. we're currently NOT USING x,y
-		float cy = myOwner.y + v.y - v.oy + sin(cangle)*dist; // because vector addition hard. apparently.
-//			al_draw_centered_bitmap(bmp, cx, cy, 0);
-		al_draw_center_rotated_bitmap(turretGun_bmp, cx, cy, angle, 0);
-		return true;
-		}
-	
-	override void onTick()
-		{
-//		writeln("I am a attachedTurret.ontick()");
-		alignTurretandFire(); //TODO FIX ME. Change the coordinates
-		}
-	}
-
-class turret : ship
-	{
-	// >>USING RELATIVE COORDINATES<<
-	BITMAP* turretGun_bmp;
-	baseObject myOwner;
-	float TURRET_TRAVERSE_SPEED=degToRad(2);
-	float TURRET_FIRE_DISTANCE=400f;
-	
-	this(float _x, float _y, baseObject _myOwner, bool dontSetupGun=true) // special case for planetTurret that will setup the gun
-		{
-		super(_x, _y, 0, 0);
-		turretGun_bmp = g.turret_bmp;
-		bmp = g.turret_base_bmp;
-		myOwner = _myOwner;
-		}
-	
-	this(float _x, float _y, baseObject _myOwner)
-		{
-		super(_x, _y, 0, 0);
-
-		myGun = new turretGun(this, yellow);
-		turretGun_bmp = g.turret_bmp;
-		bmp = g.turret_base_bmp;
-		myOwner = _myOwner;
-		}
-
-	override bool draw(viewport v)
-		{
-		al_draw_centered_bitmap(bmp, myOwner.x + x + v.x - v.ox, myOwner.y + y + v.y - v.oy, 0);
-		al_draw_center_rotated_bitmap(turretGun_bmp, myOwner.x + x + v.x - v.ox, myOwner.y + y + v.y - v.oy, angle, 0);
-		return true;
-		}
-
-	void alignTurretandFire()
-		{
-		pair absoluteP = pair(myOwner.x + x, myOwner.y + y); 
-	
-		// this simple section has turned into a nightmare of angles and tests not working
-		
-		// whenever we have "shoot the nearest enemy" we need to not shoot at our owner (or I guess our team, which counts as our owner)
-		// but also not HITTING our owner.
-	
-		float destinationAngle = angleTo(g.world.units[0], absoluteP);
-		float distance = distanceTo(g.world.units[0], absoluteP);
-		//writeln(angle, " ", destinationAngle);
-//		writeln(angle.radToDeg, " ", destinationAngle.radToDeg);
-
-// --------------> read this thoroughly
-// https://math.stackexchange.com/questions/110080/shortest-way-to-achieve-target-angle
-
-// TODO: FIX THESE		
-//		assert(angle == wrapRad(angle)); these are floats so we'd need to at least check a float /w range test
-//		assert(destinationAngle == wrapRad(destinationAngle));
-		angle = wrapRad(angle);
-		destinationAngle = wrapRad(destinationAngle);
-		
-	//	auto t = angleDiff2(angle, destinationAngle + PI/2); //FIXME: Why is this off by 90 degrees?!?!? but not for all turrets!? what the hell is going on.
-//		writeln(angle.radToDeg, " ", destinationAngle.radToDeg, " = ", t.radToDeg);
-	//	if(t < 0)
-		if(angle > destinationAngle)
-			{
-//			writeln("down");
-			angle -= TURRET_TRAVERSE_SPEED;
-		}else{
-	//		writeln("up");
-			angle += TURRET_TRAVERSE_SPEED;
-			}
-		 //grab target()
-		myGun.onTick();
-		vx = myOwner.vx; // note, these aren't "used" for our position, but are needed for spawning bullets
-		vy = myOwner.vy; // that add with our velocity.
-		
-//		if(distance < TURRET_FIRE_DISTANCE)
-		myGun.actionFireRelative(myOwner);
-		}
-
-	override void onTick()
-		{
-		alignTurretandFire();
-		}
-	}
-
 class ship : unit
 	{
 	string name="";
@@ -735,7 +625,7 @@ class ship : unit
 	player currentOwner;
 	bool isLanded=false; /// on planet
 	bool isDocked=false; /// attached to object
-	unit dockingUnit;
+	freighter dockingUnit;
 	gun myGun;
 	turret[] turrets;
 	int numDudesInside; // NYI, we don't need (at least at this point) to keep actual unique dude classes inside. Just delete them and keep track of how many we had. (ala all level-1 blue pikmin are the same)
@@ -833,7 +723,11 @@ class ship : unit
 	void dumpDudes(planet p)
 		{
 		for(int i = 0; i < numDudesInside; i++)
-			p.dudes ~= new dude(0, 0, uniform!"[]"(-1.0,1.0), uniform!"[]"(-1.0,1.0), p); 
+			{
+			float cx = x - p.x;
+			float cy = y - p.y;
+			p.dudes ~= new dude(rpair(cx, cy), uniform!"[]"(-1.0,1.0), uniform!"[]"(-1.0,1.0), p); 
+			}
 		numDudesInside = 0;
 		// todo: 
 		// - Check for max planet capacity.
@@ -964,11 +858,18 @@ class ship : unit
 					{
 					if(checkUnitCollision(u))
 						{
-						if((u !is this) && cast(freighter)u !is null)
+						if((u !is this))
 							{
-							isDocked = true;
-							dockingUnit = u;
+							auto f = cast(freighter)u;
+							if(f !is null)
+							{
+							if(f.attach(this))
+								{
+								isDocked = true;
+								dockingUnit = f; //duplicated?
+								}
 							}
+						}
 						}
 					}
 				}
@@ -1022,6 +923,7 @@ class ship : unit
 		{		
 		if(isLanded || isDocked)
 			{				
+			if(isDocked)dockingUnit.release(this);
 			isDocked = false;
 			isLanded = false;
 			x += cos(angle)*5f; 
@@ -1055,10 +957,10 @@ class dude : baseObject
 	ship landedShip;
 	planet myPlanet;
 	
-	this(float relx, float rely, float _vx, float _vy, planet _myPlanet)
+	this(rpair relpos, float _vx, float _vy, planet _myPlanet)
 		{
 		myPlanet = _myPlanet;
-		super(relx, rely, _vx, _vy, g.dude_bmp);
+		super(relpos.x, relpos.y, _vx, _vy, g.dude_bmp);
 		}
 
 	// originally a copy of structure.draw

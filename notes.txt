@@ -1,11 +1,15 @@
 TODO/notes
 --------------------------------------------------------------------------------------------------
-	- WARNING: bullet and smoke particles are now culled outside screen but the STATISTICS do not reflect that. We either need to refactor, or add a boolean return to denote if it was clipped HOWEVER this may incur some overhead. Probably not that much since its just popping the stack except for the additional if statements. But it may end up changing the FUNCTION SIGNATURE of void draw(viewport v) to bool draw(viewport v) which affects a LOT of classes. One possibility, we can write our own overloads for particles that return bool but why not just do it for everything. We can also track CLIPPED_PARTICLES as well with statistics.
+
+	- OH GOSH, none of the draw routines are built for zoom. OH NO.
+		- might only need to simply drawing certain things with a zoom factor / scale. But what about all the other stuff like text, helpers, etc.
+
+	+ WARNING: bullet and smoke particles are now culled outside screen but the STATISTICS do not reflect that. We either need to refactor, or add a boolean return to denote if it was clipped HOWEVER this may incur some overhead. Probably not that much since its just popping the stack except for the additional if statements. But it may end up changing the FUNCTION SIGNATURE of void draw(viewport v) to bool draw(viewport v) which affects a LOT of classes. One possibility, we can write our own overloads for particles that return bool but why not just do it for everything. We can also track CLIPPED_PARTICLES as well with statistics.
 	
 		particles	CLIPPED_particles
 		units		CLIPPED_units
 		
-	- another note: I doubt we're currently tracking statistics for SUB UNITS like turrets. That can be easily fixed by moving the draw and logic template helpers into HELPER.D so everyone can use them.
+	+ another note: I doubt were currently tracking statistics for SUB UNITS like turrets. That can be easily fixed by moving the draw and logic template helpers into HELPER.D so everyone can use them.
 	 
 	-- add pve stuff so there's something to do
 		- PID controller
@@ -27,7 +31,7 @@ TODO/notes
 			and 0.0 being "aim at current x/y"
 	- attachedTurret needs vector code for offseting bullet spawning and position of turret
 
-	--> if you land (only certain ships?) tons of planetDudes try to pile into your ship.
+	+ --> if you land (only certain ships?) tons of planetDudes try to pile into your ship.
 		- figure out how to handle when to dump and when to pickup dudes
 		- drop from ship (towards center) not directly on center of planet
 		- different team dudes dropping, and fighting
@@ -72,9 +76,9 @@ TODO/notes
 	+ max AI turret traverse speed 
 	- turrets only fire when they're in approx angle range
 		+ and inside [max firing distance]
-	- TURRET GUNS cannot escape gravity hahaha. Maybe make a separate gravity (or mass) field for turret ammo so only SHIP guns are affected massively.
+	+ TURRET GUNS cannot escape gravity hahaha. Maybe make a separate gravity (or mass) field for turret ammo so only SHIP guns are affected massively.
 	- possibility of a TURRETED aimable gun that doesn't fire as good as others but lets you aim while flying around instead of just shooting forward
-	- add turrets to carriers, planets, etc
+	+ add turrets to carriers, planets, etc
 	- DOCK WITH CARRIERS to transfer fuel, re-arm, etc. BETTER NOT CRASH INTO IT THOUGH.
 	- can you hit yourself with your own bullets? that could be funny. [need cooldown to leave inital area though]
 	- if you take over a planet, do different color dudes start fighting each other like Pikmin?
@@ -88,7 +92,7 @@ TODO/notes
 		- pop shields went empty
 	- ship hardpoints (that can get hit, like colony storage tanks)
 	+ how can we shoot structures if the bullets hit the planet??? 
-	- defensive satellites
+	+ defensive satellites
 	- resource sending ships vs people ships
 		- the worlds craziest version of OpenTTD in space
 	
@@ -116,9 +120,6 @@ TODO/notes
 	- its a little cludgy that we have viewportsmod.viewport viewports. the file name that is. it was cleaner looking with viewport_t for the type.
 	+ add std.chrono timing
 	- geometric space ships (and drawing routines) that are easily rotable (and scalable for zoom)
-	- OH GOSH, none of the draw routines are built for zoom. OH NO.
-		- might only need to simply drawing certain things with a zoom factor / scale. But what about all the other stuff like text, helpers, etc.
-
 	- engine smoke/jet flume
 	- damage smoking pieces coming off ala war thunder plane debris particles
 	

@@ -229,7 +229,7 @@ struct display_t
 		al_draw_filled_rounded_rectangle(16, 32, 64+800, last_position_plus_one+32, 8, 8, ALLEGRO_COLOR(.7, .7, .7, .7));
 
 		unit u = g.world.units[0];
-		drawText2(20, "obj[%.2f,%.2f][%.2f %f.2] %.2f deg", u.x, u.y, u.vx, u.vy, u.angle.radToDeg);
+		drawText2(20, "obj[%.2f,%.2f][%.2f %.2f] %.2f deg", u.x, u.y, u.vx, u.vy, u.angle.radToDeg);
 		drawText2(20, "fps[%d] objrate[%d]", g.stats.fps, 
 					(g.stats.number_of_drawn_particles +
 					g.stats.number_of_drawn_units + 
@@ -263,7 +263,7 @@ struct display_t
 
 		with(g.stats)
 			{
-		drawText2(20, "percent: structs [%3.2f%%] particles [%3.2f%%] bullets [%3.2f%%] dudes [%3.2f%%] units [%3.2f%%]", 
+		drawText2(20, "percent: structs [%3.1f%%] particles [%3.1f%%] bullets [%3.1f%%] dudes [%3.1f%%] units [%3.1f%%]", 
 			ifNotZeroPercent(number_of_drawn_structures, number_of_drawn_structures_clipped), 
 			ifNotZeroPercent(number_of_drawn_particles, number_of_drawn_particles_clipped), 
 			ifNotZeroPercent(number_of_drawn_bullets, number_of_drawn_bullets_clipped),

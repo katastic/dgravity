@@ -21,8 +21,8 @@ import graph;
 import particles;
 import planetsmod;
 
-immutable PLANET_MASS = 4000;
-immutable PLANET_MASS_FOR_BULLETS = 20_000;
+immutable float PLANET_MASS = 4000;
+immutable float PLANET_MASS_FOR_BULLETS = 20_000;
 
 //ALLEGRO_CONFIG* 		cfg;  //whats this used for?
 ALLEGRO_DISPLAY* 		al_display;
@@ -260,7 +260,7 @@ class world_t
 
 	this()
 		{		
-		auto s = new ship(400, 100, 0, 0);	
+		auto s = new ship(315, 1850, 0, 0);	
 		s.name = "Interdicter";
 		s.myTeamIndex = 1;
 		units ~= s; //which comes first, player or the egg
@@ -294,14 +294,14 @@ class world_t
 		}
 		
 		// note structures currently pre-req a player instantiated
-		float r = 200;
-		auto pl = new planet("first", 400, 300, r, 25);
+		float r = 1000;
+		auto pl = new planet("first", 400, 3000, r, 25);
 		planets ~= pl;
 		planets ~= new planet("second", 1210, 410, 100, 0);
 		planets[1].m = PLANET_MASS*.25; // we get CLOSER to SMALLER planets making gravity much larger if its the same mass!
 		planets ~= new planet("third", 1720, 520, 50, 0);
 		planets[2].m = PLANET_MASS*.05;
-		planets[2].isProducer = true;
+		//planets[2].isProducer = true;
 		
 		for(int i = 0; i < 25; i++)
 			{
@@ -441,34 +441,14 @@ class world_t
 		if(key_j_down)p2.left();
 		if(key_l_down)p2.right();
 		if(key_m_down)p2.actionFire();
-		
-		void tick(T)(ref T obj)
-			{
-			foreach(ref o; obj)
-				{
-				o.onTick();
-				}
-			}
-			
-//		tick(structures);
+
 		tick(planets);
 		tick(particles);
 		tick(asteroids);
 		tick(units);
 		tick(bullets);
-
-		//prune ready-to-delete entries
-		void prune(T)(ref T obj)
-			{
-			for (size_t i = obj.length ; i-- > 0 ; )
-				{
-				if(obj[i].isDead)obj = obj.remove(i); continue;
-				}
-			//see https://forum.dlang.org/post/sagacsjdtwzankyvclxn@forum.dlang.org
-			}
 			
 		prune(units);
-//		prune(structures);
 		prune(planets);
 		prune(particles);
 		prune(bullets);

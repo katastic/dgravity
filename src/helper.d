@@ -28,6 +28,35 @@ COLOR orange = COLOR(1,0.65,0,1);
 	//COLOR(w, w, w, 1);
 	//}
 
+
+
+
+		
+		void tick(T)(ref T obj)
+			{
+			foreach(ref o; obj)
+				{
+				o.onTick();
+				}
+			}
+
+
+	//prune ready-to-delete entries (copied from g)
+	void prune(T)(ref T obj)
+		{
+		import std.algorithm : remove;
+		for(size_t i = obj.length ; i-- > 0 ; )
+			{
+			if(obj[i].isDead)obj = obj.remove(i); continue;
+			}
+		//see https://forum.dlang.org/post/sagacsjdtwzankyvclxn@forum.dlang.org
+		}
+
+
+
+
+
+
 /// Draws a rectangle but it's missing the inside of lines. Currently just top left and bottom right corners.
 void drawSplitRectangle(pair ul, pair lr, float legSize, float thickness, COLOR c)
 	{
