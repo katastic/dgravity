@@ -9,6 +9,7 @@ import g;
 import viewportsmod;
 import objects;
 import helper;
+import bulletsmod;
 
 import std.stdio;
 import std.math;
@@ -36,7 +37,7 @@ class minigun : gun
 	this(ship newOwner)
 		{
 		super(newOwner, red);
-		gunCooldownTime = 0;
+		gunCooldownTime = 2;
 		spreadArc=5;
 		roundsFired=1;
 		speed=20;

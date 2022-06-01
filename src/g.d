@@ -20,6 +20,7 @@ import viewportsmod;
 import graph;
 import particles;
 import planetsmod;
+import bulletsmod;
 
 immutable float PLANET_MASS = 4000;
 immutable float PLANET_MASS_FOR_BULLETS = 20_000;
@@ -268,7 +269,7 @@ class world_t
 		teams ~= new team(players[0], blue);
 		players[0].myTeamIndex = 0; // teams[0];
 		
-		auto s2 = new freighter(20, 20, 0, 0);
+		auto s2 = new ship(20, 20, 0, 0); // was freighter
 	
 		s.isOwned = true;
 		s.currentOwner = players[0];

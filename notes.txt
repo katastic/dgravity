@@ -1,18 +1,39 @@
 TODO/notes
 --------------------------------------------------------------------------------------------------
+	- improved TARGETING.
+		- given bullet pos/velocity, ship pos/velocity, and target distance
+		- how long will it take to get to the current ship using our bullet
+		- given that time, where will new ship be?
+		- iterate?
+
+		https://www.gamedeveloper.com/programming/shooting-a-moving-target
+	
+	- smoke spawns offset from hits (or the ships are drawn offset)
 
 	- OH GOSH, none of the draw routines are built for zoom. OH NO.
 		- might only need to simply drawing certain things with a zoom factor / scale. But what about all the other stuff like text, helpers, etc.
-
-	+ WARNING: bullet and smoke particles are now culled outside screen but the STATISTICS do not reflect that. We either need to refactor, or add a boolean return to denote if it was clipped HOWEVER this may incur some overhead. Probably not that much since its just popping the stack except for the additional if statements. But it may end up changing the FUNCTION SIGNATURE of void draw(viewport v) to bool draw(viewport v) which affects a LOT of classes. One possibility, we can write our own overloads for particles that return bool but why not just do it for everything. We can also track CLIPPED_PARTICLES as well with statistics.
-	
-		particles	CLIPPED_particles
-		units		CLIPPED_units
 		
-	+ another note: I doubt were currently tracking statistics for SUB UNITS like turrets. That can be easily fixed by moving the draw and logic template helpers into HELPER.D so everyone can use them.
-	 
+	- actually storing a hundred dude pointers inside your ship struct, might be faster than actually newing and deleting them every time you drop, and pickup them. We could also intentionally not call onTick while they're in there as long as we acknowledge
+	in dude.onTick that this will NOT be called while inside. (Unless we later need that functionality)
+
 	-- add pve stuff so there's something to do
-		- PID controller
+		- AI commands for 
+			"go to here"
+			"begin orbit planet"
+			"leave orbit"
+			"go to unit" (same as gotohere, really)
+			--> Do we want AI commands to have persistance? go_to_here can be called every frame. But others should have a
+			set start and end, right? There are AI "actions" and there are AI "plans"? Most actions are just direct player
+			inputs. Turn left, turn right. Where as a plan (or a STATE?) involves processing and calling the right actions.
+			
+				"hunt player/unit"
+				"defend planet" [patrol around planet and engage enemy units]
+					- if enemy nearby, switch to hunt [should we include an anti-lure 'return to planet' functionality if its too far away?]
+				"gather dudes"
+				"colonize nearest"
+				"colonize X planet"
+	
+		- PID controller for enemy targetting
 	- consider moving more "object" code into separate files.
 		- split "helper" into graphics tools, vs more generic tools
 		- move random object.d code in classes that should be helpers
@@ -171,7 +192,14 @@ game changing mechanic:
 
 
 
+		
+	+ another note: I doubt were currently tracking statistics for SUB UNITS like turrets. That can be easily fixed by moving the draw and logic template helpers into HELPER.D so everyone can use them.
+	 
 
+	+ WARNING: bullet and smoke particles are now culled outside screen but the STATISTICS do not reflect that. We either need to refactor, or add a boolean return to denote if it was clipped HOWEVER this may incur some overhead. Probably not that much since its just popping the stack except for the additional if statements. But it may end up changing the FUNCTION SIGNATURE of void draw(viewport v) to bool draw(viewport v) which affects a LOT of classes. One possibility, we can write our own overloads for particles that return bool but why not just do it for everything. We can also track CLIPPED_PARTICLES as well with statistics.
+	
+		particles	CLIPPED_particles
+		units		CLIPPED_units
 
 
 

@@ -70,8 +70,10 @@ struct particle
 		if(cx > 0 && cx < SCREEN_W && cy > 0 && cy < SCREEN_H)
 			{
 			al_draw_tinted_scaled_bitmap(b, c,
-				0, 0, b.w, b.h,
-				cx - b.w/2, cy - b.h/2, scaleX, scaleY, 
+				0, 0, 
+				b.w, b.h,
+				cx - b.w/2, cy - b.h/2, 
+				scaleX, scaleY, 
 				rotation);
 			return true;
 			}
