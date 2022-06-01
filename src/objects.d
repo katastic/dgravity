@@ -124,8 +124,8 @@ class asteroid : unit
 	this(asteroid a)
 		{
 //		writeln("asteroid.this(a), size: ", a.size);
-		va = a.va;
-		angle = a.angle;
+		va = uniform!"[]"(-.05, .05); // spin randomly
+  		angle = a.angle;
 		size = a.size;
 		BITMAP* b;
 		assert(size >= 0);
@@ -685,15 +685,12 @@ class ship : unit
 						if((u !is this))
 							{
 							auto f = cast(freighter)u;
-							if(f !is null)
-							{
-							if(f.attach(this))
+							if(f !is null && f.attach(this))
 								{
 								isDocked = true;
-								dockingUnit = f; //duplicated?
+								dockingUnit = f; //duplicated in f.attach?
 								}
 							}
-						}
 						}
 					}
 				}

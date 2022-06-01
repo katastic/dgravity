@@ -92,8 +92,8 @@ class planet : baseObject
 		float cy = y + v.y - v.oy;
 // this pruning doesn't work for really big (bigger than screen) planets
 //		if(cx < r || cx > SCREEN_W + r || cy < r || cy > SCREEN_H + r)return false;
-		al_draw_filled_circle(cx, cy, r, COLOR(.2,.2,.8,1));
-		al_draw_filled_circle(cx, cy, r * .80, COLOR(.6,.6,1,1));
+		al_draw_filled_circle(cx, cy, r * 1.1, COLOR(.2,.2,.8,.7));
+		al_draw_filled_circle(cx, cy, r * 1.0, COLOR(.6,.6,1,1));
 		foreach(s; structures) 
 			{
 			if(s.draw(v))
