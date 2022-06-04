@@ -440,6 +440,12 @@ class freighter : ship
 		}
 	}
 
+class megaShip : unit
+	{
+	// hardpoints providing functionality?
+	// turrets, propulsion, turning, shields, power reactor.
+	}
+
 class ship : unit
 	{
 	string name="";

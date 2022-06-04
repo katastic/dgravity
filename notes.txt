@@ -1,5 +1,9 @@
 TODO/notes
 --------------------------------------------------------------------------------------------------
+	- tracking "bullets" (torpedos, missiles, whatever)
+	- do we want to consider MEGASHIPS? ala the oldschool hardpoint based idea of customish 2-D, ship battles
+		with turrets, guns, etc. carriers.
+
 	- improved TARGETING.
 		- given bullet pos/velocity, ship pos/velocity, and target distance
 		- how long will it take to get to the current ship using our bullet
@@ -9,6 +13,7 @@ TODO/notes
 		https://www.gamedeveloper.com/programming/shooting-a-moving-target
 	
 	- smoke spawns offset from hits (or the ships are drawn offset)
+		- fix freighter smoke position offset
 
 	- OH GOSH, none of the draw routines are built for zoom. OH NO.
 		- might only need to simply drawing certain things with a zoom factor / scale. But what about all the other stuff like text, helpers, etc.
@@ -34,6 +39,7 @@ TODO/notes
 				"colonize X planet"
 	
 		- PID controller for enemy targetting
+		
 	- consider moving more "object" code into separate files.
 		- split "helper" into graphics tools, vs more generic tools
 		- move random object.d code in classes that should be helpers
@@ -87,7 +93,6 @@ TODO/notes
 	- when undocking at speed, the child object needs to launch from the initial vx, vy from the carrier
 	- bullets check for TEAM/owner. make sure all relevant objects are using teams
 	- fix turret angle code
-	- fix freighter smoke position offset
 	- use al_hold_bitmap_drawing(true) in applicable areas
 	- fix space
 	- add some point well have to decide which blending mode we want for "coloring" bullets (additive, subtractive, etc. I think its currently multiplying which is subtracting)
